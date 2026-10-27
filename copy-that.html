@@ -1,0 +1,537 @@
+<title>Copy That</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one long board. Brand -> poster -> phone product -> block pattern -> motion moment. Boldness lives in the signal yellow; everything else stays quiet. */
+:root{
+  --bg:#ECEEF1; --fg:#101216; --mute:#566; --card:#fff; --line:#d3d8de;
+  --sig:#FFD21F; --on-sig:#101216; --ok:#1b7f47; --quiet:#2742e6;
+  --display:'Bricolage Grotesque','Helvetica Neue',Arial,sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1013;--fg:#f1f2f4;--mute:#9aa1ad;--card:#171a1f;--line:#2a2f37;--ok:#46c37b;--quiet:#9aaaff;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0e1013;--fg:#f1f2f4;--mute:#9aa1ad;--card:#171a1f;--line:#2a2f37;--ok:#46c37b;--quiet:#9aaaff;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:16px/1.5 var(--display);padding-block:0 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1080px;margin:0 auto}
+h1,h2,h3{font-weight:800;letter-spacing:-.03em;line-height:1;text-wrap:balance;margin:0}
+p{margin:0}
+.eyebrow{font:500 12px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--mute)}
+section{padding-top:72px}
+.sec-head{display:grid;gap:12px;margin-bottom:28px;max-width:640px}
+.sec-head h2{font-size:clamp(30px,5vw,48px)}
+.sec-head p{color:var(--mute)}
+:focus-visible{outline:3px solid var(--quiet);outline-offset:2px}
+
+/* hero */
+.hero{display:grid;grid-template-columns:1.1fr .9fr;gap:32px;align-items:center;padding-top:40px}
+.hero h1{font-size:clamp(56px,11vw,128px);letter-spacing:-.05em}
+.hero h1 em{font-style:normal;background:var(--sig);color:var(--on-sig);padding:0 .08em;border-radius:6px}
+.hero p.lede{font-size:20px;max-width:30ch;margin-top:20px;color:var(--mute)}
+.logo-stage{aspect-ratio:1;background:var(--sig);border-radius:36px;display:grid;place-items:center;position:relative;overflow:hidden}
+.logo-stage svg{width:62%;height:auto;overflow:visible}
+.logo-stage button{position:absolute;right:14px;bottom:14px;font:500 12px var(--mono);background:var(--on-sig);color:var(--sig);border:0;border-radius:99px;padding:8px 14px;cursor:pointer}
+.bar{fill:var(--on-sig);transform-box:fill-box;transform-origin:center}
+.tick{fill:none;stroke:var(--on-sig);stroke-width:7;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:60;stroke-dashoffset:0}
+.logo-stage.play .bar{animation:loud 4.2s cubic-bezier(.3,.7,.2,1) infinite}
+.logo-stage.play .bar:nth-child(2){animation-delay:.06s}.logo-stage.play .bar:nth-child(3){animation-delay:.12s}.logo-stage.play .bar:nth-child(4){animation-delay:.18s}
+.logo-stage.play .tick{animation:draw 4.2s ease-out infinite}
+@keyframes loud{
+  0%{transform:scaleY(.2)}8%{transform:scaleY(2.4)}16%{transform:scaleY(.7)}24%{transform:scaleY(1.9)}34%{transform:scaleY(1.1)}46%{transform:scaleY(1.5)}58%,100%{transform:scaleY(1)}}
+@keyframes draw{0%,52%{stroke-dashoffset:60}66%,90%{stroke-dashoffset:0}100%{stroke-dashoffset:60}}
+.marks{display:flex;gap:12px;flex-wrap:wrap;margin-top:20px}
+.chip{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 14px;font-weight:600}
+.chip svg{width:28px;height:28px}
+.sw{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.sw span{font:500 11px var(--mono);padding:8px 10px;border-radius:8px;border:1px solid var(--line)}
+
+/* poster */
+.posters{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;align-items:start}
+.poster{aspect-ratio:3/4;background:var(--sig);color:var(--on-sig);border-radius:6px;padding:7% 7%;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden;container-type:inline-size;box-shadow:0 20px 40px -24px rgba(0,0,0,.5)}
+.poster .big{font-weight:800;letter-spacing:-.055em;line-height:.86;font-size:23cqw}
+.poster .big s{text-decoration:none;opacity:.28}
+.poster .small{font:500 3.6cqw/1.4 var(--mono);text-transform:uppercase;letter-spacing:.08em}
+.poster .mid{font-weight:600;font-size:6.2cqw;line-height:1.08;letter-spacing:-.02em;max-width:17ch}
+.poster .wave{display:flex;align-items:center;gap:1.4cqw;height:18cqw}
+.poster .wave i{flex:1;background:var(--on-sig);border-radius:99px}
+.poster.ink{background:var(--on-sig);color:var(--sig)}
+.poster.ink .wave i{background:var(--sig)}
+.poster .foot{display:flex;justify-content:space-between;align-items:end;gap:10px}
+.poster .stamp{border:.7cqw solid currentColor;border-radius:99px;padding:1.4cqw 3.2cqw;font:500 3.4cqw var(--mono);text-transform:uppercase;letter-spacing:.08em;transform:rotate(-6deg)}
+.cap{font:500 12px var(--mono);color:var(--mute);margin-top:10px}
+
+/* product */
+.product{display:grid;grid-template-columns:minmax(300px,380px) 1fr;gap:48px;align-items:start}
+.phone{width:100%;max-width:380px;background:var(--card);border:1px solid var(--line);border-radius:44px;padding:12px;box-shadow:0 30px 60px -30px rgba(0,0,0,.45);margin:0 auto}
+.screen{border-radius:34px;background:var(--bg);height:660px;display:flex;flex-direction:column;overflow:hidden;position:relative}
+.status{display:flex;justify-content:space-between;padding:14px 22px 6px;font:500 12px var(--mono)}
+.tabs{display:flex;gap:6px;padding:6px 14px 10px}
+.tabs button{flex:1;font:600 13px var(--display);border:1px solid var(--line);background:transparent;color:var(--fg);border-radius:99px;padding:8px 0;cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.pane{flex:1;overflow:auto;padding:6px 18px 22px;display:none}
+.pane.on{display:block}
+.pane h3{font-size:28px;margin:6px 0 4px}
+.sub{color:var(--mute);font-size:14px}
+.types{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0}
+.types button{font:600 14px var(--display);padding:9px 14px;border-radius:99px;border:1.5px solid var(--line);background:var(--card);color:var(--fg);cursor:pointer}
+.types button[aria-pressed="true"]{background:var(--sig);color:var(--on-sig);border-color:var(--sig)}
+.loc{display:flex;gap:10px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;font-size:14px}
+.loc b{font-weight:600;display:block}
+.pin{width:10px;height:10px;border-radius:50%;background:var(--quiet);box-shadow:0 0 0 5px color-mix(in srgb,var(--quiet) 25%,transparent);flex:none}
+.meter{margin:16px 0;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px;display:grid;gap:10px}
+.meter .row{display:flex;justify-content:space-between;align-items:baseline}
+.db{font:500 34px var(--mono);letter-spacing:-.04em}
+.bars{display:flex;gap:3px;align-items:end;height:34px}
+.bars i{flex:1;background:var(--line);border-radius:2px;height:20%;transition:height .12s,background .12s}
+.hold{width:100%;font:700 15px var(--display);border:0;border-radius:12px;padding:12px;background:var(--fg);color:var(--bg);cursor:pointer;touch-action:none;user-select:none}
+.send{width:100%;margin-top:6px;font:800 18px var(--display);border:0;border-radius:16px;padding:16px;background:var(--sig);color:var(--on-sig);cursor:pointer}
+.send:active{transform:scale(.98)}
+.tl{list-style:none;margin:18px 0 0;padding:0;display:grid;gap:0}
+.tl li{display:grid;grid-template-columns:22px 1fr;gap:12px;position:relative;padding-bottom:18px}
+.tl li::before{content:"";position:absolute;left:10px;top:22px;bottom:0;width:2px;background:var(--line)}
+.tl li:last-child::before{display:none}
+.dot{width:22px;height:22px;border-radius:50%;border:2px solid var(--line);background:var(--bg);display:grid;place-items:center;font-size:12px;font-weight:800}
+.tl li.done .dot{background:var(--fg);border-color:var(--fg);color:var(--bg)}
+.tl li.done::before{background:var(--fg)}
+.tl li.now .dot{border-color:var(--sig);background:var(--sig);color:var(--on-sig);animation:ping 1.6s infinite}
+@keyframes ping{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--sig) 70%,transparent)}100%{box-shadow:0 0 0 12px transparent}}
+.tl li:not(.done):not(.now){opacity:.45}
+.tl b{display:block;font-size:15px}
+.tl span.t{font:400 11px var(--mono);color:var(--mute)}
+.tl p{font-size:14px;color:var(--mute);margin-top:2px}
+.outcome{margin-top:6px;background:var(--fg);color:var(--bg);border-radius:18px;padding:16px;display:none}
+.outcome.on{display:block;animation:rise .5s ease-out}
+@keyframes rise{from{transform:translateY(12px);opacity:0}}
+.outcome h4{margin:0 0 6px;font-size:18px;letter-spacing:-.02em}
+.outcome p{font-size:14px;opacity:.85}
+.outcome .fb{display:flex;gap:8px;margin-top:12px}
+.outcome .fb button{flex:1;font:700 13px var(--display);padding:10px;border-radius:10px;border:1.5px solid currentColor;background:transparent;color:inherit;cursor:pointer}
+.sim{margin-top:14px;display:flex;gap:8px;align-items:center}
+.sim button{font:500 12px var(--mono);border:1px dashed var(--mute);background:transparent;color:var(--fg);border-radius:99px;padding:8px 12px;cursor:pointer}
+.toast{position:absolute;left:16px;right:16px;top:-80px;background:var(--fg);color:var(--bg);border-radius:16px;padding:12px 14px;font-size:14px;transition:top .4s cubic-bezier(.3,1.4,.4,1);z-index:2;display:flex;gap:10px;align-items:center}
+.toast.on{top:48px}
+.toast svg{width:26px;flex:none}
+.blockcard{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px;margin-top:14px}
+.blockcard .n{font:800 40px var(--display);letter-spacing:-.04em}
+.minimap{display:grid;grid-template-columns:repeat(10,1fr);gap:3px;margin-top:12px}
+.minimap i{aspect-ratio:1;border-radius:3px}
+
+.side{display:grid;gap:28px;align-content:start}
+.beats{display:grid;gap:18px}
+.beat{display:grid;grid-template-columns:auto 1fr;gap:16px;padding-top:18px;border-top:1px solid var(--line)}
+.beat .k{font:500 12px var(--mono);color:var(--mute);padding-top:4px;width:84px}
+.beat h3{font-size:22px;margin-bottom:6px;letter-spacing:-.02em}
+.beat p{color:var(--mute)}
+.sms{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:16px;display:grid;gap:8px;max-width:420px}
+.sms div{padding:9px 13px;border-radius:18px;font-size:14px;max-width:86%;line-height:1.35}
+.sms .me{justify-self:end;background:var(--quiet);color:#fff}
+.sms .city{background:var(--bg);border:1px solid var(--line)}
+:root[data-theme="dark"] .sms .me,:root:not([data-theme="light"]) .sms .me{color:#0e1013}
+.sms small{font:400 11px var(--mono);color:var(--mute)}
+
+/* pattern map */
+.pattern{display:grid;grid-template-columns:1.2fr .8fr;gap:32px;align-items:start}
+.cityMap{width:100%;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:14px}
+.cityMap svg{width:100%;height:auto;display:block}
+.cityMap text{font:500 10px var(--mono);fill:var(--mute)}
+.legend{display:flex;gap:6px;align-items:center;font:500 11px var(--mono);color:var(--mute);margin-top:10px;flex-wrap:wrap}
+.legend i{width:22px;height:10px;border-radius:2px;display:inline-block}
+.stats{display:grid;gap:14px}
+.stat{border-top:1px solid var(--line);padding-top:12px}
+.stat .n{font-size:44px;font-weight:800;letter-spacing:-.04em;line-height:1}
+.stat p{color:var(--mute);font-size:14px;margin-top:4px}
+
+/* motion */
+.motion{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px}
+.mcard{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:20px;display:grid;gap:14px;align-content:space-between;min-height:260px}
+.mcard h3{font-size:20px;letter-spacing:-.02em}
+.mcard p{color:var(--mute);font-size:14px}
+.mcard .stage{height:120px;display:grid;place-items:center;position:relative}
+.mcard button.replay{justify-self:start;font:500 12px var(--mono);border:1px solid var(--line);background:transparent;color:var(--fg);border-radius:99px;padding:8px 12px;cursor:pointer}
+/* 1 send */
+.pulse{display:flex;gap:5px;align-items:center;height:80px}
+.pulse i{width:8px;height:60px;background:var(--fg);border-radius:99px;transform:scaleY(.15);transform-origin:center}
+.m1.go .pulse i{animation:flat 2.6s ease-in-out forwards}
+.pulse i:nth-child(2n){animation-delay:.05s!important}.pulse i:nth-child(3n){animation-delay:.1s!important}
+@keyframes flat{0%{transform:scaleY(.15)}20%{transform:scaleY(1)}40%{transform:scaleY(.5)}55%{transform:scaleY(.8)}80%,100%{transform:scaleY(.06);background:var(--ok)}}
+/* 2 status */
+.pill{display:inline-flex;align-items:center;gap:8px;font:600 14px var(--display);border-radius:99px;padding:10px 16px;background:var(--bg);border:1.5px solid var(--line);overflow:hidden;position:relative;height:42px;min-width:190px}
+.pill span{position:absolute;left:16px;right:16px;white-space:nowrap;transition:transform .5s cubic-bezier(.5,0,.2,1),opacity .4s}
+.pill .a{transform:translateY(0)}.pill .b{transform:translateY(120%);opacity:0}
+.m2.go .pill{animation:pillbg 3s forwards}
+.m2.go .pill .a{transform:translateY(-120%);opacity:0;transition-delay:.6s}
+.m2.go .pill .b{transform:translateY(0);opacity:1;transition-delay:.6s}
+@keyframes pillbg{0%,20%{background:var(--bg)}40%,100%{background:var(--sig);color:var(--on-sig);border-color:var(--sig)}}
+/* 3 notification */
+.notif{width:100%;max-width:260px;background:var(--bg);border:1px solid var(--line);border-radius:18px;padding:12px;display:flex;gap:10px;align-items:center;transform:translateY(-130%);opacity:0}
+.notif svg{width:34px;flex:none;border-radius:9px;background:var(--sig);padding:4px}
+.notif b{font-size:13px;display:block}.notif span{font-size:12px;color:var(--mute)}
+.m3.go .notif{animation:drop 3.4s cubic-bezier(.2,1.3,.4,1) forwards}
+@keyframes drop{0%{transform:translateY(-130%);opacity:0}18%{transform:translateY(0);opacity:1}22%{transform:translateX(-4px)}26%{transform:translateX(4px)}30%{transform:translateX(0)}85%{transform:translateY(0);opacity:1}100%{transform:translateY(-130%);opacity:0}}
+
+.notes{margin-top:72px;border-top:1px solid var(--line);padding-top:20px;color:var(--mute);font-size:13px;max-width:70ch}
+.themebtn{position:fixed;right:max(12px,env(safe-area-inset-right,0px));top:calc(12px + env(safe-area-inset-top,0px));z-index:20;font:500 12px var(--mono);border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:99px;padding:8px 12px;cursor:pointer}
+
+@media (max-width:860px){
+  .hero,.product,.pattern{grid-template-columns:1fr}
+  .product{gap:32px}
+  .logo-stage{max-width:420px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+  .pulse i{transform:scaleY(.4)}
+}
+</style>
+
+<button class="themebtn" id="themebtn" type="button">Light / Dark</button>
+
+<div class="wrap">
+
+<!-- ============ BRAND ============ -->
+<header class="hero">
+  <div>
+    <div class="eyebrow">Noise complaints, with closure</div>
+    <h1 style="margin-top:18px">Copy <em>That.</em></h1>
+    <p class="lede">New York files about 610,000 noise complaints a year. Copy That makes sure every one gets an answer.</p>
+    <div class="marks">
+      <div class="chip">
+        <svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#FFD21F"/><g fill="#101216"><rect x="9" y="14" width="7" height="36" rx="3.5"/><rect x="19" y="22" width="7" height="20" rx="3.5"/><rect x="29" y="27" width="7" height="10" rx="3.5"/></g><path d="M40 33l6 6 11-14" fill="none" stroke="#101216" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        App icon
+      </div>
+      <div class="chip"><span style="font-weight:800;letter-spacing:-.04em;font-size:20px">copy that.</span> Wordmark</div>
+    </div>
+    <div class="sw" aria-label="Palette">
+      <span style="background:#FFD21F;color:#101216;border-color:#FFD21F">Taxi yellow #FFD21F</span>
+      <span style="background:#101216;color:#fff;border-color:#101216">Night ink #101216</span>
+      <span style="background:#2742e6;color:#fff;border-color:#2742e6">Quiet blue #2742E6</span>
+      <span style="background:#1b7f47;color:#fff;border-color:#1b7f47">Closed green #1B7F47</span>
+    </div>
+  </div>
+  <div class="logo-stage play" id="logoStage">
+    <svg viewBox="0 0 120 80" role="img" aria-label="Sound bars shrinking into a check mark">
+      <g>
+        <rect class="bar" x="8"  y="10" width="13" height="60" rx="6.5"/>
+        <rect class="bar" x="28" y="26" width="13" height="28" rx="6.5"/>
+        <rect class="bar" x="48" y="34" width="13" height="12" rx="6.5"/>
+      </g>
+      <path class="tick" d="M70 42l13 13 26-30"/>
+    </svg>
+    <button type="button" id="logoToggle">Pause</button>
+  </div>
+</header>
+
+<section>
+  <div class="sec-head">
+    <div class="eyebrow">Name &amp; mark</div>
+    <h2>"Copy that" is how you tell someone they were heard.</h2>
+    <p>Radio operators say it to confirm a message arrived. The mark is a loud wave that decays into a tick. The complaint gets quieter, then it gets closed. The same tick ends every status in the product.</p>
+  </div>
+</section>
+
+<section style="padding-top:24px">
+  <div class="posters">
+    <div>
+      <div class="poster" role="img" aria-label="Poster: Loud in. Answered out.">
+        <div class="small">NYC 311 · Noise</div>
+        <div class="big">Loud<br>in.<br><s>Answered</s><br>out.</div>
+        <div class="foot">
+          <div class="mid">You report it once. You hear back every time.</div>
+          <div class="stamp">Copy that.</div>
+        </div>
+      </div>
+      <div class="cap">Poster A · street / subway</div>
+    </div>
+    <div>
+      <div class="poster ink" role="img" aria-label="Poster: 610,000 complaints a year. How many replies?">
+        <div class="small">Every year, in New York</div>
+        <div>
+          <div class="big" style="font-size:26cqw">610K</div>
+          <div class="mid" style="margin-top:3cqw">noise complaints. How many got a reply?</div>
+        </div>
+        <div>
+          <div class="wave" aria-hidden="true" id="posterWave"></div>
+          <div class="foot" style="margin-top:3cqw"><div class="small">Copy That</div><div class="small">Now you will.</div></div>
+        </div>
+      </div>
+      <div class="cap">Poster B · bus shelter / stoop flyer</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PRODUCT ============ -->
+<section id="product">
+  <div class="sec-head">
+    <div class="eyebrow">Product</div>
+    <h2>A delivery tracker for being listened to.</h2>
+    <p>Tap the tabs. Hold the button to measure. Send a report, then step time forward to see what the city does with it. All names, places and numbers are examples.</p>
+  </div>
+
+  <div class="product">
+    <div class="phone">
+      <div class="screen">
+        <div class="toast" id="toast" role="status">
+          <svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#FFD21F"/><path d="M16 33l11 11 22-26" fill="none" stroke="#101216" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <div><b>Copy that.</b> Case NC-48213 is logged. We'll reply by 9 AM.</div>
+        </div>
+        <div class="status"><span>11:07 PM</span><span>Copy That</span></div>
+        <div class="tabs" role="tablist">
+          <button role="tab" aria-selected="true" data-tab="report">Report</button>
+          <button role="tab" aria-selected="false" data-tab="track">Track</button>
+          <button role="tab" aria-selected="false" data-tab="block">My block</button>
+        </div>
+
+        <div class="pane on" id="p-report">
+          <h3>What are you hearing?</h3>
+          <div class="sub">Ten seconds. We take it from here.</div>
+          <div class="types" id="types">
+            <button type="button" aria-pressed="true">Music / party</button>
+            <button type="button" aria-pressed="false">Construction</button>
+            <button type="button" aria-pressed="false">Car / horn</button>
+            <button type="button" aria-pressed="false">Neighbors</button>
+            <button type="button" aria-pressed="false">AC / vents</button>
+            <button type="button" aria-pressed="false">Bar / club</button>
+          </div>
+          <div class="loc"><span class="pin"></span><div><b>Near Bedford Ave &amp; N 6 St</b><span class="sub">Apt 3R · Brooklyn · located automatically</span></div></div>
+          <div class="meter">
+            <div class="row"><span class="sub">Hold to measure at your window</span><span class="sub">example</span></div>
+            <div class="row"><span class="db" id="db">-- dB</span><div class="bars" id="bars" style="width:55%"></div></div>
+            <button class="hold" id="hold" type="button">Hold to listen</button>
+          </div>
+          <button class="send" id="send" type="button">Send it</button>
+        </div>
+
+        <div class="pane" id="p-track">
+          <div class="eyebrow">Case NC-48213</div>
+          <h3 id="trkTitle">Officer on the way</h3>
+          <div class="sub" id="trkSub">Music / party · Near Bedford Ave &amp; N 6 St</div>
+          <ol class="tl" id="tl"></ol>
+          <div class="outcome" id="outcome">
+            <h4>Closed. Music stopped at 11:58 PM.</h4>
+            <p>Officer measured 71 dB at your window, over the night limit. A summons was issued to the unit upstairs. This is the 3rd report at this address in 30 days, so it is now flagged.</p>
+            <div class="fb"><button type="button" id="quiet">It's quiet now</button><button type="button" id="loud">Still loud</button></div>
+            <p id="fbmsg" style="margin-top:10px;display:none"></p>
+          </div>
+          <div class="sim"><button type="button" id="adv">Skip ahead 15 min</button><button type="button" id="rst">Reset</button></div>
+        </div>
+
+        <div class="pane" id="p-block">
+          <div class="eyebrow">Bedford Ave &amp; N 6 St · last 30 days</div>
+          <h3>You're not alone.</h3>
+          <div class="blockcard">
+            <div class="n">9 <span class="sub" style="font:500 14px var(--display)">neighbors reported 31 times</span></div>
+            <p class="sub">One address, mostly after 10 PM. Three or more reports in 30 days sends it to a repeat-location team instead of a fresh case each time.</p>
+            <div class="minimap" id="minimap" aria-hidden="true"></div>
+          </div>
+          <div class="blockcard">
+            <b>What changed on your block</b>
+            <p class="sub" style="margin-top:6px">Oct 3 · Warning issued<br>Oct 17 · Summons issued<br>Oct 27 · Case closed, flagged for follow-up visit</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="side">
+      <div class="beats">
+        <div class="beat"><div class="k">REPORT</div><div><h3>Faster than typing a paragraph</h3><p>Pick a sound, hold to measure, send. Location, time and the reading travel with it, so an officer knows what to look for.</p></div></div>
+        <div class="beat"><div class="k">TRACK</div><div><h3>Five stages, plain words</h3><p>Heard, matched, dispatched, on scene, closed. Every change sends one text. Silence is never the status.</p></div></div>
+        <div class="beat"><div class="k">PATTERN</div><div><h3>Your report counts toward something</h3><p>Reports from the same block and address are grouped. Repeat addresses get escalated so one neighbor does not carry the whole case.</p></div></div>
+        <div class="beat"><div class="k">CLOSURE</div><div><h3>The last word is yours</h3><p>The outcome says what the city did. You answer "quiet now" or "still loud". Still loud reopens the case with the first one on file.</p></div></div>
+      </div>
+      <div>
+        <div class="eyebrow" style="margin-bottom:10px">No app? Same service by text</div>
+        <div class="sms">
+          <div class="me">loud music 3R bedford</div>
+          <div class="city">Copy that. Case NC-48213. Reply STATUS anytime.</div>
+          <div class="city">Officer is 15 min away. You are 1 of 9 reports at this address.</div>
+          <div class="city">Closed 11:58 PM. Summons issued. Quiet now? Reply YES or NO.</div>
+          <div class="me">YES</div>
+          <small>Example thread</small>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PATTERN ============ -->
+<section>
+  <div class="sec-head">
+    <div class="eyebrow">Seeing the pattern</div>
+    <h2>The loud block gets a name, not 31 separate tickets.</h2>
+    <p>Each square is a block. Darker means more reports in the last 30 days. Tap a block to read it. The yellow ring is the repeat location from the phone above.</p>
+  </div>
+  <div class="pattern">
+    <div class="cityMap">
+      <svg viewBox="0 0 520 300" id="cmap" role="img" aria-label="Example heat map of noise reports by block"></svg>
+      <div class="legend"><span>Fewer</span><i style="background:var(--l1)"></i><i style="background:var(--l2)"></i><i style="background:var(--l3)"></i><i style="background:var(--l4)"></i><span>More reports</span><span style="margin-left:auto">Example data</span></div>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="n" id="sBlock">Pick a block</div><p id="sBlockP">Tap a square on the map to see its reports and what happened.</p></div>
+      <div class="stat"><div class="n">48 h</div><p>Target from first report to a written outcome. The tracker shows the clock.</p></div>
+      <div class="stat"><div class="n">3+</div><p>Reports at one address in 30 days moves it to the repeat-location queue.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MOTION ============ -->
+<section>
+  <div class="sec-head">
+    <div class="eyebrow">Motion</div>
+    <h2>Three moments, each one ends in a tick.</h2>
+    <p>The logo animation above is the master. These three apply the same grammar inside the product: loud, then settled, then confirmed.</p>
+  </div>
+  <div class="motion">
+    <div class="mcard m1" id="m1">
+      <div class="stage"><div class="pulse" id="pulse"></div></div>
+      <div><h3>Sent</h3><p>The complaint leaves as a wave and goes flat. Flat means it landed.</p></div>
+      <button class="replay" type="button" data-m="m1">Replay</button>
+    </div>
+    <div class="mcard m2" id="m2">
+      <div class="stage"><div class="pill"><span class="a">Officer on the way</span><span class="b">On scene now</span></div></div>
+      <div><h3>Status change</h3><p>The old label rolls up, the new one rolls in, and the pill fills yellow once.</p></div>
+      <button class="replay" type="button" data-m="m2">Replay</button>
+    </div>
+    <div class="mcard m3" id="m3">
+      <div class="stage">
+        <div class="notif"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M16 33l11 11 22-26" fill="none" stroke="#101216" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg><div><b>Case closed, 11:58 PM</b><span>Summons issued. Is it quiet now?</span></div></div>
+      </div>
+      <div><h3>Someone listened</h3><p>The notification drops in with a small shake, like a knock at the door.</p></div>
+      <button class="replay" type="button" data-m="m3">Replay</button>
+    </div>
+  </div>
+</section>
+
+<div class="notes">
+  Concept board built for the noise complaint design challenge. Sources: the 610,000 yearly figure comes from the brief (NYC Open Data, 311). Case numbers, addresses, readings, neighbor counts and the 48 hour target are invented examples to show the experience, not real city data or commitments. Copy That is a concept and is not affiliated with NYC 311.
+</div>
+</div>
+
+<script>
+(function(){
+  var $=function(s,r){return (r||document).querySelector(s)}, $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
+
+  // theme toggle
+  $('#themebtn').addEventListener('click',function(){
+    var r=document.documentElement, dark=r.dataset.theme?r.dataset.theme==='dark':matchMedia('(prefers-color-scheme: dark)').matches;
+    r.dataset.theme=dark?'light':'dark';
+  });
+
+  // logo pause/play
+  var ls=$('#logoStage'), lt=$('#logoToggle');
+  lt.addEventListener('click',function(){var p=ls.classList.toggle('play');lt.textContent=p?'Pause':'Play'});
+
+  // poster wave
+  var pw=$('#posterWave'), hs=[.9,.5,.75,.3,.6,.2,.4,.15,.25,.1,.12,.08];
+  hs.forEach(function(h){var i=document.createElement('i');i.style.height=(h*100)+'%';pw.appendChild(i)});
+
+  // tabs
+  function tab(n){
+    $$('.tabs button').forEach(function(b){b.setAttribute('aria-selected',b.dataset.tab===n)});
+    $$('.pane').forEach(function(p){p.classList.toggle('on',p.id==='p-'+n)});
+  }
+  $$('.tabs button').forEach(function(b){b.addEventListener('click',function(){tab(b.dataset.tab)})});
+
+  // types
+  $$('#types button').forEach(function(b){b.addEventListener('click',function(){
+    $$('#types button').forEach(function(x){x.setAttribute('aria-pressed','false')});
+    b.setAttribute('aria-pressed','true');
+    $('#trkSub').textContent=b.textContent+' · Near Bedford Ave & N 6 St';
+  })});
+
+  // db meter (simulated, no microphone)
+  var bars=$('#bars'); for(var i=0;i<14;i++){bars.appendChild(document.createElement('i'))}
+  var meterT=null, hold=$('#hold');
+  function tickMeter(){
+    var v=62+Math.random()*20, lit=Math.round((v-55)/30*14);
+    $('#db').textContent=Math.round(v)+' dB';
+    $$('i',bars).forEach(function(b,k){var on=k<lit;b.style.height=(on?25+k*5:18)+'%';b.style.background=on?(k>9?'var(--quiet)':'var(--fg)'):'var(--line)'});
+  }
+  function startM(e){e.preventDefault();if(meterT)return;hold.textContent='Listening...';tickMeter();meterT=setInterval(tickMeter,140)}
+  function stopM(){if(!meterT)return;clearInterval(meterT);meterT=null;hold.textContent='Hold to listen'}
+  hold.addEventListener('pointerdown',startM);
+  ['pointerup','pointerleave','pointercancel'].forEach(function(ev){hold.addEventListener(ev,stopM)});
+  hold.addEventListener('keydown',function(e){if(e.key===' '||e.key==='Enter'){startM(e)}});
+  hold.addEventListener('keyup',stopM);
+
+  // tracker
+  var stages=[
+    {t:'Heard',d:'Copy that. Your report is in.',ti:'Logged · 11:07 PM'},
+    {t:'Matched',d:'Joined 8 other reports at this address.',ti:'11:09 PM'},
+    {t:'Officer dispatched',d:'Unit from the 94th Precinct, about 15 min away.',ti:'11:21 PM'},
+    {t:'On scene',d:'Officer measuring at your window.',ti:'11:44 PM'},
+    {t:'Closed',d:'Outcome sent to you in writing.',ti:'11:58 PM'}
+  ];
+  var cur=2, titles=['Heard','Matched','Officer on the way','Officer on scene','Closed. Here is what happened.'];
+  function renderTL(){
+    var ol=$('#tl'); ol.innerHTML='';
+    stages.forEach(function(s,i){
+      var li=document.createElement('li'); li.className=i<cur?'done':i===cur?'now':'';
+      li.innerHTML='<div class="dot">'+(i<cur?'&#10003;':(i===cur&&cur===4?'&#10003;':''))+'</div><div><b>'+s.t+'</b>'+(i<=cur?'<span class="t">'+s.ti+'</span><p>'+s.d+'</p>':'')+'</div>';
+      ol.appendChild(li);
+    });
+    $('#trkTitle').textContent=titles[cur];
+    $('#outcome').classList.toggle('on',cur===4);
+    $('#adv').disabled=cur===4; $('#adv').style.opacity=cur===4?.4:1;
+    $('#fbmsg').style.display='none';
+  }
+  $('#adv').addEventListener('click',function(){if(cur<4){cur++;renderTL()}});
+  $('#rst').addEventListener('click',function(){cur=0;renderTL()});
+  function fb(msg){var m=$('#fbmsg');m.textContent=msg;m.style.display='block'}
+  $('#quiet').addEventListener('click',function(){fb('Thank you. We will check this address again in 7 days.')});
+  $('#loud').addEventListener('click',function(){fb('Reopened. Your first report is attached and the case moves to the top of the queue.')});
+  renderTL();
+
+  // send
+  var toastT;
+  $('#send').addEventListener('click',function(){
+    stopM(); cur=0; renderTL();
+    var t=$('#toast'); t.classList.add('on'); clearTimeout(toastT);
+    toastT=setTimeout(function(){t.classList.remove('on');tab('track')},1800);
+  });
+
+  // minimap on phone
+  var mm=$('#minimap'); for(var i=0;i<50;i++){var c=document.createElement('i'); var h=(i*37+11)%7; c.style.background=i===23?'var(--sig)':'color-mix(in srgb,var(--fg) '+(6+h*4)+'%,var(--card))'; if(i===23)c.style.boxShadow='0 0 0 2px var(--fg)'; mm.appendChild(c)}
+
+  // city map
+  var lv=['#','#','#','#'];
+  var root=document.documentElement;
+  var svg=$('#cmap'), cols=20, rows=12, size=24, gap=2, ox=10, oy=6, sel=null;
+  var names=['Bedford Ave','Metropolitan','Graham Ave','Lorimer St','Driggs Ave','Union Ave','Nassau Ave','Manhattan Ave'];
+  function val(x,y){var n=Math.sin(x*12.9898+y*78.233)*43758.5453; n=n-Math.floor(n); var d=Math.hypot(x-7,y-5), d2=Math.hypot(x-15,y-8); var heat=Math.max(0,1-d/6)*.9+Math.max(0,1-d2/4)*.6; return Math.min(1,heat+n*.3)}
+  var cells=[];
+  for(var y=0;y<rows;y++)for(var x=0;x<cols;x++){
+    var v=val(x,y), lvl=v<.2?0:v<.45?1:v<.7?2:3, count=Math.round(v*38);
+    var r=document.createElementNS('http://www.w3.org/2000/svg','rect');
+    r.setAttribute('x',ox+x*(size+gap)); r.setAttribute('y',oy+y*(size+gap)); r.setAttribute('width',size); r.setAttribute('height',size); r.setAttribute('rx',4);
+    r.setAttribute('class','cell l'+lvl); r.setAttribute('tabindex','0'); r.setAttribute('role','button');
+    r.setAttribute('aria-label','Block '+(x+1)+','+(y+1)+': '+count+' reports');
+    (function(r,x,y,count,lvl){
+      function pick(){
+        if(sel)sel.setAttribute('stroke','none'); sel=r; r.setAttribute('stroke','currentColor'); r.setAttribute('stroke-width',2);
+        $('#sBlock').textContent=count+' reports';
+        $('#sBlockP').textContent=names[(x+y)%names.length]+' area · '+(lvl>=2?'Repeat location queue, '+Math.max(1,Math.round(count/8))+' addresses flagged':'No repeat addresses')+' · '+Math.round(count*.82)+' closed with an outcome';
+      }
+      r.addEventListener('click',pick); r.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();pick()}});
+    })(r,x,y,count,lvl);
+    svg.appendChild(r);
+  }
+  var ring=document.createElementNS('http://www.w3.org/2000/svg','rect');
+  ring.setAttribute('x',ox+7*(size+gap)-3); ring.setAttribute('y',oy+5*(size+gap)-3); ring.setAttribute('width',size+6); ring.setAttribute('height',size+6); ring.setAttribute('rx',7); ring.setAttribute('fill','none'); ring.setAttribute('stroke','#FFD21F'); ring.setAttribute('stroke-width',3); ring.setAttribute('pointer-events','none');
+  svg.appendChild(ring);
+
+  // motion cards
+  var p=$('#pulse'); for(var i=0;i<22;i++){p.appendChild(document.createElement('i'))}
+  function play(id){var el=document.getElementById(id); el.classList.remove('go'); void el.offsetWidth; el.classList.add('go')}
+  $$('.replay').forEach(function(b){b.addEventListener('click',function(){play(b.dataset.m)})});
+  ['m1','m2','m3'].forEach(function(id,i){setTimeout(function(){play(id)},400+i*300)});
+})();
+</script>
+<style>
+:root{--l1:#d9dde3;--l2:#a9b3ff;--l3:#6b7dff;--l4:#2742e6}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--l1:#222831;--l2:#364290;--l3:#5568e6;--l4:#9aaaff}}
+:root[data-theme="dark"]{--l1:#222831;--l2:#364290;--l3:#5568e6;--l4:#9aaaff}
+.cell{cursor:pointer;color:var(--fg)}
+.cell.l0{fill:var(--l1)}.cell.l1{fill:var(--l2)}.cell.l2{fill:var(--l3)}.cell.l3{fill:var(--l4)}
+.cell:hover{opacity:.8}
+</style>
