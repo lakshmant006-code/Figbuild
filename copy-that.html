@@ -364,7 +364,7 @@ section{padding-top:72px}
   <div class="sec-head">
     <div class="eyebrow">Seeing the pattern</div>
     <h2>The loud block gets a name, not 31 separate tickets.</h2>
-    <p>Each hexagon is about 150 m across. Yellower means more reports in the last 30 days. The buildings are the real NYC 3D Building Model. Click a hexagon to read it, drag to pan, right-drag to tilt. The yellow ring is the repeat location from the phone above.</p>
+    <p>Each hexagon is about 150 m across. Yellower means more reports in the last 30 days. The buildings are the real NYC 3D Building Model. Zoom in close and the buildings gain windows. Click a hexagon to read it, drag to pan, right-drag to tilt. The yellow ring is the repeat location from the phone above.</p>
   </div>
   <div class="pattern">
     <div class="cityMap">
@@ -540,17 +540,46 @@ section{padding-top:72px}
     $('#sBlockP').textContent=nm+' area \u00b7 '+(count>=25?'Repeat location queue, '+Math.max(1,Math.round(count/14))+' addresses flagged':'No repeat addresses')+' \u00b7 '+Math.round(count*.82)+' closed with an outcome';
     draw();
   }
+  // Close-up detail: procedural window grid and roof tint on the real building surfaces, faded in as you zoom.
+  var detailAmt=0;
+  class DetailExt extends deck.LayerExtension{
+    getShaders(){return {inject:{
+      'vs:#decl':'varying vec3 vWp; varying vec3 vNn;',
+      'vs:#main-end':'vWp=positions; vNn=normals;',
+      'fs:#decl':'uniform float detailAmt; varying vec3 vWp; varying vec3 vNn;\nfloat h21(vec2 p){return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453);}',
+      'fs:DECKGL_FILTER_COLOR':`
+        if(detailAmt>0.0){
+          if(abs(vNn.z)<0.35){
+            vec2 t=normalize(vec2(-vNn.y,vNn.x));
+            float u=dot(vWp.xy,t)/3.1, v=vWp.z/3.3;
+            vec2 id=floor(vec2(u,v)); vec2 f=fract(vec2(u,v));
+            float win=step(0.22,f.x)*step(f.x,0.78)*step(0.28,f.y)*step(f.y,0.78)*step(3.4,vWp.z);
+            float lit=step(0.78,h21(id+floor(vWp.xy*0.01)));
+            vec3 glass=mix(vec3(0.07,0.09,0.15),vec3(1.0,0.82,0.45),lit);
+            float sill=step(f.y,0.28)*step(0.22,f.x)*step(f.x,0.78)*0.10;
+            color.rgb=mix(color.rgb,glass,win*detailAmt*0.92)-sill*detailAmt;
+            color.rgb*=1.0-0.12*detailAmt*step(0.92,f.y);
+          } else if(vNn.z>0.7){
+            vec2 g=fract(vWp.xy/1.2);
+            color.rgb*=1.0-detailAmt*0.10*step(0.94,max(g.x,g.y));
+          }
+        }`
+    }}}
+    draw(params,extension){this.state.model.setUniforms({detailAmt:extension.opts.amount||0})}
+  }
+  DetailExt.extensionName='DetailExt';DetailExt.componentName='DetailExt';
   function layers(){
     return [
       new deck.PathLayer({id:'streets',data:streets,getPath:function(d){return d.path},getColor:[58,66,84],getWidth:2,widthUnits:'pixels'}),
-      new deck.HexagonLayer({id:'hex',data:pts,getPosition:function(d){return d.p},radius:90,extruded:false,coverage:.92,opacity:.9,colorRange:range,upperPercentile:100,pickable:true,autoHighlight:true,highlightColor:[255,255,255,90],onClick:pick}),
-      is3d&&cityMesh?cityMesh.map(function(m,i){return new deck.SimpleMeshLayer({id:'nyc3d-'+i,data:[{}],mesh:m,getPosition:[0,0,0],coordinateSystem:deck.COORDINATE_SYSTEM.METER_OFFSETS,coordinateOrigin:[MA[0],MA[1],0],getColor:[[112,122,156,255],[150,160,198,255],[214,220,240,255]][i],pickable:false,material:{ambient:.38,diffuse:.85,shininess:6,specularColor:[40,44,60]}})}):[],
+      new deck.HexagonLayer({id:'hex',data:pts,getPosition:function(d){return d.p},radius:90,extruded:false,coverage:.92,opacity:.9-.7*detailAmt,colorRange:range,upperPercentile:100,pickable:true,autoHighlight:true,highlightColor:[255,255,255,90],onClick:pick}),
+      is3d&&cityMesh?cityMesh.map(function(m,i){return new deck.SimpleMeshLayer({id:'nyc3d-'+i,data:[{}],mesh:m,getPosition:[0,0,0],coordinateSystem:deck.COORDINATE_SYSTEM.METER_OFFSETS,coordinateOrigin:[MA[0],MA[1],0],getColor:[[112,122,156,255],[150,160,198,255],[214,220,240,255]][i],extensions:detailAmt>0?[new DetailExt({amount:detailAmt})]:[],pickable:false,material:{ambient:.38,diffuse:.85,shininess:6,specularColor:[40,44,60]}})}):[],
       new deck.ScatterplotLayer({id:'ring',data:[{p:HOT}],getPosition:function(d){return d.p},getRadius:120,radiusUnits:'meters',stroked:true,filled:false,getLineColor:[255,210,31],lineWidthMinPixels:3})
     ].reduce(function(a,l){return a.concat(l)},[]).filter(Boolean);
   }
   function draw(){if(deckInst)deckInst.setProps({layers:layers()})}
   try{
-    deckInst=new deck.Deck({parent:$('#deckmap'),initialViewState:INITIAL,controller:true,layers:layers(),
+    deckInst=new deck.Deck({parent:$('#deckmap'),initialViewState:INITIAL,controller:{maxZoom:19.5,minZoom:12},layers:layers(),
+      onViewStateChange:function(e){var z=e.viewState.zoom,a=z<16.6?0:z>17.6?1:(z-16.6);a=Math.round(a*4)/4;if(a!==detailAmt){detailAmt=a;draw()}},
       getTooltip:function(i){return i.object&&i.object.count?{text:i.object.count+' reports in this hexagon',style:{font:'12px IBM Plex Mono, monospace',background:'#171b23',color:'#f1f2f4',padding:'6px 8px',borderRadius:'8px'}}:null}});
     $('#tilt').addEventListener('click',function(){is3d=!is3d;this.setAttribute('aria-pressed',is3d);this.textContent=is3d?'3D':'2D';deckInst.setProps({initialViewState:Object.assign({},INITIAL,{pitch:is3d?50:0,bearing:is3d?-18:0,transitionDuration:600}),layers:layers()})});
     $('#reset').addEventListener('click',function(){deckInst.setProps({initialViewState:Object.assign({},INITIAL,{pitch:is3d?50:0,bearing:is3d?-18:0,transitionDuration:600})})});
