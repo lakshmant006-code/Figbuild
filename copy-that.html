@@ -183,6 +183,11 @@ section{padding-top:72px}
   *,*::before,*::after{animation:none!important;transition:none!important}
   .pulse i{transform:scaleY(.4)}
 }
+.deckwrap{position:relative;height:440px;border-radius:12px;overflow:hidden;background:#0d1016}
+#deckmap{position:absolute;inset:0}
+.mapctl{position:absolute;right:10px;top:10px;display:flex;gap:6px;z-index:2}
+.mapctl button{font:500 11px var(--mono);border:1px solid #3a4150;background:#171b23;color:#f1f2f4;border-radius:99px;padding:7px 11px;cursor:pointer}
+.deckfail{position:absolute;inset:0;display:grid;place-items:center;color:#9aa1ad;font:500 13px var(--mono);padding:20px;text-align:center}
 </style>
 
 <button class="themebtn" id="themebtn" type="button">Light / Dark</button>
@@ -359,12 +364,12 @@ section{padding-top:72px}
   <div class="sec-head">
     <div class="eyebrow">Seeing the pattern</div>
     <h2>The loud block gets a name, not 31 separate tickets.</h2>
-    <p>Each square is a block. Darker means more reports in the last 30 days. Tap a block to read it. The yellow ring is the repeat location from the phone above.</p>
+    <p>Each hexagon is about 150 m across. Taller and yellower means more reports in the last 30 days. Click a hexagon to read it, drag to pan, right-drag to tilt. The yellow ring is the repeat location from the phone above.</p>
   </div>
   <div class="pattern">
     <div class="cityMap">
-      <svg viewBox="0 0 520 300" id="cmap" role="img" aria-label="Example heat map of noise reports by block"></svg>
-      <div class="legend"><span>Fewer</span><i style="background:var(--l1)"></i><i style="background:var(--l2)"></i><i style="background:var(--l3)"></i><i style="background:var(--l4)"></i><span>More reports</span><span style="margin-left:auto">Example data</span></div>
+      <div class="deckwrap"><div id="deckmap" role="img" aria-label="Example 3D map of noise reports by area, built with deck.gl"></div><div class="mapctl"><button type="button" id="tilt" aria-pressed="true">3D</button><button type="button" id="reset">Reset view</button></div></div>
+      <div class="legend"><span>Fewer</span><i style="background:#364290"></i><i style="background:#4d5fd8"></i><i style="background:#9aa8ff"></i><i style="background:#FFD21F"></i><span>More reports</span><span style="margin-left:auto">Example data</span></div>
     </div>
     <div class="stats">
       <div class="stat"><div class="n" id="sBlock">Pick a block</div><p id="sBlockP">Tap a square on the map to see its reports and what happened.</p></div>
@@ -407,6 +412,7 @@ section{padding-top:72px}
 </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/deck.gl@8.9.35/dist.min.js"></script>
 <script>
 (function(){
   var $=function(s,r){return (r||document).querySelector(s)}, $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
@@ -493,32 +499,43 @@ section{padding-top:72px}
   // minimap on phone
   var mm=$('#minimap'); for(var i=0;i<50;i++){var c=document.createElement('i'); var h=(i*37+11)%7; c.style.background=i===23?'var(--sig)':'color-mix(in srgb,var(--fg) '+(6+h*4)+'%,var(--card))'; if(i===23)c.style.boxShadow='0 0 0 2px var(--fg)'; mm.appendChild(c)}
 
-  // city map
-  var lv=['#','#','#','#'];
-  var root=document.documentElement;
-  var svg=$('#cmap'), cols=20, rows=12, size=24, gap=2, ox=10, oy=6, sel=null;
-  var names=['Bedford Ave','Metropolitan','Graham Ave','Lorimer St','Driggs Ave','Union Ave','Nassau Ave','Manhattan Ave'];
-  function val(x,y){var n=Math.sin(x*12.9898+y*78.233)*43758.5453; n=n-Math.floor(n); var d=Math.hypot(x-7,y-5), d2=Math.hypot(x-15,y-8); var heat=Math.max(0,1-d/6)*.9+Math.max(0,1-d2/4)*.6; return Math.min(1,heat+n*.3)}
-  var cells=[];
-  for(var y=0;y<rows;y++)for(var x=0;x<cols;x++){
-    var v=val(x,y), lvl=v<.2?0:v<.45?1:v<.7?2:3, count=Math.round(v*38);
-    var r=document.createElementNS('http://www.w3.org/2000/svg','rect');
-    r.setAttribute('x',ox+x*(size+gap)); r.setAttribute('y',oy+y*(size+gap)); r.setAttribute('width',size); r.setAttribute('height',size); r.setAttribute('rx',4);
-    r.setAttribute('class','cell l'+lvl); r.setAttribute('tabindex','0'); r.setAttribute('role','button');
-    r.setAttribute('aria-label','Block '+(x+1)+','+(y+1)+': '+count+' reports');
-    (function(r,x,y,count,lvl){
-      function pick(){
-        if(sel)sel.setAttribute('stroke','none'); sel=r; r.setAttribute('stroke','currentColor'); r.setAttribute('stroke-width',2);
-        $('#sBlock').textContent=count+' reports';
-        $('#sBlockP').textContent=names[(x+y)%names.length]+' area · '+(lvl>=2?'Repeat location queue, '+Math.max(1,Math.round(count/8))+' addresses flagged':'No repeat addresses')+' · '+Math.round(count*.82)+' closed with an outcome';
-      }
-      r.addEventListener('click',pick); r.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();pick()}});
-    })(r,x,y,count,lvl);
-    svg.appendChild(r);
+  // city map (deck.gl, no basemap tiles: street grid is drawn from data)
+  var CENTER=[-73.9576,40.7178], HOT=[-73.9576,40.7178];
+  var INITIAL={longitude:-73.9565,latitude:40.7170,zoom:14.3,pitch:50,bearing:-18};
+  var names=['Bedford Ave','Metropolitan Ave','Grand St','N 6 St','Driggs Ave','Wythe Ave','Kent Ave','Roebling St'];
+  function rnd(seed){var x=Math.sin(seed*12.9898)*43758.5453;return x-Math.floor(x)}
+  var pts=[],k=0;
+  function cluster(c,n,sx,sy,w){for(var i=0;i<n;i++){k++;var a=rnd(k)*6.283,r=Math.sqrt(-2*Math.log(Math.max(.0001,rnd(k+777))));pts.push({p:[c[0]+Math.cos(a)*r*sx,c[1]+Math.sin(a)*r*sy],w:w||1})}}
+  cluster(HOT,150,.0011,.0008,1);cluster([-73.9488,40.7215],70,.0016,.0010,1);cluster([-73.9660,40.7140],60,.0014,.0011,1);cluster(CENTER,260,.0050,.0034,1);
+  var streets=[];
+  for(var i=-9;i<=9;i++){streets.push({path:[[CENTER[0]+i*.0017-.012,CENTER[1]-.008],[CENTER[0]+i*.0017+.012,CENTER[1]+.008]]})}
+  for(var j=-8;j<=8;j++){streets.push({path:[[CENTER[0]-.016,CENTER[1]+j*.0012-.003],[CENTER[0]+.016,CENTER[1]+j*.0012+.005]]})}
+  var range=[[54,66,144],[77,95,216],[125,140,255],[183,192,255],[255,210,31]];
+  var is3d=true, deckInst=null, picked=null;
+  function pick(info){
+    var o=info&&info.object; if(!o)return;
+    picked=o.index;
+    var count=o.count, nm=names[Math.abs(Math.round(o.position[0]*1e4+o.position[1]*1e4))%names.length];
+    $('#sBlock').textContent=count+' reports';
+    $('#sBlockP').textContent=nm+' area \u00b7 '+(count>=25?'Repeat location queue, '+Math.max(1,Math.round(count/14))+' addresses flagged':'No repeat addresses')+' \u00b7 '+Math.round(count*.82)+' closed with an outcome';
+    draw();
   }
-  var ring=document.createElementNS('http://www.w3.org/2000/svg','rect');
-  ring.setAttribute('x',ox+7*(size+gap)-3); ring.setAttribute('y',oy+5*(size+gap)-3); ring.setAttribute('width',size+6); ring.setAttribute('height',size+6); ring.setAttribute('rx',7); ring.setAttribute('fill','none'); ring.setAttribute('stroke','#FFD21F'); ring.setAttribute('stroke-width',3); ring.setAttribute('pointer-events','none');
-  svg.appendChild(ring);
+  function layers(){
+    return [
+      new deck.PathLayer({id:'streets',data:streets,getPath:function(d){return d.path},getColor:[58,66,84],getWidth:2,widthUnits:'pixels'}),
+      new deck.HexagonLayer({id:'hex',data:pts,getPosition:function(d){return d.p},radius:90,extruded:is3d,elevationScale:is3d?6:0,elevationRange:[0,300],coverage:.88,colorRange:range,upperPercentile:100,pickable:true,autoHighlight:true,highlightColor:[255,255,255,90],onClick:pick,material:{ambient:.6,diffuse:.6,shininess:20}}),
+      new deck.ScatterplotLayer({id:'ring',data:[{p:HOT}],getPosition:function(d){return d.p},getRadius:120,radiusUnits:'meters',stroked:true,filled:false,getLineColor:[255,210,31],lineWidthMinPixels:3})
+    ];
+  }
+  function draw(){if(deckInst)deckInst.setProps({layers:layers()})}
+  try{
+    deckInst=new deck.Deck({parent:$('#deckmap'),initialViewState:INITIAL,controller:true,layers:layers(),
+      getTooltip:function(i){return i.object&&i.object.count?{text:i.object.count+' reports in this hexagon',style:{font:'12px IBM Plex Mono, monospace',background:'#171b23',color:'#f1f2f4',padding:'6px 8px',borderRadius:'8px'}}:null}});
+    $('#tilt').addEventListener('click',function(){is3d=!is3d;this.setAttribute('aria-pressed',is3d);this.textContent=is3d?'3D':'2D';deckInst.setProps({initialViewState:Object.assign({},INITIAL,{pitch:is3d?50:0,bearing:is3d?-18:0,transitionDuration:600}),layers:layers()})});
+    $('#reset').addEventListener('click',function(){deckInst.setProps({initialViewState:Object.assign({},INITIAL,{pitch:is3d?50:0,bearing:is3d?-18:0,transitionDuration:600})})});
+  }catch(e){
+    var m=document.createElement('div');m.className='deckfail';m.textContent='This map needs WebGL, which is not available here.';$('#deckmap').appendChild(m);
+  }
 
   // motion cards
   var p=$('#pulse'); for(var i=0;i<22;i++){p.appendChild(document.createElement('i'))}
