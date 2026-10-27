@@ -1,419 +1,300 @@
-<title>Copy That</title>
+<title>HUSH</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400;12..96,75..100,600;12..96,75..100,800&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
-/* Layout: one long board. Brand -> poster -> phone product -> block pattern -> motion moment. Boldness lives in the signal yellow; everything else stays quiet. */
+/* Layout: one long scroll. Hero heartbeat -> interactive tracker -> three signature experiences (drop, ears map, silence) -> brand -> motion -> tracks.
+   Loud colors live in tangerine and butter; navy and off-white carry everything else. */
 :root{
-  --bg:#ECEEF1; --fg:#101216; --mute:#566; --card:#fff; --line:#d3d8de;
-  --sig:#FFD21F; --on-sig:#101216; --ok:#1b7f47; --quiet:#2742e6;
+  --bg:#FFF8EC; --fg:#141B3C; --mute:#5B6380; --card:#FFFFFF; --line:#EADFCB; --soft:#F6EBD6;
+  --navy:#141B3C; --tang:#FF7A1A; --butter:#FFD66B; --off:#FFF8EC; --calm:#3E7BFA;
   --display:'Bricolage Grotesque','Helvetica Neue',Arial,sans-serif;
   --mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
 }
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1013;--fg:#f1f2f4;--mute:#9aa1ad;--card:#171a1f;--line:#2a2f37;--ok:#46c37b;--quiet:#9aaaff;color-scheme:dark}}
-:root[data-theme="dark"]{--bg:#0e1013;--fg:#f1f2f4;--mute:#9aa1ad;--card:#171a1f;--line:#2a2f37;--ok:#46c37b;--quiet:#9aaaff;color-scheme:dark}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0E1430;--fg:#FFF8EC;--mute:#A9B0CF;--card:#18204A;--line:#2A3463;--soft:#1C2552;--calm:#8FB0FF;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0E1430;--fg:#FFF8EC;--mute:#A9B0CF;--card:#18204A;--line:#2A3463;--soft:#1C2552;--calm:#8FB0FF;color-scheme:dark}
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--fg);font:16px/1.5 var(--display);padding-block:0 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
-.wrap{max-width:1080px;margin:0 auto}
+.wrap{max-width:1100px;margin:0 auto}
 h1,h2,h3{font-weight:800;letter-spacing:-.03em;line-height:1;text-wrap:balance;margin:0}
 p{margin:0}
+button{font-family:inherit}
+:focus-visible{outline:3px solid var(--tang);outline-offset:2px}
 .eyebrow{font:500 12px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--mute)}
-section{padding-top:72px}
-.sec-head{display:grid;gap:12px;margin-bottom:28px;max-width:640px}
-.sec-head h2{font-size:clamp(30px,5vw,48px)}
-.sec-head p{color:var(--mute)}
-:focus-visible{outline:3px solid var(--quiet);outline-offset:2px}
+section{padding-top:88px}
+.sec-head{display:grid;gap:12px;margin-bottom:28px;max-width:660px}
+.sec-head h2{font-size:clamp(32px,5.4vw,56px);font-variation-settings:"wdth" 85}
+.sec-head p{color:var(--mute);font-size:18px}
+.num{font:500 13px var(--mono);color:var(--tang)}
+.btn{font:800 16px var(--display);border:0;border-radius:99px;padding:13px 20px;cursor:pointer;background:var(--tang);color:#141B3C;transition:transform .15s}
+.btn:active{transform:scale(.97)}
+.btn.ghost{background:transparent;color:var(--fg);border:2px solid var(--fg)}
+.chipbtn{font:600 14px var(--display);border:1.5px solid var(--line);background:var(--card);color:var(--fg);border-radius:99px;padding:8px 13px;cursor:pointer}
+.chipbtn[aria-pressed="true"]{background:var(--butter);color:#141B3C;border-color:var(--butter)}
+.themebtn{position:fixed;right:max(12px,env(safe-area-inset-right,0px));top:calc(12px + env(safe-area-inset-top,0px));z-index:20;font:500 12px var(--mono);border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:99px;padding:8px 12px;cursor:pointer}
 
 /* hero */
-.hero{display:grid;grid-template-columns:1.1fr .9fr;gap:32px;align-items:center;padding-top:40px}
-.hero h1{font-size:clamp(56px,11vw,128px);letter-spacing:-.05em}
-.hero h1 em{font-style:normal;background:var(--sig);color:var(--on-sig);padding:0 .08em;border-radius:6px}
-.hero p.lede{font-size:20px;max-width:30ch;margin-top:20px;color:var(--mute)}
-.logo-stage{aspect-ratio:1;background:var(--sig);border-radius:36px;display:grid;place-items:center;position:relative;overflow:hidden}
-.logo-stage svg{width:62%;height:auto;overflow:visible}
-.logo-stage button{position:absolute;right:14px;bottom:14px;font:500 12px var(--mono);background:var(--on-sig);color:var(--sig);border:0;border-radius:99px;padding:8px 14px;cursor:pointer}
-.bar{fill:var(--on-sig);transform-box:fill-box;transform-origin:center}
-.tick{fill:none;stroke:var(--on-sig);stroke-width:7;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:60;stroke-dashoffset:0}
-.logo-stage.play .bar{animation:loud 4.2s cubic-bezier(.3,.7,.2,1) infinite}
-.logo-stage.play .bar:nth-child(2){animation-delay:.06s}.logo-stage.play .bar:nth-child(3){animation-delay:.12s}.logo-stage.play .bar:nth-child(4){animation-delay:.18s}
-.logo-stage.play .tick{animation:draw 4.2s ease-out infinite}
-@keyframes loud{
-  0%{transform:scaleY(.2)}8%{transform:scaleY(2.4)}16%{transform:scaleY(.7)}24%{transform:scaleY(1.9)}34%{transform:scaleY(1.1)}46%{transform:scaleY(1.5)}58%,100%{transform:scaleY(1)}}
-@keyframes draw{0%,52%{stroke-dashoffset:60}66%,90%{stroke-dashoffset:0}100%{stroke-dashoffset:60}}
-.marks{display:flex;gap:12px;flex-wrap:wrap;margin-top:20px}
-.chip{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 14px;font-weight:600}
-.chip svg{width:28px;height:28px}
-.sw{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
-.sw span{font:500 11px var(--mono);padding:8px 10px;border-radius:8px;border:1px solid var(--line)}
+.hero{display:grid;grid-template-columns:1.05fr .95fr;gap:36px;align-items:center;padding-top:56px}
+.word{display:flex;align-items:center;gap:14px}
+.word svg{width:64px;height:64px;flex:none}
+.word b{font-size:30px;font-weight:800;letter-spacing:.02em}
+.hero h1{font-size:clamp(56px,10vw,124px);letter-spacing:-.05em;font-variation-settings:"wdth" 80;margin-top:22px}
+.hero h1 .hb{color:var(--tang)}
+.hero .lede{font-size:20px;color:var(--mute);max-width:34ch;margin-top:18px}
+.hero .ctas{display:flex;gap:10px;flex-wrap:wrap;margin-top:26px}
+.heroWave{background:var(--navy);border-radius:32px;aspect-ratio:1/1;max-width:100%;position:relative;overflow:hidden}
+.heroWave canvas{position:absolute;inset:0;width:100%;height:100%}
+.heroWave .tag{position:absolute;left:18px;bottom:16px;font:500 12px var(--mono);color:var(--butter)}
+.heroWave .tag2{position:absolute;right:18px;top:16px;font:500 12px var(--mono);color:#FFF8EC;opacity:.7}
 
-/* poster */
-.posters{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;align-items:start}
-.poster{aspect-ratio:3/4;background:var(--sig);color:var(--on-sig);border-radius:6px;padding:7% 7%;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden;container-type:inline-size;box-shadow:0 20px 40px -24px rgba(0,0,0,.5)}
-.poster .big{font-weight:800;letter-spacing:-.055em;line-height:.86;font-size:23cqw}
-.poster .big s{text-decoration:none;opacity:.28}
-.poster .small{font:500 3.6cqw/1.4 var(--mono);text-transform:uppercase;letter-spacing:.08em}
-.poster .mid{font-weight:600;font-size:6.2cqw;line-height:1.08;letter-spacing:-.02em;max-width:17ch}
-.poster .wave{display:flex;align-items:center;gap:1.4cqw;height:18cqw}
-.poster .wave i{flex:1;background:var(--on-sig);border-radius:99px}
-.poster.ink{background:var(--on-sig);color:var(--sig)}
-.poster.ink .wave i{background:var(--sig)}
-.poster .foot{display:flex;justify-content:space-between;align-items:end;gap:10px}
-.poster .stamp{border:.7cqw solid currentColor;border-radius:99px;padding:1.4cqw 3.2cqw;font:500 3.4cqw var(--mono);text-transform:uppercase;letter-spacing:.08em;transform:rotate(-6deg)}
-.cap{font:500 12px var(--mono);color:var(--mute);margin-top:10px}
+/* tracker */
+.tracker{display:grid;grid-template-columns:1.2fr .8fr;gap:28px;align-items:stretch}
+.waveCard{background:var(--navy);border-radius:28px;padding:22px;display:grid;gap:14px;color:#FFF8EC;min-width:0}
+.waveCard canvas{width:100%;height:260px;display:block}
+.waveTop{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.ref{font:500 13px var(--mono);color:var(--butter)}
+.pill{font:500 11px var(--mono);border:1px solid rgba(255,248,236,.3);border-radius:99px;padding:5px 10px;color:#FFF8EC}
+.steps{display:flex;gap:8px}
+.steps button{flex:1;height:44px;border-radius:12px;border:1.5px solid rgba(255,248,236,.25);background:transparent;color:#FFF8EC;font:800 16px var(--display);cursor:pointer}
+.steps button.done{background:rgba(255,214,107,.18);border-color:var(--butter);color:var(--butter)}
+.steps button.now{background:var(--tang);border-color:var(--tang);color:#141B3C}
+.stageText{display:grid;gap:12px;align-content:start;background:var(--card);border:1px solid var(--line);border-radius:28px;padding:24px;min-width:0}
+.stageText h3{font-size:34px;font-variation-settings:"wdth" 85}
+.stageText p{color:var(--mute)}
+.stageText .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:auto}
+.small{font:500 12px var(--mono);color:var(--mute)}
 
-/* product */
-.product{display:grid;grid-template-columns:minmax(300px,380px) 1fr;gap:48px;align-items:start}
-.phone{width:100%;max-width:380px;background:var(--card);border:1px solid var(--line);border-radius:44px;padding:12px;box-shadow:0 30px 60px -30px rgba(0,0,0,.45);margin:0 auto}
-.screen{border-radius:34px;background:var(--bg);height:660px;display:flex;flex-direction:column;overflow:hidden;position:relative}
-.status{display:flex;justify-content:space-between;padding:14px 22px 6px;font:500 12px var(--mono)}
-.tabs{display:flex;gap:6px;padding:6px 14px 10px}
-.tabs button{flex:1;font:600 13px var(--display);border:1px solid var(--line);background:transparent;color:var(--fg);border-radius:99px;padding:8px 0;cursor:pointer}
-.tabs button[aria-selected="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
-.pane{flex:1;overflow:auto;padding:6px 18px 22px;display:none}
-.pane.on{display:block}
-.pane h3{font-size:28px;margin:6px 0 4px}
-.sub{color:var(--mute);font-size:14px}
-.types{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0}
-.types button{font:600 14px var(--display);padding:9px 14px;border-radius:99px;border:1.5px solid var(--line);background:var(--card);color:var(--fg);cursor:pointer}
-.types button[aria-pressed="true"]{background:var(--sig);color:var(--on-sig);border-color:var(--sig)}
-.loc{display:flex;gap:10px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;font-size:14px}
-.loc b{font-weight:600;display:block}
-.pin{width:10px;height:10px;border-radius:50%;background:var(--quiet);box-shadow:0 0 0 5px color-mix(in srgb,var(--quiet) 25%,transparent);flex:none}
-.meter{margin:16px 0;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px;display:grid;gap:10px}
-.meter .row{display:flex;justify-content:space-between;align-items:baseline}
-.db{font:500 34px var(--mono);letter-spacing:-.04em}
-.bars{display:flex;gap:3px;align-items:end;height:34px}
-.bars i{flex:1;background:var(--line);border-radius:2px;height:20%;transition:height .12s,background .12s}
-.hold{width:100%;font:700 15px var(--display);border:0;border-radius:12px;padding:12px;background:var(--fg);color:var(--bg);cursor:pointer;touch-action:none;user-select:none}
-.send{width:100%;margin-top:6px;font:800 18px var(--display);border:0;border-radius:16px;padding:16px;background:var(--sig);color:var(--on-sig);cursor:pointer}
-.send:active{transform:scale(.98)}
-.tl{list-style:none;margin:18px 0 0;padding:0;display:grid;gap:0}
-.tl li{display:grid;grid-template-columns:22px 1fr;gap:12px;position:relative;padding-bottom:18px}
-.tl li::before{content:"";position:absolute;left:10px;top:22px;bottom:0;width:2px;background:var(--line)}
-.tl li:last-child::before{display:none}
-.dot{width:22px;height:22px;border-radius:50%;border:2px solid var(--line);background:var(--bg);display:grid;place-items:center;font-size:12px;font-weight:800}
-.tl li.done .dot{background:var(--fg);border-color:var(--fg);color:var(--bg)}
-.tl li.done::before{background:var(--fg)}
-.tl li.now .dot{border-color:var(--sig);background:var(--sig);color:var(--on-sig);animation:ping 1.6s infinite}
-@keyframes ping{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--sig) 70%,transparent)}100%{box-shadow:0 0 0 12px transparent}}
-.tl li:not(.done):not(.now){opacity:.45}
-.tl b{display:block;font-size:15px}
-.tl span.t{font:400 11px var(--mono);color:var(--mute)}
-.tl p{font-size:14px;color:var(--mute);margin-top:2px}
-.outcome{margin-top:6px;background:var(--fg);color:var(--bg);border-radius:18px;padding:16px;display:none}
-.outcome.on{display:block;animation:rise .5s ease-out}
-@keyframes rise{from{transform:translateY(12px);opacity:0}}
-.outcome h4{margin:0 0 6px;font-size:18px;letter-spacing:-.02em}
-.outcome p{font-size:14px;opacity:.85}
-.outcome .fb{display:flex;gap:8px;margin-top:12px}
-.outcome .fb button{flex:1;font:700 13px var(--display);padding:10px;border-radius:10px;border:1.5px solid currentColor;background:transparent;color:inherit;cursor:pointer}
-.sim{margin-top:14px;display:flex;gap:8px;align-items:center}
-.sim button{font:500 12px var(--mono);border:1px dashed var(--mute);background:transparent;color:var(--fg);border-radius:99px;padding:8px 12px;cursor:pointer}
-.toast{position:absolute;left:16px;right:16px;top:-80px;background:var(--fg);color:var(--bg);border-radius:16px;padding:12px 14px;font-size:14px;transition:top .4s cubic-bezier(.3,1.4,.4,1);z-index:2;display:flex;gap:10px;align-items:center}
-.toast.on{top:48px}
-.toast svg{width:26px;flex:none}
-.blockcard{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px;margin-top:14px}
-.blockcard .n{font:800 40px var(--display);letter-spacing:-.04em}
-.minimap{display:grid;grid-template-columns:repeat(10,1fr);gap:3px;margin-top:12px}
-.minimap i{aspect-ratio:1;border-radius:3px}
+/* experiences */
+.xgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}
+.xcard{background:var(--card);border:1px solid var(--line);border-radius:28px;padding:22px;display:grid;gap:14px;align-content:start;min-width:0}
+.xcard h3{font-size:30px;font-variation-settings:"wdth" 85}
+.xcard p{color:var(--mute)}
+.pond{position:relative;border-radius:20px;overflow:hidden;background:var(--navy);height:340px;cursor:crosshair}
+.pond canvas{position:absolute;inset:0;width:100%;height:100%}
+.pond .hint{position:absolute;left:14px;top:12px;font:500 12px var(--mono);color:#FFF8EC;opacity:.8;pointer-events:none}
+.toast{font:500 13px var(--mono);color:var(--fg);min-height:20px}
+.types{display:flex;flex-wrap:wrap;gap:8px}
+.silence canvas{width:100%;height:150px;display:block;border-radius:16px;background:var(--navy)}
+.outcome{background:var(--soft);border-radius:16px;padding:14px;display:grid;gap:6px}
+.outcome b{font-size:17px}
+.ask{display:flex;gap:10px;flex-wrap:wrap}
 
-.side{display:grid;gap:28px;align-content:start}
-.beats{display:grid;gap:18px}
-.beat{display:grid;grid-template-columns:auto 1fr;gap:16px;padding-top:18px;border-top:1px solid var(--line)}
-.beat .k{font:500 12px var(--mono);color:var(--mute);padding-top:4px;width:84px}
-.beat h3{font-size:22px;margin-bottom:6px;letter-spacing:-.02em}
-.beat p{color:var(--mute)}
-.sms{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:16px;display:grid;gap:8px;max-width:420px}
-.sms div{padding:9px 13px;border-radius:18px;font-size:14px;max-width:86%;line-height:1.35}
-.sms .me{justify-self:end;background:var(--quiet);color:#fff}
-.sms .city{background:var(--bg);border:1px solid var(--line)}
-:root[data-theme="dark"] .sms .me,:root:not([data-theme="light"]) .sms .me{color:#0e1013}
-.sms small{font:400 11px var(--mono);color:var(--mute)}
-
-/* pattern map */
-.pattern{display:grid;grid-template-columns:1.2fr .8fr;gap:32px;align-items:start}
-.cityMap{width:100%;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:14px}
-.cityMap svg{width:100%;height:auto;display:block}
-.cityMap text{font:500 10px var(--mono);fill:var(--mute)}
+/* map (the city has ears) */
+.pattern{display:grid;grid-template-columns:1.25fr .75fr;gap:32px;align-items:start}
+.cityMap{width:100%;background:var(--card);border:1px solid var(--line);border-radius:24px;padding:14px;min-width:0}
 .legend{display:flex;gap:6px;align-items:center;font:500 11px var(--mono);color:var(--mute);margin-top:10px;flex-wrap:wrap}
 .legend i{width:22px;height:10px;border-radius:2px;display:inline-block}
 .stats{display:grid;gap:14px}
 .stat{border-top:1px solid var(--line);padding-top:12px}
 .stat .n{font-size:44px;font-weight:800;letter-spacing:-.04em;line-height:1}
 .stat p{color:var(--mute);font-size:14px;margin-top:4px}
-
-/* motion */
-.motion{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px}
-.mcard{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:20px;display:grid;gap:14px;align-content:space-between;min-height:260px}
-.mcard h3{font-size:20px;letter-spacing:-.02em}
-.mcard p{color:var(--mute);font-size:14px}
-.mcard .stage{height:120px;display:grid;place-items:center;position:relative}
-.mcard button.replay{justify-self:start;font:500 12px var(--mono);border:1px solid var(--line);background:transparent;color:var(--fg);border-radius:99px;padding:8px 12px;cursor:pointer}
-/* 1 send */
-.pulse{display:flex;gap:5px;align-items:center;height:80px}
-.pulse i{width:8px;height:60px;background:var(--fg);border-radius:99px;transform:scaleY(.15);transform-origin:center}
-.m1.go .pulse i{animation:flat 2.6s ease-in-out forwards}
-.pulse i:nth-child(2n){animation-delay:.05s!important}.pulse i:nth-child(3n){animation-delay:.1s!important}
-@keyframes flat{0%{transform:scaleY(.15)}20%{transform:scaleY(1)}40%{transform:scaleY(.5)}55%{transform:scaleY(.8)}80%,100%{transform:scaleY(.06);background:var(--ok)}}
-/* 2 status */
-.pill{display:inline-flex;align-items:center;gap:8px;font:600 14px var(--display);border-radius:99px;padding:10px 16px;background:var(--bg);border:1.5px solid var(--line);overflow:hidden;position:relative;height:42px;min-width:190px}
-.pill span{position:absolute;left:16px;right:16px;white-space:nowrap;transition:transform .5s cubic-bezier(.5,0,.2,1),opacity .4s}
-.pill .a{transform:translateY(0)}.pill .b{transform:translateY(120%);opacity:0}
-.m2.go .pill{animation:pillbg 3s forwards}
-.m2.go .pill .a{transform:translateY(-120%);opacity:0;transition-delay:.6s}
-.m2.go .pill .b{transform:translateY(0);opacity:1;transition-delay:.6s}
-@keyframes pillbg{0%,20%{background:var(--bg)}40%,100%{background:var(--sig);color:var(--on-sig);border-color:var(--sig)}}
-/* 3 notification */
-.notif{width:100%;max-width:260px;background:var(--bg);border:1px solid var(--line);border-radius:18px;padding:12px;display:flex;gap:10px;align-items:center;transform:translateY(-130%);opacity:0}
-.notif svg{width:34px;flex:none;border-radius:9px;background:var(--sig);padding:4px}
-.notif b{font-size:13px;display:block}.notif span{font-size:12px;color:var(--mute)}
-.m3.go .notif{animation:drop 3.4s cubic-bezier(.2,1.3,.4,1) forwards}
-@keyframes drop{0%{transform:translateY(-130%);opacity:0}18%{transform:translateY(0);opacity:1}22%{transform:translateX(-4px)}26%{transform:translateX(4px)}30%{transform:translateX(0)}85%{transform:translateY(0);opacity:1}100%{transform:translateY(-130%);opacity:0}}
-
-.notes{margin-top:72px;border-top:1px solid var(--line);padding-top:20px;color:var(--mute);font-size:13px;max-width:70ch}
-.themebtn{position:fixed;right:max(12px,env(safe-area-inset-right,0px));top:calc(12px + env(safe-area-inset-top,0px));z-index:20;font:500 12px var(--mono);border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:99px;padding:8px 12px;cursor:pointer}
-
-@media (max-width:860px){
-  .hero,.product,.pattern{grid-template-columns:1fr}
-  .product{gap:32px}
-  .logo-stage{max-width:420px}
-}
-@media (prefers-reduced-motion:reduce){
-  *,*::before,*::after{animation:none!important;transition:none!important}
-  .pulse i{transform:scaleY(.4)}
-}
-.deckwrap{position:relative;height:440px;border-radius:12px;overflow:hidden;background:linear-gradient(180deg,#4f9fe6 0%,#8ec7f2 38%,#d9eefb 62%,#d9eefb 100%)}
+.deckwrap{position:relative;height:460px;border-radius:14px;overflow:hidden;background:linear-gradient(180deg,#4f9fe6 0%,#8ec7f2 38%,#d9eefb 62%,#d9eefb 100%)}
 #deckmap{position:absolute;inset:0}
-.mapctl{position:absolute;right:10px;top:10px;display:flex;gap:6px;z-index:2}
-.mapctl button{font:500 11px var(--mono);border:1px solid #3a4150;background:#171b23;color:#f1f2f4;border-radius:99px;padding:7px 11px;cursor:pointer}
-.mapstatus{position:absolute;left:10px;bottom:10px;z-index:2;font:500 11px var(--mono);background:#171b23;color:#f1f2f4;border-radius:99px;padding:6px 11px}
+.mapctl{position:absolute;right:10px;top:10px;display:flex;gap:6px;z-index:2;flex-wrap:wrap;justify-content:flex-end;max-width:calc(100% - 20px)}
+.mapctl button{font:500 11px var(--mono);border:0;background:#141B3C;color:#FFF8EC;border-radius:99px;padding:7px 11px;cursor:pointer}
+.mapstatus{position:absolute;left:10px;bottom:10px;z-index:2;font:500 11px var(--mono);background:#141B3C;color:#FFF8EC;border-radius:99px;padding:6px 11px}
 .areas{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
 .areas button{font:600 13px var(--display);border:1.5px solid var(--line);background:var(--card);color:var(--fg);border-radius:99px;padding:7px 12px;cursor:pointer}
-.areas button[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.areas button[aria-pressed="true"]{background:var(--tang);color:#141B3C;border-color:var(--tang)}
 .deckfail{position:absolute;inset:0;display:grid;place-items:center;color:#9aa1ad;font:500 13px var(--mono);padding:20px;text-align:center}
+
+/* brand */
+.brand{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+.tile{border-radius:24px;padding:22px;display:grid;gap:10px;align-content:space-between;min-height:220px;min-width:0}
+.tile.navy{background:var(--navy);color:#FFF8EC}
+.tile.tang{background:var(--tang);color:#141B3C}
+.tile.butter{background:var(--butter);color:#141B3C}
+.tile .big{font-size:76px;font-weight:800;letter-spacing:-.02em;line-height:.9;font-variation-settings:"wdth" 80}
+.tile .small{color:inherit;opacity:.75}
+.sw{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:20px}
+.sw div{border-radius:16px;padding:14px;min-height:110px;display:grid;align-content:end;gap:2px;font:500 12px var(--mono);border:1px solid var(--line)}
+.sw b{font:800 18px var(--display)}
+.posters{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;margin-top:28px}
+.poster{aspect-ratio:3/4;border-radius:8px;padding:7%;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden;container-type:inline-size;box-shadow:0 20px 40px -24px rgba(0,0,0,.5)}
+.poster.p1{background:#141B3C;color:#FFF8EC}
+.poster.p2{background:#FF7A1A;color:#141B3C}
+.poster.p3{background:#FFD66B;color:#141B3C}
+.poster .pbig{font-weight:800;letter-spacing:-.05em;line-height:.86;font-size:21cqw;font-variation-settings:"wdth" 75}
+.poster .psm{font:500 3.6cqw/1.4 var(--mono);text-transform:uppercase;letter-spacing:.08em}
+.poster .pmid{font-weight:600;font-size:6cqw;line-height:1.1;letter-spacing:-.02em;max-width:18ch}
+.poster canvas{width:100%;height:24cqw;display:block}
+.cap{font:500 12px var(--mono);color:var(--mute);margin-top:10px}
+
+/* motion */
+.motion{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+.mcard{background:var(--card);border:1px solid var(--line);border-radius:24px;padding:18px;display:grid;gap:12px;min-width:0}
+.mcard canvas{width:100%;height:150px;display:block;border-radius:14px;background:var(--navy)}
+.mcard h3{font-size:20px;letter-spacing:-.02em}
+.mcard p{color:var(--mute);font-size:14px}
+
+/* tracks */
+.tracks{width:100%;border-collapse:collapse}
+.tracks th,.tracks td{text-align:left;padding:14px 10px;border-top:1px solid var(--line);vertical-align:top}
+.tracks th{font:500 12px var(--mono);text-transform:uppercase;letter-spacing:.1em;color:var(--mute)}
+.tracks td:first-child{font-weight:800;font-size:20px;width:22%}
+.tablewrap{overflow-x:auto}
+.notes{margin-top:72px;border-top:1px solid var(--line);padding-top:20px;color:var(--mute);font-size:13px;max-width:72ch}
+
+@media (max-width:860px){
+  .hero,.tracker,.xgrid,.pattern,.brand,.motion{grid-template-columns:1fr}
+  .sw{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .heroWave{max-width:460px}
+}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
 
 <button class="themebtn" id="themebtn" type="button">Light / Dark</button>
 
 <div class="wrap">
 
-<!-- ============ BRAND ============ -->
+<!-- ============ HERO ============ -->
 <header class="hero">
   <div>
-    <div class="eyebrow">Noise complaints, with closure</div>
-    <h1 style="margin-top:18px">Copy <em>That.</em></h1>
-    <p class="lede">New York files about 610,000 noise complaints a year. Copy That makes sure every one gets an answer.</p>
-    <div class="marks">
-      <div class="chip">
-        <svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#FFD21F"/><g fill="#101216"><rect x="9" y="14" width="7" height="36" rx="3.5"/><rect x="19" y="22" width="7" height="20" rx="3.5"/><rect x="29" y="27" width="7" height="10" rx="3.5"/></g><path d="M40 33l6 6 11-14" fill="none" stroke="#101216" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        App icon
-      </div>
-      <div class="chip"><span style="font-weight:800;letter-spacing:-.04em;font-size:20px">copy that.</span> Wordmark</div>
+    <div class="word">
+      <svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="18" fill="#141B3C"/><g fill="#FF7A1A"><rect x="13" y="22" width="6" height="20" rx="3"/><rect x="23" y="14" width="6" height="36" rx="3"/><rect x="33" y="24" width="6" height="16" rx="3"/></g><rect x="43" y="30.5" width="10" height="3" rx="1.5" fill="#FFD66B"/></svg>
+      <b>HUSH</b>
     </div>
-    <div class="sw" aria-label="Palette">
-      <span style="background:#FFD21F;color:#101216;border-color:#FFD21F">Taxi yellow #FFD21F</span>
-      <span style="background:#101216;color:#fff;border-color:#101216">Night ink #101216</span>
-      <span style="background:#2742e6;color:#fff;border-color:#2742e6">Quiet blue #2742E6</span>
-      <span style="background:#1b7f47;color:#fff;border-color:#1b7f47">Closed green #1B7F47</span>
-    </div>
+    <h1>Give every complaint a <span class="hb">heartbeat.</span></h1>
+    <p class="lede">New Yorkers file about 610,000 noise complaints a year, and most never hear back. HUSH turns each one into a living sound wave that changes every time the city actually does something.</p>
+    <div class="ctas"><a class="btn" href="#tracker" style="text-decoration:none">Watch one beat</a><a class="btn ghost" href="#drop" style="text-decoration:none">Drop a sound</a></div>
   </div>
-  <div class="logo-stage play" id="logoStage">
-    <svg viewBox="0 0 120 80" role="img" aria-label="Sound bars shrinking into a check mark">
-      <g>
-        <rect class="bar" x="8"  y="10" width="13" height="60" rx="6.5"/>
-        <rect class="bar" x="28" y="26" width="13" height="28" rx="6.5"/>
-        <rect class="bar" x="48" y="34" width="13" height="12" rx="6.5"/>
-      </g>
-      <path class="tick" d="M70 42l13 13 26-30"/>
-    </svg>
-    <button type="button" id="logoToggle">Pause</button>
-  </div>
+  <div class="heroWave"><canvas id="heroCanvas" aria-label="An animated sound wave unique to one complaint"></canvas><div class="tag2">HSH-48213</div><div class="tag">Your complaint, alive.</div></div>
 </header>
 
+<!-- ============ TRACKER ============ -->
+<section id="tracker">
+  <div class="sec-head">
+    <div class="eyebrow">Explore the HUSH interaction</div>
+    <h2>The wave is the receipt.</h2>
+    <p>Every complaint gets its own wave, generated from its reference number. It shifts each time a real update lands, so you can see your case moving without reading a single form.</p>
+  </div>
+  <div class="tracker">
+    <div class="waveCard">
+      <div class="waveTop"><span class="ref" id="refNo">HSH-48213</span><span class="pill">Conceptual stages · Not live 311 data</span></div>
+      <canvas id="trackCanvas" aria-label="Complaint wave that changes with each stage"></canvas>
+      <div class="steps" id="steps" aria-label="Stages"></div>
+    </div>
+    <div class="stageText">
+      <div class="num" id="stageNum">STAGE 1 OF 5</div>
+      <h3 id="stageTitle">The city received it.</h3>
+      <p id="stageBody">Your complaint has an official reference. It's on the record, with your location and the time.</p>
+      <p class="small">The wave shows progress on your case. It is not a reading of how loud the street is.</p>
+      <div class="row"><button class="btn" id="nextStage" type="button">Next stage</button><button class="btn ghost" id="newWave" type="button">New complaint</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ EXPERIENCES ============ -->
 <section>
   <div class="sec-head">
-    <div class="eyebrow">Name &amp; mark</div>
-    <h2>"Copy that" is how you tell someone they were heard.</h2>
-    <p>Radio operators say it to confirm a message arrived. The mark is a loud wave that decays into a tick. The complaint gets quieter, then it gets closed. The same tick ends every status in the product.</p>
+    <div class="eyebrow">Three signature experiences</div>
+    <h2>Drop it. See it. Hear the silence.</h2>
   </div>
-</section>
-
-<section style="padding-top:24px">
-  <div class="posters">
-    <div>
-      <div class="poster" role="img" aria-label="Poster: Loud in. Answered out.">
-        <div class="small">NYC 311 · Noise</div>
-        <div class="big">Loud<br>in.<br><s>Answered</s><br>out.</div>
-        <div class="foot">
-          <div class="mid">You report it once. You hear back every time.</div>
-          <div class="stamp">Copy that.</div>
-        </div>
+  <div class="xgrid">
+    <div class="xcard" id="drop">
+      <div class="num">01 · DROP A SOUND</div>
+      <h3>Reporting feels like tossing a pebble.</h3>
+      <p>Pick what's bugging you, then tap where you are. A ripple spreads from your spot and turns into a trackable complaint.</p>
+      <div class="types" id="dropTypes">
+        <button type="button" class="chipbtn" aria-pressed="true">Party next door</button>
+        <button type="button" class="chipbtn" aria-pressed="false">Jackhammer at 6 AM</button>
+        <button type="button" class="chipbtn" aria-pressed="false">Car alarm, again</button>
+        <button type="button" class="chipbtn" aria-pressed="false">Ice cream truck jingle</button>
       </div>
-      <div class="cap">Poster A · street / subway</div>
+      <div class="pond" id="pond"><canvas id="pondCanvas"></canvas><div class="hint">Tap anywhere on the block</div></div>
+      <div class="toast" id="dropToast" role="status">Nothing dropped yet. The block is waiting.</div>
     </div>
-    <div>
-      <div class="poster ink" role="img" aria-label="Poster: 610,000 complaints a year. How many replies?">
-        <div class="small">Every year, in New York</div>
-        <div>
-          <div class="big" style="font-size:26cqw">610K</div>
-          <div class="mid" style="margin-top:3cqw">noise complaints. How many got a reply?</div>
-        </div>
-        <div>
-          <div class="wave" aria-hidden="true" id="posterWave"></div>
-          <div class="foot" style="margin-top:3cqw"><div class="small">Copy That</div><div class="small">Now you will.</div></div>
-        </div>
-      </div>
-      <div class="cap">Poster B · bus shelter / stoop flyer</div>
+    <div class="xcard silence" id="silence">
+      <div class="num">03 · THE SILENCE MOMENT</div>
+      <h3>You get the last word.</h3>
+      <p>The official outcome shows up first. Then HUSH asks the only question that matters.</p>
+      <div class="outcome"><span class="small">HSH-48213 · OUTCOME · EXAMPLE</span><b>Officer visited at 11:44 PM. Music stopped by 11:58 PM.</b><span class="small">Summons issued to the unit upstairs.</span></div>
+      <canvas id="silenceCanvas" aria-label="Wave that settles when you confirm it got quieter"></canvas>
+      <b style="font-size:22px">Did it actually get quieter?</b>
+      <div class="ask"><button class="btn" id="yesQuiet" type="button">Yes, finally</button><button class="btn ghost" id="noQuiet" type="button">Nope, still loud</button></div>
+      <div class="toast" id="silenceToast" role="status"></div>
     </div>
   </div>
 </section>
 
-<!-- ============ PRODUCT ============ -->
-<section id="product">
+<!-- ============ EARS (MAP) ============ -->
+<section id="ears">
   <div class="sec-head">
-    <div class="eyebrow">Product</div>
-    <h2>A delivery tracker for being listened to.</h2>
-    <p>Tap the tabs. Hold the button to measure. Send a report, then step time forward to see what the city does with it. All names, places and numbers are examples.</p>
-  </div>
-
-  <div class="product">
-    <div class="phone">
-      <div class="screen">
-        <div class="toast" id="toast" role="status">
-          <svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#FFD21F"/><path d="M16 33l11 11 22-26" fill="none" stroke="#101216" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          <div><b>Copy that.</b> Case NC-48213 is logged. We'll reply by 9 AM.</div>
-        </div>
-        <div class="status"><span>11:07 PM</span><span>Copy That</span></div>
-        <div class="tabs" role="tablist">
-          <button role="tab" aria-selected="true" data-tab="report">Report</button>
-          <button role="tab" aria-selected="false" data-tab="track">Track</button>
-          <button role="tab" aria-selected="false" data-tab="block">My block</button>
-        </div>
-
-        <div class="pane on" id="p-report">
-          <h3>What are you hearing?</h3>
-          <div class="sub">Ten seconds. We take it from here.</div>
-          <div class="types" id="types">
-            <button type="button" aria-pressed="true">Music / party</button>
-            <button type="button" aria-pressed="false">Construction</button>
-            <button type="button" aria-pressed="false">Car / horn</button>
-            <button type="button" aria-pressed="false">Neighbors</button>
-            <button type="button" aria-pressed="false">AC / vents</button>
-            <button type="button" aria-pressed="false">Bar / club</button>
-          </div>
-          <div class="loc"><span class="pin"></span><div><b>Near Bedford Ave &amp; N 6 St</b><span class="sub">Apt 3R · Brooklyn · located automatically</span></div></div>
-          <div class="meter">
-            <div class="row"><span class="sub">Hold to measure at your window</span><span class="sub">example</span></div>
-            <div class="row"><span class="db" id="db">-- dB</span><div class="bars" id="bars" style="width:55%"></div></div>
-            <button class="hold" id="hold" type="button">Hold to listen</button>
-          </div>
-          <button class="send" id="send" type="button">Send it</button>
-        </div>
-
-        <div class="pane" id="p-track">
-          <div class="eyebrow">Case NC-48213</div>
-          <h3 id="trkTitle">Officer on the way</h3>
-          <div class="sub" id="trkSub">Music / party · Near Bedford Ave &amp; N 6 St</div>
-          <ol class="tl" id="tl"></ol>
-          <div class="outcome" id="outcome">
-            <h4>Closed. Music stopped at 11:58 PM.</h4>
-            <p>Officer measured 71 dB at your window, over the night limit. A summons was issued to the unit upstairs. This is the 3rd report at this address in 30 days, so it is now flagged.</p>
-            <div class="fb"><button type="button" id="quiet">It's quiet now</button><button type="button" id="loud">Still loud</button></div>
-            <p id="fbmsg" style="margin-top:10px;display:none"></p>
-          </div>
-          <div class="sim"><button type="button" id="adv">Skip ahead 15 min</button><button type="button" id="rst">Reset</button></div>
-        </div>
-
-        <div class="pane" id="p-block">
-          <div class="eyebrow">Bedford Ave &amp; N 6 St · last 30 days</div>
-          <h3>You're not alone.</h3>
-          <div class="blockcard">
-            <div class="n">9 <span class="sub" style="font:500 14px var(--display)">neighbors reported 31 times</span></div>
-            <p class="sub">One address, mostly after 10 PM. Three or more reports in 30 days sends it to a repeat-location team instead of a fresh case each time.</p>
-            <div class="minimap" id="minimap" aria-hidden="true"></div>
-          </div>
-          <div class="blockcard">
-            <b>What changed on your block</b>
-            <p class="sub" style="margin-top:6px">Oct 3 · Warning issued<br>Oct 17 · Summons issued<br>Oct 27 · Case closed, flagged for follow-up visit</p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="side">
-      <div class="beats">
-        <div class="beat"><div class="k">REPORT</div><div><h3>Faster than typing a paragraph</h3><p>Pick a sound, hold to measure, send. Location, time and the reading travel with it, so an officer knows what to look for.</p></div></div>
-        <div class="beat"><div class="k">TRACK</div><div><h3>Five stages, plain words</h3><p>Heard, matched, dispatched, on scene, closed. Every change sends one text. Silence is never the status.</p></div></div>
-        <div class="beat"><div class="k">PATTERN</div><div><h3>Your report counts toward something</h3><p>Reports from the same block and address are grouped. Repeat addresses get escalated so one neighbor does not carry the whole case.</p></div></div>
-        <div class="beat"><div class="k">CLOSURE</div><div><h3>The last word is yours</h3><p>The outcome says what the city did. You answer "quiet now" or "still loud". Still loud reopens the case with the first one on file.</p></div></div>
-      </div>
-      <div>
-        <div class="eyebrow" style="margin-bottom:10px">No app? Same service by text</div>
-        <div class="sms">
-          <div class="me">loud music 3R bedford</div>
-          <div class="city">Copy that. Case NC-48213. Reply STATUS anytime.</div>
-          <div class="city">Officer is 15 min away. You are 1 of 9 reports at this address.</div>
-          <div class="city">Closed 11:58 PM. Summons issued. Quiet now? Reply YES or NO.</div>
-          <div class="me">YES</div>
-          <small>Example thread</small>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ============ PATTERN ============ -->
-<section>
-  <div class="sec-head">
-    <div class="eyebrow">Seeing the pattern</div>
-    <h2>The loud block gets a name, not 31 separate tickets.</h2>
-    <p>Each hexagon is about 150 m across. Redder means more reports in the last 30 days. The buildings use the real NYC 3D Building Model, drawn as a stylized street scene. Pick a neighborhood under the map, and press Street level for the view from the avenue. Zoom in close and the buildings gain windows. Click a hexagon to read it, drag to pan, right-drag to tilt. The dark ring is the repeat location from the phone above. The map opens on the whole city: tap a neighborhood name to fly in, and press City to come back out. Every building over 150 ft is drawn citywide, so the real skyline shows from any angle; press Skyline for the view from the harbor.</p>
+    <div class="eyebrow"><span class="num">02</span> · The city has ears</div>
+    <h2>Is it just you, or the whole block?</h2>
+    <p>Complaints show up as clusters, so you can tell a one-off from a neighborhood-wide problem. Hotter hexagons mean more reports in the last 30 days. Tap a neighborhood name to fly in, City to zoom back out, Skyline for the view from the harbor and Street level to stand on the avenue. Buildings come from the NYC 3D Building Model. Every tower over 150 ft is on the map, and the tangerine ring marks a repeat location.</p>
   </div>
   <div class="pattern">
     <div class="cityMap">
-      <div class="deckwrap"><div id="deckmap" role="img" aria-label="Example 3D map of noise reports by area, built with deck.gl"></div><div class="mapstatus" id="mapstatus" role="status" hidden></div><div class="mapctl"><button type="button" id="tilt" aria-pressed="true">3D</button><button type="button" id="city">City</button><button type="button" id="skyview">Skyline</button><button type="button" id="street">Street level</button><button type="button" id="reset">Reset view</button></div></div>
+      <div class="deckwrap"><div id="deckmap" role="img" aria-label="Example 3D map of noise complaints by area, built with deck.gl"></div><div class="mapstatus" id="mapstatus" role="status" hidden></div><div class="mapctl"><button type="button" id="tilt" aria-pressed="true">3D</button><button type="button" id="city">City</button><button type="button" id="skyview">Skyline</button><button type="button" id="street">Street level</button><button type="button" id="reset">Reset view</button></div></div>
       <div class="areas" id="areas" aria-label="Neighborhoods"></div>
-      <div class="legend"><span>Fewer</span><i style="background:#FFEC99"></i><i style="background:#FFC966"></i><i style="background:#FF965A"></i><i style="background:#F05A5A"></i><span>More reports</span><span style="margin-left:auto">Example data</span></div>
+      <div class="legend"><span>Fewer</span><i style="background:#FFECAA"></i><i style="background:#FFD66B"></i><i style="background:#FFAA46"></i><i style="background:#FF7A1A"></i><span>More complaints</span><span style="margin-left:auto">Example data</span></div>
     </div>
     <div class="stats">
-      <div class="stat"><div class="n" id="sBlock">Pick a block</div><p id="sBlockP">Tap a square on the map to see its reports and what happened.</p></div>
-      <div class="stat"><div class="n">48 h</div><p>Target from first report to a written outcome. The tracker shows the clock.</p></div>
-      <div class="stat"><div class="n">3+</div><p>Reports at one address in 30 days moves it to the repeat-location queue.</p></div>
+      <div class="stat"><div class="n" id="sBlock">Pick a block</div><p id="sBlockP">Tap a hexagon on the map to see how many complaints it holds and what happened to them.</p></div>
+      <div class="stat"><div class="n">9 of you</div><p>Neighbors who reported the same address get grouped, so nobody carries a case alone.</p></div>
+      <div class="stat"><div class="n">3+</div><p>Reports at one address in 30 days sends it to a repeat-location team.</p></div>
     </div>
+  </div>
+</section>
+
+<!-- ============ BRAND ============ -->
+<section id="brand">
+  <div class="sec-head">
+    <div class="eyebrow">Brand</div>
+    <h2>Loud personality. Quiet ending.</h2>
+    <p>Midnight navy for the city at night, tangerine for the complaint, butter for good news and off-white for calm. The icon is three bars of noise that end in a flat line.</p>
+  </div>
+  <div class="brand">
+    <div class="tile navy"><span class="small">WORDMARK</span><div class="big">HUSH</div><span class="small">Bricolage Grotesque ExtraBold, condensed</span></div>
+    <div class="tile tang"><span class="small">ICON</span><canvas id="iconCanvas" style="width:120px;height:120px" aria-label="Animated HUSH icon"></canvas><span class="small">Bars shout, then settle to a line</span></div>
+    <div class="tile butter"><span class="small">VOICE</span><div style="font-size:30px;font-weight:800;line-height:1.05;letter-spacing:-.02em">"Your neighbor's subwoofer now has a case number."</div><span class="small">Witty, on your side, never mean</span></div>
+  </div>
+  <div class="sw">
+    <div style="background:#141B3C;color:#FFF8EC;border-color:#141B3C"><b>Midnight navy</b>#141B3C</div>
+    <div style="background:#FF7A1A;color:#141B3C;border-color:#FF7A1A"><b>Tangerine</b>#FF7A1A</div>
+    <div style="background:#FFD66B;color:#141B3C;border-color:#FFD66B"><b>Butter</b>#FFD66B</div>
+    <div style="background:#FFF8EC;color:#141B3C"><b>Off-white</b>#FFF8EC</div>
+  </div>
+  <div class="posters">
+    <div><div class="poster p1" role="img" aria-label="Poster: Shhh, New York."><div class="psm">HUSH · NYC</div><div class="pbig">SHHH,<br>NEW<br>YORK.</div><div><canvas class="pwave" data-seed="7" data-c="#FF7A1A"></canvas><div class="pmid" style="margin-top:3cqw">Every noise complaint gets a heartbeat.</div></div></div><div class="cap">Poster A · subway</div></div>
+    <div><div class="poster p2" role="img" aria-label="Poster: 610K complaints. Every one gets an answer."><div class="psm">Every year, in New York</div><div class="pbig" style="font-size:27cqw">610K</div><div><div class="pmid">complaints. Every single one gets an answer now.</div><canvas class="pwave" data-seed="3" data-c="#141B3C" style="margin-top:3cqw"></canvas></div></div><div class="cap">Poster B · bus shelter</div></div>
+    <div><div class="poster p3" role="img" aria-label="Poster: Too loud? Tell HUSH."><div class="psm">Brooklyn · Queens · Manhattan</div><div class="pbig">TOO<br>LOUD?</div><div><div class="pmid">Tell HUSH. Watch the city answer.</div><canvas class="pwave" data-seed="11" data-c="#141B3C" data-calm="1" style="margin-top:3cqw"></canvas></div></div><div class="cap">Poster C · stoop flyer</div></div>
   </div>
 </section>
 
 <!-- ============ MOTION ============ -->
-<section>
+<section id="motion">
   <div class="sec-head">
     <div class="eyebrow">Motion</div>
-    <h2>Three moments, each one ends in a tick.</h2>
-    <p>The logo animation above is the master. These three apply the same grammar inside the product: loud, then settled, then confirmed.</p>
+    <h2>Three moves, all made of sound.</h2>
   </div>
   <div class="motion">
-    <div class="mcard m1" id="m1">
-      <div class="stage"><div class="pulse" id="pulse"></div></div>
-      <div><h3>Sent</h3><p>The complaint leaves as a wave and goes flat. Flat means it landed.</p></div>
-      <button class="replay" type="button" data-m="m1">Replay</button>
-    </div>
-    <div class="mcard m2" id="m2">
-      <div class="stage"><div class="pill"><span class="a">Officer on the way</span><span class="b">On scene now</span></div></div>
-      <div><h3>Status change</h3><p>The old label rolls up, the new one rolls in, and the pill fills yellow once.</p></div>
-      <button class="replay" type="button" data-m="m2">Replay</button>
-    </div>
-    <div class="mcard m3" id="m3">
-      <div class="stage">
-        <div class="notif"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M16 33l11 11 22-26" fill="none" stroke="#101216" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg><div><b>Case closed, 11:58 PM</b><span>Summons issued. Is it quiet now?</span></div></div>
-      </div>
-      <div><h3>Someone listened</h3><p>The notification drops in with a small shake, like a knock at the door.</p></div>
-      <button class="replay" type="button" data-m="m3">Replay</button>
-    </div>
+    <div class="mcard"><canvas class="mloop" data-kind="ripple"></canvas><h3>Sound ripples</h3><p>A drop on the map ripples out, then lands as a pin with a number.</p></div>
+    <div class="mcard"><canvas class="mloop" data-kind="morph"></canvas><h3>Waveform transitions</h3><p>Each real update morphs the wave: fewer spikes, softer color, more rhythm.</p></div>
+    <div class="mcard"><canvas class="mloop" data-kind="close"></canvas><h3>Confirmed closure</h3><p>When you say yes, the wave exhales into one calm line and a tick.</p></div>
   </div>
 </section>
 
+<!-- ============ TRACKS ============ -->
+<section>
+  <div class="sec-head">
+    <div class="eyebrow">How the three Figma tracks map out</div>
+    <h2>One idea, three deliverables.</h2>
+  </div>
+  <div class="tablewrap"><table class="tracks">
+    <thead><tr><th>Track</th><th>Deliverable</th></tr></thead>
+    <tbody>
+      <tr><td>Brand</td><td>HUSH wordmark, animated soundwave icon, type system and three NYC posters</td></tr>
+      <tr><td>Product</td><td>Drop-a-sound reporting, the living complaint tracker, the neighborhood sound map and closure feedback</td></tr>
+      <tr><td>Motion</td><td>Sound ripples, waveform transitions and the resident-confirmed closure animation</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
 <div class="notes">
-  Concept board built for the noise complaint design challenge. Sources: the 610,000 yearly figure comes from the brief (NYC Open Data, 311). Case numbers, addresses, readings, neighbor counts and the 48 hour target are invented examples to show the experience, not real city data or commitments. Copy That is a concept and is not affiliated with NYC 311.
+  Concept for the NYC noise complaint design challenge. The 610,000 yearly figure comes from the brief (NYC Open Data, 311). Reference numbers, outcomes, stage timings, neighbor counts and every complaint on the map are invented examples, not live 311 data. Building shapes come from the NYC 3D Building Model (Office of Technology and Innovation) and NYC Open Data building footprints; borough outlines from public NYC boundary data. HUSH is a concept and is not affiliated with NYC 311.
 </div>
 </div>
 
@@ -421,88 +302,129 @@ section{padding-top:72px}
 <script>
 (function(){
   var $=function(s,r){return (r||document).querySelector(s)}, $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
+  var RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // theme toggle
   $('#themebtn').addEventListener('click',function(){
     var r=document.documentElement, dark=r.dataset.theme?r.dataset.theme==='dark':matchMedia('(prefers-color-scheme: dark)').matches;
     r.dataset.theme=dark?'light':'dark';
   });
 
-  // logo pause/play
-  var ls=$('#logoStage'), lt=$('#logoToggle');
-  lt.addEventListener('click',function(){var p=ls.classList.toggle('play');lt.textContent=p?'Pause':'Play'});
-
-  // poster wave
-  var pw=$('#posterWave'), hs=[.9,.5,.75,.3,.6,.2,.4,.15,.25,.1,.12,.08];
-  hs.forEach(function(h){var i=document.createElement('i');i.style.height=(h*100)+'%';pw.appendChild(i)});
-
-  // tabs
-  function tab(n){
-    $$('.tabs button').forEach(function(b){b.setAttribute('aria-selected',b.dataset.tab===n)});
-    $$('.pane').forEach(function(p){p.classList.toggle('on',p.id==='p-'+n)});
+  // ---------- wave engine: one seeded wave per complaint ----------
+  function prng(seed){var s=seed>>>0||1;return function(){s=(s*1664525+1013904223)>>>0;return s/4294967296}}
+  function seedFrom(str){var h=2166136261;for(var i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0}
+  function makeWave(seed){var r=prng(seed),h=[];for(var i=0;i<6;i++)h.push({f:1+r()*9,p:r()*6.28,a:.3+r()*.7,s:.4+r()*1.6});return h}
+  function fit(c){var d=Math.min(2,window.devicePixelRatio||1),w=c.clientWidth,h=c.clientHeight;if(c.width!==Math.round(w*d)||c.height!==Math.round(h*d)){c.width=Math.round(w*d);c.height=Math.round(h*d)}return {x:c.getContext('2d'),w:c.width,h:c.height,d:d}}
+  function lerp(a,b,t){return a+(b-a)*t}
+  function mix(c1,c2,t){return 'rgb('+[0,1,2].map(function(i){return Math.round(lerp(c1[i],c2[i],t))}).join(',')+')'}
+  var TANG=[255,122,26], BUTTER=[255,214,107], OFF=[255,248,236], CALM=[143,176,255];
+  // energy 1 = loud and jagged, 0 = calm line
+  function drawWave(c,wave,t,energy,opts){
+    opts=opts||{};var F=fit(c),x=F.x,W=F.w,H=F.h,mid=H/2,amp=H*.38*(opts.amp||1);
+    x.clearRect(0,0,W,H);
+    var lines=opts.lines||3;
+    for(var L=lines-1;L>=0;L--){
+      x.beginPath();
+      for(var i=0;i<=200;i++){
+        var u=i/200,X=u*W,y=0;
+        for(var k=0;k<wave.length;k++){var hm=wave[k];y+=Math.sin(u*hm.f*Math.PI*2*(1+energy*.6)+hm.p+t*hm.s*(1+energy*2)+L*.6)*hm.a*(k<2?1:energy)}
+        var env=Math.sin(u*Math.PI);var jag=energy*energy*Math.sin(u*90+t*9)*.35;
+        y=(y/2.4+jag)*env*energy+Math.sin(u*Math.PI*4+t*1.2)*.04*(1-energy)*env;
+        x.lineTo(X,mid+y*amp*(1-L*.18));
+      }
+      x.lineWidth=(L===0?3.2:1.6)*F.d;x.lineCap='round';x.lineJoin='round';
+      var col=opts.color||(energy>.5?mix(BUTTER,TANG,(energy-.5)*2):mix(CALM,BUTTER,energy*2));
+      x.strokeStyle=col;x.globalAlpha=L===0?1:.35;x.stroke();x.globalAlpha=1;
+    }
   }
-  $$('.tabs button').forEach(function(b){b.addEventListener('click',function(){tab(b.dataset.tab)})});
+  var loops=[];function loop(fn){loops.push(fn)}
+  var t0=performance.now();
+  function frame(now){var t=RM?0:(now-t0)/1000;loops.forEach(function(f){f(t)});requestAnimationFrame(frame)}
+  requestAnimationFrame(frame);
 
-  // types
-  $$('#types button').forEach(function(b){b.addEventListener('click',function(){
-    $$('#types button').forEach(function(x){x.setAttribute('aria-pressed','false')});
-    b.setAttribute('aria-pressed','true');
-    $('#trkSub').textContent=b.textContent+' · Near Bedford Ave & N 6 St';
-  })});
+  // ---------- hero ----------
+  var heroWave=makeWave(seedFrom('HSH-48213'));
+  loop(function(t){drawWave($('#heroCanvas'),heroWave,t,.55+.4*Math.sin(t*.5),{lines:4})});
 
-  // db meter (simulated, no microphone)
-  var bars=$('#bars'); for(var i=0;i<14;i++){bars.appendChild(document.createElement('i'))}
-  var meterT=null, hold=$('#hold');
-  function tickMeter(){
-    var v=62+Math.random()*20, lit=Math.round((v-55)/30*14);
-    $('#db').textContent=Math.round(v)+' dB';
-    $$('i',bars).forEach(function(b,k){var on=k<lit;b.style.height=(on?25+k*5:18)+'%';b.style.background=on?(k>9?'var(--quiet)':'var(--fg)'):'var(--line)'});
-  }
-  function startM(e){e.preventDefault();if(meterT)return;hold.textContent='Listening...';tickMeter();meterT=setInterval(tickMeter,140)}
-  function stopM(){if(!meterT)return;clearInterval(meterT);meterT=null;hold.textContent='Hold to listen'}
-  hold.addEventListener('pointerdown',startM);
-  ['pointerup','pointerleave','pointercancel'].forEach(function(ev){hold.addEventListener(ev,stopM)});
-  hold.addEventListener('keydown',function(e){if(e.key===' '||e.key==='Enter'){startM(e)}});
-  hold.addEventListener('keyup',stopM);
-
-  // tracker
-  var stages=[
-    {t:'Heard',d:'Copy that. Your report is in.',ti:'Logged · 11:07 PM'},
-    {t:'Matched',d:'Joined 8 other reports at this address.',ti:'11:09 PM'},
-    {t:'Officer dispatched',d:'Unit from the 94th Precinct, about 15 min away.',ti:'11:21 PM'},
-    {t:'On scene',d:'Officer measuring at your window.',ti:'11:44 PM'},
-    {t:'Closed',d:'Outcome sent to you in writing.',ti:'11:58 PM'}
+  // ---------- tracker ----------
+  var STAGES=[
+    {t:'The city received it.',b:'Your complaint has an official reference. It is on the record, with your location and the time.',e:1},
+    {t:'It went to the right desk.',b:'Parties go to the NYPD, jackhammers go to the Department of Environmental Protection. Yours is routed.',e:.78},
+    {t:'Someone is on the way.',b:'An officer has your case and is heading over. The wave picks up a steadier rhythm.',e:.58},
+    {t:'They showed up and checked.',b:'Someone stood on your block and looked into it. Notes from the visit are attached to your case.',e:.36},
+    {t:'Official outcome posted.',b:'Here is what the city did about it. Now it is your turn: did it actually get quieter?',e:.16}
   ];
-  var cur=2, titles=['Heard','Matched','Officer on the way','Officer on scene','Closed. Here is what happened.'];
-  function renderTL(){
-    var ol=$('#tl'); ol.innerHTML='';
-    stages.forEach(function(s,i){
-      var li=document.createElement('li'); li.className=i<cur?'done':i===cur?'now':'';
-      li.innerHTML='<div class="dot">'+(i<cur?'&#10003;':(i===cur&&cur===4?'&#10003;':''))+'</div><div><b>'+s.t+'</b>'+(i<=cur?'<span class="t">'+s.ti+'</span><p>'+s.d+'</p>':'')+'</div>';
-      ol.appendChild(li);
-    });
-    $('#trkTitle').textContent=titles[cur];
-    $('#outcome').classList.toggle('on',cur===4);
-    $('#adv').disabled=cur===4; $('#adv').style.opacity=cur===4?.4:1;
-    $('#fbmsg').style.display='none';
+  var stage=0, energy=1, target=1, refNo='HSH-48213', tw=makeWave(seedFrom(refNo));
+  var stepsEl=$('#steps');
+  STAGES.forEach(function(s,i){var b=document.createElement('button');b.type='button';b.textContent=i+1;b.setAttribute('aria-label','Stage '+(i+1)+': '+s.t);b.addEventListener('click',function(){setStage(i)});stepsEl.appendChild(b)});
+  function setStage(i){
+    stage=i;target=STAGES[i].e;
+    $$('button',stepsEl).forEach(function(b,k){b.className=k<i?'done':k===i?'now':''});
+    $('#stageNum').textContent='STAGE '+(i+1)+' OF 5';$('#stageTitle').textContent=STAGES[i].t;$('#stageBody').textContent=STAGES[i].b;
+    $('#nextStage').textContent=i===4?'Start over':'Next stage';
   }
-  $('#adv').addEventListener('click',function(){if(cur<4){cur++;renderTL()}});
-  $('#rst').addEventListener('click',function(){cur=0;renderTL()});
-  function fb(msg){var m=$('#fbmsg');m.textContent=msg;m.style.display='block'}
-  $('#quiet').addEventListener('click',function(){fb('Thank you. We will check this address again in 7 days.')});
-  $('#loud').addEventListener('click',function(){fb('Reopened. Your first report is attached and the case moves to the top of the queue.')});
-  renderTL();
+  $('#nextStage').addEventListener('click',function(){setStage(stage===4?0:stage+1)});
+  $('#newWave').addEventListener('click',function(){refNo='HSH-'+(10000+Math.floor(Math.random()*89999));$('#refNo').textContent=refNo;tw=makeWave(seedFrom(refNo));setStage(0)});
+  setStage(0);
+  loop(function(t){energy+=RM?(target-energy):(target-energy)*.04;drawWave($('#trackCanvas'),tw,t,energy,{lines:3})});
 
-  // send
-  var toastT;
-  $('#send').addEventListener('click',function(){
-    stopM(); cur=0; renderTL();
-    var t=$('#toast'); t.classList.add('on'); clearTimeout(toastT);
-    toastT=setTimeout(function(){t.classList.remove('on');tab('track')},1800);
+  // ---------- 01 drop a sound ----------
+  var drops=[], pondSeed=prng(42), blocks=[];
+  for(var bx=0;bx<12;bx++)for(var by=0;by<8;by++)blocks.push({x:bx,y:by,h:pondSeed()});
+  var dropType='Party next door', dropN=0;
+  $$('#dropTypes button').forEach(function(b){b.addEventListener('click',function(){$$('#dropTypes button').forEach(function(x){x.setAttribute('aria-pressed','false')});b.setAttribute('aria-pressed','true');dropType=b.textContent})});
+  $('#pond').addEventListener('click',function(e){
+    var r=this.getBoundingClientRect(),d=Math.min(2,window.devicePixelRatio||1);
+    var id='HSH-'+(48214+dropN++);
+    drops.push({x:(e.clientX-r.left)*d,y:(e.clientY-r.top)*d,t:performance.now()/1000,id:id});
+    if(drops.length>6)drops.shift();
+    $('#dropToast').textContent='Plop. "'+dropType+'" is now '+id+'. Tracking started.';
+  });
+  loop(function(t){
+    var F=fit($('#pondCanvas')),x=F.x,W=F.w,H=F.h,cw=W/12,ch=H/8;
+    x.fillStyle='#141B3C';x.fillRect(0,0,W,H);
+    blocks.forEach(function(b){x.fillStyle='rgba(255,248,236,'+(.05+b.h*.08)+')';x.beginPath();x.roundRect?x.roundRect(b.x*cw+cw*.12,b.y*ch+ch*.14,cw*.76,ch*.72,6*F.d):x.rect(b.x*cw+cw*.12,b.y*ch+ch*.14,cw*.76,ch*.72);x.fill()});
+    var now=performance.now()/1000;
+    drops.forEach(function(d){
+      var age=now-d.t;
+      for(var k=0;k<3;k++){var a=age-k*.35;if(a<0||a>2.2)continue;var r=a*90*F.d;x.strokeStyle='rgba(255,122,26,'+Math.max(0,1-a/2.2)+')';x.lineWidth=3*F.d;x.beginPath();x.arc(d.x,d.y,r,0,Math.PI*2);x.stroke()}
+      var p=Math.min(1,age/.5);x.fillStyle='#FF7A1A';x.beginPath();x.arc(d.x,d.y,(6+3*Math.sin(now*4))*F.d*p,0,Math.PI*2);x.fill();
+      if(age>.6){x.font=(500)+' '+(11*F.d)+'px IBM Plex Mono, monospace';x.fillStyle='#FFD66B';x.fillText(d.id,d.x+12*F.d,d.y-10*F.d)}
+    });
   });
 
-  // minimap on phone
-  var mm=$('#minimap'); for(var i=0;i<50;i++){var c=document.createElement('i'); var h=(i*37+11)%7; c.style.background=i===23?'var(--sig)':'color-mix(in srgb,var(--fg) '+(6+h*4)+'%,var(--card))'; if(i===23)c.style.boxShadow='0 0 0 2px var(--fg)'; mm.appendChild(c)}
+  // ---------- 03 the silence moment ----------
+  var sWave=makeWave(seedFrom('HSH-48213-close')), sEnergy=.45, sTarget=.45, sDone=0;
+  $('#yesQuiet').addEventListener('click',function(){sTarget=0;sDone=1;$('#silenceToast').textContent='Ahh. Logged as quieter. Case closed, with your thumbs-up on the record.'});
+  $('#noQuiet').addEventListener('click',function(){sTarget=1;sDone=0;$('#silenceToast').textContent='Reopened. Your first report is attached and the case jumps the line.'});
+  loop(function(t){
+    sEnergy+=RM?(sTarget-sEnergy):(sTarget-sEnergy)*.05;
+    var c=$('#silenceCanvas');drawWave(c,sWave,t,sEnergy,{lines:2,amp:.9});
+    if(sDone&&sEnergy<.05){var F=fit(c),x=F.x;x.strokeStyle='#FFD66B';x.lineWidth=4*F.d;x.lineCap='round';x.lineJoin='round';x.beginPath();var cx=F.w-34*F.d,cy=F.h/2;x.moveTo(cx-12*F.d,cy);x.lineTo(cx-3*F.d,cy+9*F.d);x.lineTo(cx+13*F.d,cy-10*F.d);x.stroke()}
+  });
+
+  // ---------- brand icon + posters ----------
+  loop(function(t){
+    var F=fit($('#iconCanvas')),x=F.x,W=F.w,H=F.h;x.clearRect(0,0,W,H);
+    x.fillStyle='#141B3C';x.beginPath();x.roundRect?x.roundRect(0,0,W,H,W*.28):x.rect(0,0,W,H);x.fill();
+    var cyc=(t%3.2)/3.2, settle=cyc<.55?0:Math.min(1,(cyc-.55)/.25);
+    [0,1,2].forEach(function(i){var base=[20,36,16][i]/64,amp=Math.abs(Math.sin(t*6+i*1.3))*.25,h=lerp(base+amp,.05,settle)*H;x.fillStyle='#FF7A1A';var bw=W*.1,xx=W*(.2+i*.155);x.beginPath();x.roundRect?x.roundRect(xx,H/2-h/2,bw,h,bw/2):x.rect(xx,H/2-h/2,bw,h);x.fill()});
+    x.fillStyle='#FFD66B';x.beginPath();var lw=lerp(W*.16,W*.28,settle);x.roundRect?x.roundRect(W*.66,H/2-W*.025,lw,W*.05,W*.025):x.rect(W*.66,H/2-W*.025,lw,W*.05);x.fill();
+  });
+  $$('.pwave').forEach(function(c){var w=makeWave(+c.dataset.seed),col=c.dataset.c,calm=c.dataset.calm;loop(function(t){drawWave(c,w,t,calm?.25+.1*Math.sin(t):.75+.2*Math.sin(t*.7),{lines:2,color:col})})});
+
+  // ---------- motion loops ----------
+  $$('.mloop').forEach(function(c,ci){
+    var w=makeWave(100+ci);
+    loop(function(t){
+      var k=c.dataset.kind,F=fit(c),x=F.x,W=F.w,H=F.h;
+      if(k==='ripple'){x.fillStyle='#141B3C';x.fillRect(0,0,W,H);var cyc=t%2.6;for(var j=0;j<3;j++){var a=cyc-j*.3;if(a<0)continue;x.strokeStyle='rgba(255,122,26,'+Math.max(0,1-a/2)+')';x.lineWidth=3*F.d;x.beginPath();x.arc(W/2,H/2,a*60*F.d,0,Math.PI*2);x.stroke()}
+        var pp=Math.min(1,Math.max(0,(cyc-1.2)/.3));x.fillStyle='#FFD66B';x.beginPath();x.arc(W/2,H/2,7*F.d*pp,0,Math.PI*2);x.fill();
+        if(pp>=1){x.font='500 '+(11*F.d)+'px IBM Plex Mono, monospace';x.fillText('HSH-48213',W/2+12*F.d,H/2-10*F.d)}}
+      else if(k==='morph'){var e=.5+.5*Math.cos(t*.9);drawWave(c,w,t,e,{lines:2})}
+      else {var cyc2=(t%4)/4,e2=cyc2<.4?1-cyc2/.4*.95:.05;drawWave(c,w,t,cyc2>.55?0:e2,{lines:2});
+        if(cyc2>.6){x.strokeStyle='#FFD66B';x.lineWidth=4*F.d;x.lineCap='round';x.beginPath();var cx=W/2,cy=H/2-22*F.d,pr=Math.min(1,(cyc2-.6)/.15);x.moveTo(cx-12*F.d,cy);x.lineTo(cx-3*F.d,cy+9*F.d);if(pr>.5)x.lineTo(cx-3*F.d+16*F.d*(pr-.5)*2,cy+9*F.d-19*F.d*(pr-.5)*2);x.stroke()}}
+    });
+  });
 
   // city map (deck.gl): stylized NYC street scene built on the real NYC 3D Building Model
   var CENTER=[-73.9576,40.7178], HOT=[-73.9576,40.7178];
@@ -538,7 +460,7 @@ section{padding-top:72px}
   function cluster(c,n,sx,sy,w){for(var i=0;i<n;i++){k++;var a=rnd(k)*6.283,r=Math.sqrt(-2*Math.log(Math.max(.0001,rnd(k+777))));pts.push({p:[c[0]+Math.cos(a)*r*sx,c[1]+Math.sin(a)*r*sy],w:w||1})}}
   cluster(HOT,150,.0011,.0008,1);cluster([-73.9488,40.7215],70,.0016,.0010,1);cluster([-73.9660,40.7140],60,.0014,.0011,1);cluster(CENTER,260,.0050,.0034,1);
   AREAS.slice(1).forEach(function(a,i){cluster([a.c[0]+.0012*(i%2?1:-1),a.c[1]+.0008],60+i*12,.0012,.0009,1);cluster(a.c,140,.0042,.003,1)});
-  var range=[[255,236,153],[255,201,102],[255,150,90],[240,90,90],[200,50,110]];
+  var range=[[255,236,170],[255,214,107],[255,170,70],[255,122,26],[214,80,20]];
   var is3d=true, deckInst=null, picked=null;
   // NYC 3D Building Model (enhanced CityGML, georocket/new-york-city-model-enhanced), tile DA19, about 1.3 km square around the hotspot.
   function b64(s,T){var b=atob(s),u=new Uint8Array(b.length);for(var i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return new T(u.buffer)}
@@ -752,9 +674,9 @@ section{padding-top:72px}
     });
     if(labelsOn){
       ls.push(new deck.TextLayer({id:'boro-labels',data:BLABELS,getPosition:function(d){return d.p},getText:function(d){return d.t},getSize:20,getColor:[60,64,74,235],fontFamily:'Bricolage Grotesque, Helvetica, Arial, sans-serif',fontWeight:800,characterSet:'auto',fontSettings:{sdf:true},outlineWidth:4,outlineColor:[255,255,255,220],billboard:true,parameters:{depthTest:false}}));
-      ls.push(new deck.TextLayer({id:'area-labels',data:AREAS,getPosition:function(d){return d.c},getText:function(d){return d.name},getSize:13,getColor:function(d){return d===cur?[16,18,22,255]:[40,44,54,230]},fontFamily:'Bricolage Grotesque, Helvetica, Arial, sans-serif',fontWeight:700,characterSet:'auto',fontSettings:{sdf:true},outlineWidth:5,outlineColor:[255,210,31,240],background:false,billboard:true,pickable:true,onClick:function(i){if(i.object)selectArea(i.object)},updateTriggers:{getColor:cur.id},parameters:{depthTest:false}}));
+      ls.push(new deck.TextLayer({id:'area-labels',data:AREAS,getPosition:function(d){return d.c},getText:function(d){return d.name},getSize:13,getColor:function(d){return d===cur?[16,18,22,255]:[40,44,54,230]},fontFamily:'Bricolage Grotesque, Helvetica, Arial, sans-serif',fontWeight:700,characterSet:'auto',fontSettings:{sdf:true},outlineWidth:5,outlineColor:[255,214,107,240],background:false,billboard:true,pickable:true,onClick:function(i){if(i.object)selectArea(i.object)},updateTriggers:{getColor:cur.id},parameters:{depthTest:false}}));
     }
-    ls.push(new deck.ScatterplotLayer({id:'ring',data:[{p:HOT}],getPosition:function(d){return d.p},getRadius:120,radiusUnits:'meters',stroked:true,filled:false,getLineColor:[74,52,92],lineWidthMinPixels:3}));
+    ls.push(new deck.ScatterplotLayer({id:'ring',data:[{p:HOT}],getPosition:function(d){return d.p},getRadius:120,radiusUnits:'meters',stroked:true,filled:false,getLineColor:[255,122,26],lineWidthMinPixels:4}));
     return ls.filter(Boolean);
   }
   function draw(){if(deckInst)deckInst.setProps({layers:layers()})}
@@ -782,18 +704,6 @@ section{padding-top:72px}
     var m=document.createElement('div');m.className='deckfail';m.textContent='This map needs WebGL, which is not available here.';$('#deckmap').appendChild(m);
   }
 
-  // motion cards
-  var p=$('#pulse'); for(var i=0;i<22;i++){p.appendChild(document.createElement('i'))}
-  function play(id){var el=document.getElementById(id); el.classList.remove('go'); void el.offsetWidth; el.classList.add('go')}
-  $$('.replay').forEach(function(b){b.addEventListener('click',function(){play(b.dataset.m)})});
-  ['m1','m2','m3'].forEach(function(id,i){setTimeout(function(){play(id)},400+i*300)});
+
 })();
 </script>
-<style>
-:root{--l1:#d9dde3;--l2:#a9b3ff;--l3:#6b7dff;--l4:#2742e6}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--l1:#222831;--l2:#364290;--l3:#5568e6;--l4:#9aaaff}}
-:root[data-theme="dark"]{--l1:#222831;--l2:#364290;--l3:#5568e6;--l4:#9aaaff}
-.cell{cursor:pointer;color:var(--fg)}
-.cell.l0{fill:var(--l1)}.cell.l1{fill:var(--l2)}.cell.l2{fill:var(--l3)}.cell.l3{fill:var(--l4)}
-.cell:hover{opacity:.8}
-</style>
