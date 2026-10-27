@@ -368,11 +368,11 @@ section{padding-top:72px}
   <div class="sec-head">
     <div class="eyebrow">Seeing the pattern</div>
     <h2>The loud block gets a name, not 31 separate tickets.</h2>
-    <p>Each hexagon is about 150 m across. Redder means more reports in the last 30 days. The buildings use the real NYC 3D Building Model, drawn as a stylized street scene. Pick a neighborhood under the map, and press Street level for the view from the avenue. Zoom in close and the buildings gain windows. Click a hexagon to read it, drag to pan, right-drag to tilt. The dark ring is the repeat location from the phone above.</p>
+    <p>Each hexagon is about 150 m across. Redder means more reports in the last 30 days. The buildings use the real NYC 3D Building Model, drawn as a stylized street scene. Pick a neighborhood under the map, and press Street level for the view from the avenue. Zoom in close and the buildings gain windows. Click a hexagon to read it, drag to pan, right-drag to tilt. The dark ring is the repeat location from the phone above. The map opens on the whole city: tap a neighborhood name to fly in, and press City to come back out.</p>
   </div>
   <div class="pattern">
     <div class="cityMap">
-      <div class="deckwrap"><div id="deckmap" role="img" aria-label="Example 3D map of noise reports by area, built with deck.gl"></div><div class="mapstatus" id="mapstatus" role="status" hidden></div><div class="mapctl"><button type="button" id="tilt" aria-pressed="true">3D</button><button type="button" id="street">Street level</button><button type="button" id="reset">Reset view</button></div></div>
+      <div class="deckwrap"><div id="deckmap" role="img" aria-label="Example 3D map of noise reports by area, built with deck.gl"></div><div class="mapstatus" id="mapstatus" role="status" hidden></div><div class="mapctl"><button type="button" id="tilt" aria-pressed="true">3D</button><button type="button" id="city">City</button><button type="button" id="street">Street level</button><button type="button" id="reset">Reset view</button></div></div>
       <div class="areas" id="areas" aria-label="Neighborhoods"></div>
       <div class="legend"><span>Fewer</span><i style="background:#FFEC99"></i><i style="background:#FFC966"></i><i style="background:#FF965A"></i><i style="background:#F05A5A"></i><span>More reports</span><span style="margin-left:auto">Example data</span></div>
     </div>
@@ -526,7 +526,11 @@ section{padding-top:72px}
   ];
   var cur=AREAS[0];
   function areaView(a){return {longitude:a.c[0]+.0004,latitude:a.c[1]-.0006,zoom:15.9,pitch:60,bearing:a.b,maxPitch:85}}
-  var INITIAL=areaView(cur);
+  var CITY={longitude:-73.962,latitude:40.722,zoom:11.35,pitch:38,bearing:-15,maxPitch:85};
+  var INITIAL=CITY;
+  // real borough coastlines (simplified from the NYC borough boundaries), drawn as land over water
+  var boroughs=[], BLABELS=[{t:'MANHATTAN',p:[-73.9690,40.7700]},{t:'BROOKLYN',p:[-73.9500,40.6990]},{t:'QUEENS',p:[-73.9150,40.7400]},{t:'THE BRONX',p:[-73.8648,40.8448]},{t:'STATEN ISLAND',p:[-74.1502,40.5795]}];
+  fetch('areas/boroughs.json').then(function(r){return r.json()}).then(function(b){boroughs=[];b.forEach(function(x){x.polys.forEach(function(p){boroughs.push({name:x.name,polygon:p})})});draw()}).catch(function(){});
   var names=['Bedford Ave','Metropolitan Ave','Grand St','N 6 St','Driggs Ave','Wythe Ave','Kent Ave','Roebling St'];
   function rnd(seed){var x=Math.sin(seed*12.9898)*43758.5453;return x-Math.floor(x)}
   var pts=[],k=0;
@@ -609,7 +613,7 @@ section{padding-top:72px}
   }
   // Stylized 3D-cartoon look: brick and stone palette, soft cel shading, cornices and belt courses, framed windows with sky reflections,
   // air conditioners, fire escapes, shopfronts with awnings and wooden rooftop water tanks. Fine detail fades in with zoom (detailAmt).
-  var detailAmt=0, hexOn=true;
+  var detailAmt=0, hexOn=true, labelsOn=true;
   var PAL=[[181,86,68],[205,128,88],[218,182,128],[232,208,166],[118,134,150],[160,178,194],[150,64,58],[236,222,190]];
   class DetailExt extends deck.LayerExtension{
     getShaders(){return {inject:{
@@ -695,11 +699,13 @@ section{padding-top:72px}
     draw(params,extension){this.state.model.setUniforms({detailAmt:extension.opts.amount||0})}
   }
   DetailExt.extensionName='DetailExt';DetailExt.componentName='DetailExt';
-  var GC=[-73.972,40.728], GR=0.09, groundPoly=[[[GC[0]-GR,GC[1]-GR*.75,-.6],[GC[0]+GR,GC[1]-GR*.75,-.6],[GC[0]+GR,GC[1]+GR*.75,-.6],[GC[0]-GR,GC[1]+GR*.75,-.6]]];
+  var GC=[-73.95,40.70], GR=0.45, groundPoly=[[[GC[0]-GR,GC[1]-GR*.75,-.6],[GC[0]+GR,GC[1]-GR*.75,-.6],[GC[0]+GR,GC[1]+GR*.75,-.6],[GC[0]-GR,GC[1]+GR*.75,-.6]]];
   var TREE_G=[[86,168,92],[110,190,100],[70,150,96]];
   function layers(){
     var ls=[
-      new deck.SolidPolygonLayer({id:'ground',data:groundPoly.map(function(p){return {polygon:p}}),getPolygon:function(d){return d.polygon},getFillColor:[88,94,104],material:false}),
+      new deck.SolidPolygonLayer({id:'water',data:groundPoly.map(function(p){return {polygon:p}}),getPolygon:function(d){return d.polygon},getFillColor:[128,190,230],material:false}),
+      new deck.SolidPolygonLayer({id:'land',data:boroughs,getPolygon:function(d){return d.polygon},getFillColor:[178,176,170],material:false,parameters:{depthTest:false}}),
+      new deck.PathLayer({id:'shore',data:boroughs,getPath:function(d){return d.polygon},getColor:[236,240,242],getWidth:2,widthUnits:'pixels',widthMinPixels:1.5,parameters:{depthTest:false}}),
       !hexOn?null:new deck.HexagonLayer({id:'hex',data:pts,getPosition:function(d){return d.p},radius:90,extruded:false,coverage:.92,opacity:.7-.42*detailAmt,colorRange:range,upperPercentile:100,pickable:true,autoHighlight:true,highlightColor:[255,255,255,120],onClick:pick})
     ];
     if(is3d)AREAS.forEach(function(ar){
@@ -711,22 +717,32 @@ section{padding-top:72px}
       ls.push(new deck.SimpleMeshLayer(Object.assign({id:id+'trunks',data:D.trees,mesh:treeTrunk,getPosition:function(d){return d.p},getColor:[110,78,52,255],getScale:function(d){return [d.s,d.s,d.s]},material:{ambient:.6,diffuse:.6}},O)));
       ls.push(new deck.SimpleMeshLayer(Object.assign({id:id+'crowns',data:D.trees,mesh:treeCrown,getPosition:function(d){return d.p},getColor:function(d){return TREE_G[Math.floor(d.g*3)].concat(255)},getScale:function(d){return [d.s,d.s,d.s]},material:{ambient:.5,diffuse:.7,shininess:4,specularColor:[30,40,30]}},O)));
     });
+    if(labelsOn){
+      ls.push(new deck.TextLayer({id:'boro-labels',data:BLABELS,getPosition:function(d){return d.p},getText:function(d){return d.t},getSize:20,getColor:[60,64,74,235],fontFamily:'Bricolage Grotesque, Helvetica, Arial, sans-serif',fontWeight:800,characterSet:'auto',fontSettings:{sdf:true},outlineWidth:4,outlineColor:[255,255,255,220],billboard:true,parameters:{depthTest:false}}));
+      ls.push(new deck.TextLayer({id:'area-labels',data:AREAS,getPosition:function(d){return d.c},getText:function(d){return d.name},getSize:13,getColor:function(d){return d===cur?[16,18,22,255]:[40,44,54,230]},fontFamily:'Bricolage Grotesque, Helvetica, Arial, sans-serif',fontWeight:700,characterSet:'auto',fontSettings:{sdf:true},outlineWidth:5,outlineColor:[255,210,31,240],background:false,billboard:true,pickable:true,onClick:function(i){if(i.object)selectArea(i.object)},updateTriggers:{getColor:cur.id},parameters:{depthTest:false}}));
+    }
     ls.push(new deck.ScatterplotLayer({id:'ring',data:[{p:HOT}],getPosition:function(d){return d.p},getRadius:120,radiusUnits:'meters',stroked:true,filled:false,getLineColor:[74,52,92],lineWidthMinPixels:3}));
     return ls.filter(Boolean);
   }
   function draw(){if(deckInst)deckInst.setProps({layers:layers()})}
+  function selectArea(a){
+    cur=a;var row=$('#areas');Array.prototype.forEach.call(row.children,function(x){x.setAttribute('aria-pressed',x.textContent===a.name)});
+    loadArea(a);draw();
+    deckInst.setProps({initialViewState:view(Object.assign({},areaView(a),{pitch:is3d?60:0,bearing:is3d?a.b:0}))});
+  }
   function view(v){return Object.assign({},v,{transitionDuration:1400,transitionInterpolator:new deck.FlyToInterpolator({speed:1.4})})}
   try{
-    deckInst=new deck.Deck({parent:$('#deckmap'),useDevicePixels:true,glOptions:{antialias:true},initialViewState:INITIAL,controller:{maxZoom:20,minZoom:12},maxPitch:85,layers:layers(),
-      onViewStateChange:function(e){var z=e.viewState.zoom,a=z<15.4?0:z>16.4?1:(z-15.4);a=Math.round(a*4)/4;var h=z<17.3;if(a!==detailAmt||h!==hexOn){detailAmt=a;hexOn=h;draw()}},
+    deckInst=new deck.Deck({parent:$('#deckmap'),useDevicePixels:true,glOptions:{antialias:true},initialViewState:INITIAL,controller:{maxZoom:20,minZoom:10},maxPitch:85,layers:layers(),
+      onViewStateChange:function(e){var z=e.viewState.zoom,a=z<15.4?0:z>16.4?1:(z-15.4);a=Math.round(a*4)/4;var h=z<17.3,lb=z<15.3;if(a!==detailAmt||h!==hexOn||lb!==labelsOn){detailAmt=a;hexOn=h;labelsOn=lb;draw()}},
       getTooltip:function(i){return i.object&&i.object.count?{text:i.object.count+' reports in this hexagon',style:{font:'12px IBM Plex Mono, monospace',background:'#171b23',color:'#f1f2f4',padding:'6px 8px',borderRadius:'8px'}}:null}});
     $('#tilt').addEventListener('click',function(){is3d=!is3d;this.setAttribute('aria-pressed',is3d);this.textContent=is3d?'3D':'2D';deckInst.setProps({initialViewState:Object.assign({},areaView(cur),{pitch:is3d?60:0,bearing:is3d?cur.b:0,transitionDuration:600}),layers:layers()})});
     $('#reset').addEventListener('click',function(){deckInst.setProps({initialViewState:view(Object.assign({},areaView(cur),{pitch:is3d?60:0,bearing:is3d?cur.b:0}))})});
     $('#street').addEventListener('click',function(){if(!is3d)$('#tilt').click();loadArea(cur).then(function(D){if(D&&D.street)deckInst.setProps({initialViewState:view(D.street)})})});
     var row=$('#areas');
     AREAS.forEach(function(a){var b=document.createElement('button');b.type='button';b.textContent=a.name;b.setAttribute('aria-pressed',a===cur);
-      b.addEventListener('click',function(){cur=a;Array.prototype.forEach.call(row.children,function(x){x.setAttribute('aria-pressed',x===b)});loadArea(a);deckInst.setProps({initialViewState:view(Object.assign({},areaView(a),{pitch:is3d?60:0,bearing:is3d?a.b:0}))})});
+      b.addEventListener('click',function(){selectArea(a)});
       row.appendChild(b)});
+    $('#city').addEventListener('click',function(){deckInst.setProps({initialViewState:view(Object.assign({},CITY,{pitch:is3d?40:0,bearing:is3d?-15:0}))})});
     loadArea(cur);
   }catch(e){
     var m=document.createElement('div');m.className='deckfail';m.textContent='This map needs WebGL, which is not available here.';$('#deckmap').appendChild(m);
