@@ -1,7 +1,7 @@
 import pickle,json,base64,numpy as np,mapbox_earcut as ec,pyproj,sys
 CX,CY=996003.57,200793.26;FT=0.3048
 blds=pickle.load(open('da/DA19.pkl','rb'))
-P=[];I=[];B=[];H=[];base=0
+P=[];I=[];B=[];H=[];base=0;OL=[];OLN=[]
 for bi,b in enumerate(blds):
     gz=None;pts=[]
     for k,a in b['surf']:
@@ -11,6 +11,11 @@ for bi,b in enumerate(blds):
     allp=np.vstack(pts);cx,cy=allp.mean(0)
     grounds=[a[:,:2] for k,a in b['surf'] if k=='Ground']
     top=0
+    for k,a in b['surf']:
+        if k in ('Roof','Ground') and len(a)>=3:
+            r=np.column_stack([(a[:,0]-CX)*FT,(a[:,1]-CY)*FT,(a[:,2]-gz)*FT+(0.05 if k=='Ground' else 0)])
+            if not np.allclose(r[0],r[-1]): r=np.vstack([r,r[:1]])
+            OL.append(r);OLN.append(len(r))
     for k,a in b['surf']:
         if k=='Ground': continue
         a=a[:-1] if np.allclose(a[0],a[-1]) else a
@@ -53,6 +58,6 @@ assert np.abs(P*10).max()<32000
 lon,lat=pyproj.Transformer.from_crs(2263,4326,always_xy=True).transform(CX,CY)
 d={'anchor':[lon,lat],'n':len(blds),'nv':int(len(P)),'ni':int(len(I)),
  'pos':base64.b64encode(q.tobytes()).decode(),'idx':base64.b64encode(I.tobytes()).decode(),'bid':base64.b64encode(B.tobytes()).decode(),
- 'h':H,'hmax':max(H)}
+ 'ol':base64.b64encode(np.round(np.vstack(OL)*10).astype(np.int16).tobytes()).decode(),'oln':base64.b64encode(np.array(OLN,dtype=np.uint16).tobytes()).decode(),'h':H,'hmax':max(H)}
 json.dump(d,open('mesh.json','w'),separators=(',',':'))
 import os;print(d['nv'],d['ni']//3,'tris',os.path.getsize('mesh.json')//1024,'KB','hmax',max(H),'anchor',lon,lat)
