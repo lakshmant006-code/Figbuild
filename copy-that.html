@@ -519,9 +519,8 @@ section{padding-top:72px}
     f.forEach(function(q){var b=out.p.length/3;q[1].forEach(function(v){out.p.push(v[0],v[1],v[2]);out.n.push(q[0][0],q[0][1],q[0][2])});out.i.push(b,b+1,b+2,b,b+2,b+3)});
   }
   function toMesh(o){return {attributes:{positions:{value:new Float32Array(o.p),size:3},normals:{value:new Float32Array(o.n),size:3}},indices:{value:new Uint32Array(o.i),size:1}}}
-  function sphere(r,sx,sy,sz,cz){var o={p:[],n:[],i:[]},A=9,Bn=6;for(var a=0;a<=Bn;a++){var th=a/Bn*Math.PI;for(var b=0;b<=A;b++){var ph=b/A*Math.PI*2,nx=Math.sin(th)*Math.cos(ph),ny=Math.sin(th)*Math.sin(ph),nz=Math.cos(th);o.p.push(nx*sx,ny*sy,nz*sz+cz);var l=Math.hypot(nx/sx,ny/sy,nz/sz);o.n.push(nx/sx/l,ny/sy/l,nz/sz/l)}}for(var a2=0;a2<Bn;a2++)for(var b2=0;b2<A;b2++){var p0=a2*(A+1)+b2,p1=p0+A+1;o.i.push(p0,p1,p0+1,p0+1,p1,p1+1)}return toMesh(o)}
-  function trunk(r,h){var o={p:[],n:[],i:[]},n=7;for(var i=0;i<=n;i++){var ph=i/n*Math.PI*2,c=Math.cos(ph),s=Math.sin(ph);o.p.push(c*r,s*r,0,c*r,s*r,h);o.n.push(c,s,0,c,s,0)}for(var j=0;j<n;j++){var a=j*2;o.i.push(a,a+2,a+1,a+1,a+2,a+3)}return toMesh(o)}
-  var carMesh=(function(){var o={p:[],n:[],i:[]};box(4.3,1.85,.35,1.15,o);box(2.3,1.65,1.15,1.8,o);return toMesh(o)})();
+  function sphere(r,sx,sy,sz,cz){var o={p:[],n:[],i:[]},A=28,Bn=18;for(var a=0;a<=Bn;a++){var th=a/Bn*Math.PI;for(var b=0;b<=A;b++){var ph=b/A*Math.PI*2,nx=Math.sin(th)*Math.cos(ph),ny=Math.sin(th)*Math.sin(ph),nz=Math.cos(th);o.p.push(nx*sx,ny*sy,nz*sz+cz);var l=Math.hypot(nx/sx,ny/sy,nz/sz);o.n.push(nx/sx/l,ny/sy/l,nz/sz/l)}}for(var a2=0;a2<Bn;a2++)for(var b2=0;b2<A;b2++){var p0=a2*(A+1)+b2,p1=p0+A+1;o.i.push(p0,p1,p0+1,p0+1,p1,p1+1)}return toMesh(o)}
+  function trunk(r,h){var o={p:[],n:[],i:[]},n=16;for(var i=0;i<=n;i++){var ph=i/n*Math.PI*2,c=Math.cos(ph),s=Math.sin(ph);o.p.push(c*r,s*r,0,c*r,s*r,h);o.n.push(c,s,0,c,s,0)}for(var j=0;j<n;j++){var a=j*2;o.i.push(a,a+2,a+1,a+1,a+2,a+3)}return toMesh(o)}
   var treeCrown=sphere(1,2.5,2.5,2.2,4.6), treeTrunk=trunk(.22,3.6);
   var outlines=null, cityMesh=null, MA=[-73.9576,40.7178], trees=[], cars=[];
   try{
@@ -580,7 +579,7 @@ section{padding-top:72px}
         vec3 n=normalize(vNn);
         float H=vTc.x;
         float L=dot(n,normalize(vec3(-0.45,-0.6,0.66)));
-        float band=0.78+0.32*smoothstep(-0.2,0.8,L);
+        float band=0.8+0.28*smoothstep(-0.3,0.9,L);
         if(vTc.y>0.5){
           float zz=vWp.z-H;
           vec3 wood=vec3(0.66,0.45,0.28);
@@ -605,27 +604,27 @@ section{padding-top:72px}
             // soft ground-contact shadow
             color.rgb*=0.82+0.18*smoothstep(0.0,3.0,vWp.z);
             // cornice and belt course
-            float top=smoothstep(H-1.15,H-1.0,vWp.z);
+            float top=smoothstep(H-1.2,H-1.0,vWp.z);
             color.rgb=mix(color.rgb,stone,top);
             color.rgb*=1.0-0.28*(smoothstep(H-1.6,H-1.15,vWp.z)*(1.0-top))*detailAmt;
             float belt=step(f.y,0.07)*step(7.0,vWp.z)*step(0.6,h21(vec2(floor(v/3.0),floor(along*0.01))));
             color.rgb=mix(color.rgb,stone,belt*detailAmt);
             // brick courses
             float row=floor(vWp.z/0.22); float bx=fract(along/0.5+0.5*mod(row,2.0));
-            float brick=max(step(fract(vWp.z/0.22),0.07),step(bx,0.05));
-            color.rgb*=1.0-detailAmt*0.07*brick;
+            float brick=max(1.0-smoothstep(0.03,0.09,fract(vWp.z/0.22)),1.0-smoothstep(0.02,0.07,bx));
+            color.rgb*=1.0-detailAmt*0.045*brick;
             // framed windows
             vec2 p=f-vec2(0.5,0.52);
             float d=rbox(p,vec2(0.27,0.32),0.04);
-            float win=(1.0-smoothstep(0.0,0.02,d))*up;
-            float frame=(1.0-smoothstep(0.0,0.02,d-0.05))*up;
+            float win=(1.0-smoothstep(-0.01,0.025,d))*up;
+            float frame=(1.0-smoothstep(-0.01,0.025,d-0.05))*up;
             float lintel=step(abs(p.x),0.33)*step(0.34,p.y)*step(p.y,0.42)*up;
             vec3 sky=mix(vec3(0.45,0.66,0.9),vec3(0.78,0.9,1.0),clamp(p.y+0.5,0.0,1.0));
             float lit=step(0.84,hs);
             vec3 glass=mix(sky,vec3(1.0,0.84,0.5),lit);
             float sh=p.x*0.9-p.y*0.7+0.05;
             glass=mix(glass,vec3(1.0),0.55*smoothstep(0.0,0.03,sh)*(1.0-smoothstep(0.06,0.11,sh)));
-            float mull=step(abs(p.x),0.012)+step(abs(p.y+0.0),0.012);
+            float mull=(1.0-smoothstep(0.008,0.02,abs(p.x)))+(1.0-smoothstep(0.008,0.02,abs(p.y)));
             glass=mix(glass,vec3(0.95),mull*0.8);
             vec3 c=mix(color.rgb,stone,max(frame,lintel)*detailAmt);
             c=mix(c,glass,win*detailAmt);
@@ -637,7 +636,7 @@ section{padding-top:72px}
             // fire escape on some facades
             float fe=step(0.66,h21(floor(vWp.xy*0.03)+floor(vec2(n.x,n.y)*2.0)))*step(8.0,H);
             float plat=step(f.y,0.09)*step(0.1,f.x)*step(f.x,0.9)*step(6.5,vWp.z)*step(vWp.z,H-2.0);
-            float rail=step(0.09,f.y)*step(f.y,0.36)*step(0.1,f.x)*step(f.x,0.9)*step(6.5,vWp.z)*step(vWp.z,H-2.0)*step(fract(f.x*7.0),0.1);
+            float rail=step(0.09,f.y)*step(f.y,0.36)*step(0.1,f.x)*step(f.x,0.9)*step(6.5,vWp.z)*step(vWp.z,H-2.0)*(1.0-smoothstep(0.05,0.14,abs(fract(f.x*7.0)-0.5)*2.0-0.84));
             float stair=step(0.55,f.x)*step(f.x,0.9)*step(6.5,vWp.z)*step(vWp.z,H-2.0)*step(abs(f.y-(f.x-0.55)/0.35),0.045);
             c=mix(c,vec3(0.12,0.13,0.15),clamp(plat+rail*0.8+stair,0.0,1.0)*fe*detailAmt);
             // shopfront on the ground floor
@@ -670,8 +669,7 @@ section{padding-top:72px}
     if(is3d&&cityMesh){
       cityMesh.forEach(function(m,i){ls.push(new deck.SimpleMeshLayer(Object.assign({id:'nyc3d-'+i,data:[{}],mesh:m,getPosition:[0,0,0],getColor:PAL[i].concat(255),extensions:[new DetailExt({amount:detailAmt})],pickable:false,material:false},O)))});
       ls.push(new deck.SimpleMeshLayer(Object.assign({id:'trunks',data:trees,mesh:treeTrunk,getPosition:function(d){return d.p},getColor:[110,78,52,255],sizeScale:1,getScale:function(d){return [d.s,d.s,d.s]},material:{ambient:.6,diffuse:.6}},O)));
-      ls.push(new deck.SimpleMeshLayer(Object.assign({id:'crowns',data:trees,mesh:treeCrown,getPosition:function(d){return d.p},getColor:function(d){return TREE_G[Math.floor(d.g*3)].concat(255)},getScale:function(d){return [d.s,d.s,d.s]},material:{ambient:.55,diffuse:.75}},O)));
-      ls.push(new deck.SimpleMeshLayer(Object.assign({id:'cars',data:cars,mesh:carMesh,getPosition:function(d){return d.p},getColor:function(d){return d.c.concat(255)},getOrientation:function(d){return [0,0,d.yaw]},material:{ambient:.55,diffuse:.8,shininess:30}},O)));
+      ls.push(new deck.SimpleMeshLayer(Object.assign({id:'crowns',data:trees,mesh:treeCrown,getPosition:function(d){return d.p},getColor:function(d){return TREE_G[Math.floor(d.g*3)].concat(255)},getScale:function(d){return [d.s,d.s,d.s]},material:{ambient:.5,diffuse:.7,shininess:4,specularColor:[30,40,30]}},O)));
     }
     ls.push(new deck.ScatterplotLayer({id:'ring',data:[{p:HOT}],getPosition:function(d){return d.p},getRadius:120,radiusUnits:'meters',stroked:true,filled:false,getLineColor:[74,52,92],lineWidthMinPixels:3}));
     return ls.filter(Boolean);
@@ -683,9 +681,9 @@ section{padding-top:72px}
     if(best){var kx=111320*Math.cos(MA[1]*Math.PI/180);STREET.longitude=MA[0]+best.p[0]/kx;STREET.latitude=MA[1]+best.p[1]/110574;STREET.bearing=90-best.yaw}
   })();
   function draw(){if(deckInst)deckInst.setProps({layers:layers()})}
-  function view(v){return Object.assign({},v,{transitionDuration:900})}
+  function view(v){return Object.assign({},v,{transitionDuration:1400,transitionInterpolator:new deck.FlyToInterpolator({speed:1.4})})}
   try{
-    deckInst=new deck.Deck({parent:$('#deckmap'),initialViewState:INITIAL,controller:{maxZoom:20,minZoom:12},maxPitch:85,layers:layers(),
+    deckInst=new deck.Deck({parent:$('#deckmap'),useDevicePixels:true,glOptions:{antialias:true},initialViewState:INITIAL,controller:{maxZoom:20,minZoom:12},maxPitch:85,layers:layers(),
       onViewStateChange:function(e){var z=e.viewState.zoom,a=z<15.4?0:z>16.4?1:(z-15.4);a=Math.round(a*4)/4;var h=z<17.3;if(a!==detailAmt||h!==hexOn){detailAmt=a;hexOn=h;draw()}},
       getTooltip:function(i){return i.object&&i.object.count?{text:i.object.count+' reports in this hexagon',style:{font:'12px IBM Plex Mono, monospace',background:'#171b23',color:'#f1f2f4',padding:'6px 8px',borderRadius:'8px'}}:null}});
     $('#tilt').addEventListener('click',function(){is3d=!is3d;this.setAttribute('aria-pressed',is3d);this.textContent=is3d?'3D':'2D';deckInst.setProps({initialViewState:Object.assign({},INITIAL,{pitch:is3d?50:0,bearing:is3d?-18:0,transitionDuration:600}),layers:layers()})});
