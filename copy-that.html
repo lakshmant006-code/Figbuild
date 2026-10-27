@@ -368,11 +368,11 @@ section{padding-top:72px}
   <div class="sec-head">
     <div class="eyebrow">Seeing the pattern</div>
     <h2>The loud block gets a name, not 31 separate tickets.</h2>
-    <p>Each hexagon is about 150 m across. Redder means more reports in the last 30 days. The buildings use the real NYC 3D Building Model, drawn as a stylized street scene. Pick a neighborhood under the map, and press Street level for the view from the avenue. Zoom in close and the buildings gain windows. Click a hexagon to read it, drag to pan, right-drag to tilt. The dark ring is the repeat location from the phone above. The map opens on the whole city: tap a neighborhood name to fly in, and press City to come back out.</p>
+    <p>Each hexagon is about 150 m across. Redder means more reports in the last 30 days. The buildings use the real NYC 3D Building Model, drawn as a stylized street scene. Pick a neighborhood under the map, and press Street level for the view from the avenue. Zoom in close and the buildings gain windows. Click a hexagon to read it, drag to pan, right-drag to tilt. The dark ring is the repeat location from the phone above. The map opens on the whole city: tap a neighborhood name to fly in, and press City to come back out. Every building over 150 ft is drawn citywide, so the real skyline shows from any angle; press Skyline for the view from the harbor.</p>
   </div>
   <div class="pattern">
     <div class="cityMap">
-      <div class="deckwrap"><div id="deckmap" role="img" aria-label="Example 3D map of noise reports by area, built with deck.gl"></div><div class="mapstatus" id="mapstatus" role="status" hidden></div><div class="mapctl"><button type="button" id="tilt" aria-pressed="true">3D</button><button type="button" id="city">City</button><button type="button" id="street">Street level</button><button type="button" id="reset">Reset view</button></div></div>
+      <div class="deckwrap"><div id="deckmap" role="img" aria-label="Example 3D map of noise reports by area, built with deck.gl"></div><div class="mapstatus" id="mapstatus" role="status" hidden></div><div class="mapctl"><button type="button" id="tilt" aria-pressed="true">3D</button><button type="button" id="city">City</button><button type="button" id="skyview">Skyline</button><button type="button" id="street">Street level</button><button type="button" id="reset">Reset view</button></div></div>
       <div class="areas" id="areas" aria-label="Neighborhoods"></div>
       <div class="legend"><span>Fewer</span><i style="background:#FFEC99"></i><i style="background:#FFC966"></i><i style="background:#FF965A"></i><i style="background:#F05A5A"></i><span>More reports</span><span style="margin-left:auto">Example data</span></div>
     </div>
@@ -527,6 +527,7 @@ section{padding-top:72px}
   var cur=AREAS[0];
   function areaView(a){return {longitude:a.c[0]+.0004,latitude:a.c[1]-.0006,zoom:15.9,pitch:60,bearing:a.b,maxPitch:85}}
   var CITY={longitude:-73.962,latitude:40.722,zoom:11.35,pitch:38,bearing:-15,maxPitch:85};
+  var SKYVIEW={longitude:-74.0045,latitude:40.7105,zoom:14.6,pitch:78,bearing:-38,maxPitch:85};
   var INITIAL=CITY;
   // real borough coastlines (simplified from the NYC borough boundaries), drawn as land over water
   var boroughs=[], BLABELS=[{t:'MANHATTAN',p:[-73.9690,40.7700]},{t:'BROOKLYN',p:[-73.9500,40.6990]},{t:'QUEENS',p:[-73.9150,40.7400]},{t:'THE BRONX',p:[-73.8648,40.8448]},{t:'STATEN ISLAND',p:[-74.1502,40.5795]}];
@@ -602,6 +603,30 @@ section{padding-top:72px}
       .catch(function(){a.loading=null;setStatus('Could not load '+a.name+'. Try again.')});
     return a.loading;
   }
+  // Skyline: every NYC building taller than 150 ft (NYC Open Data building footprints), drawn from the city's official
+  // 3D Building Model where it has them, and extruded from the current footprint and roof height where it doesn't (mostly built after 2014).
+  var skyline=[];
+  function loadSkyline(){
+    fetch('areas/skyline.txt').then(function(r){if(!r.ok)throw new Error(r.status);return r.text()}).then(unpack).then(function(buf){
+      var hl=new DataView(buf).getUint32(0,true), M=JSON.parse(new TextDecoder().decode(new Uint8Array(buf,4,hl))), o=4+hl;
+      skyline=M.groups.map(function(G){
+        function g(k,T){return new T(buf,o+G.b[k][0],G.b[k][1])}
+        var q=g('pos',Int16Array), idx=g('idx',Uint32Array), bid=g('bid',Uint16Array), nv=G.nv;
+        var pos=new Float32Array(nv*3), nor=new Float32Array(nv*3), tc=new Float32Array(nv*2);
+        for(var i=0;i<q.length;i++)pos[i]=q[i]/10;
+        for(var t=0;t<idx.length;t+=3){
+          var a=idx[t]*3,b=idx[t+1]*3,c=idx[t+2]*3;
+          var ux=pos[b]-pos[a],uy=pos[b+1]-pos[a+1],uz=pos[b+2]-pos[a+2],vx=pos[c]-pos[a],vy=pos[c+1]-pos[a+1],vz=pos[c+2]-pos[a+2];
+          var nx=uy*vz-uz*vy,ny=uz*vx-ux*vz,nz=ux*vy-uy*vx,l=Math.hypot(nx,ny,nz)||1;
+          nor[a]=nor[b]=nor[c]=nx/l;nor[a+1]=nor[b+1]=nor[c+1]=ny/l;nor[a+2]=nor[b+2]=nor[c+2]=nz/l;
+        }
+        for(var v=0;v<nv;v++){tc[v*2]=G.h[bid[v]];tc[v*2+1]=2+((Math.imul(bid[v]+7,2654435761)>>>0)%8)}
+        return {key:G.key,area:G.key.indexOf('area:')===0?G.key.slice(5):null,anchor:G.anchor,
+          mesh:{attributes:{positions:{value:pos,size:3},normals:{value:nor,size:3},texCoords:{value:tc,size:2}},indices:{value:idx,size:1}}};
+      });
+      draw();
+    }).catch(function(){});
+  }
   function setStatus(t){var el=$('#mapstatus');if(el){el.textContent=t;el.hidden=!t}}
   function pick(info){
     var o=info&&info.object; if(!o)return;
@@ -625,7 +650,11 @@ section{padding-top:72px}
         float H=vTc.x;
         float L=dot(n,normalize(vec3(-0.45,-0.6,0.66)));
         float band=0.8+0.28*smoothstep(-0.3,0.9,L);
-        if(vTc.y>0.5){
+        if(vTc.y>1.5){
+          float c=vTc.y-2.0;
+          color.rgb=c<0.5?vec3(0.71,0.34,0.27):c<1.5?vec3(0.8,0.5,0.35):c<2.5?vec3(0.85,0.71,0.5):c<3.5?vec3(0.91,0.82,0.65):c<4.5?vec3(0.46,0.53,0.59):c<5.5?vec3(0.63,0.7,0.76):c<6.5?vec3(0.59,0.25,0.23):vec3(0.93,0.87,0.75);
+        }
+        if(vTc.y>0.5&&vTc.y<1.5){
           float zz=vWp.z-H;
           vec3 wood=vec3(0.66,0.45,0.28);
           if(zz<1.6) wood=vec3(0.26,0.25,0.27);
@@ -708,6 +737,10 @@ section{padding-top:72px}
       new deck.PathLayer({id:'shore',data:boroughs,getPath:function(d){return d.polygon},getColor:[236,240,242],getWidth:2,widthUnits:'pixels',widthMinPixels:1.5,parameters:{depthTest:false}}),
       !hexOn?null:new deck.HexagonLayer({id:'hex',data:pts,getPosition:function(d){return d.p},radius:90,extruded:false,coverage:.92,opacity:.7-.42*detailAmt,colorRange:range,upperPercentile:100,pickable:true,autoHighlight:true,highlightColor:[255,255,255,120],onClick:pick})
     ];
+    if(is3d)skyline.forEach(function(G){
+      if(G.area){var ar=AREAS.filter(function(a){return a.id===G.area})[0];if(ar&&ar.data)return}
+      ls.push(new deck.SimpleMeshLayer({id:'sky-'+G.key,data:[{}],mesh:G.mesh,getPosition:[0,0,0],coordinateSystem:deck.COORDINATE_SYSTEM.METER_OFFSETS,coordinateOrigin:[G.anchor[0],G.anchor[1],0],getColor:[255,255,255,255],extensions:[new DetailExt({amount:detailAmt})],pickable:false,material:false}));
+    });
     if(is3d)AREAS.forEach(function(ar){
       var D=ar.data;if(!D)return;
       var O={coordinateSystem:deck.COORDINATE_SYSTEM.METER_OFFSETS,coordinateOrigin:[D.anchor[0],D.anchor[1],0]}, id=ar.id+'-';
@@ -733,7 +766,7 @@ section{padding-top:72px}
   function view(v){return Object.assign({},v,{transitionDuration:1400,transitionInterpolator:new deck.FlyToInterpolator({speed:1.4})})}
   try{
     deckInst=new deck.Deck({parent:$('#deckmap'),useDevicePixels:true,glOptions:{antialias:true},initialViewState:INITIAL,controller:{maxZoom:20,minZoom:10},maxPitch:85,layers:layers(),
-      onViewStateChange:function(e){var z=e.viewState.zoom,a=z<15.4?0:z>16.4?1:(z-15.4);a=Math.round(a*4)/4;var h=z<17.3,lb=z<15.3;if(a!==detailAmt||h!==hexOn||lb!==labelsOn){detailAmt=a;hexOn=h;labelsOn=lb;draw()}},
+      onViewStateChange:function(e){var z=e.viewState.zoom,a=z<15.4?0:z>16.4?1:(z-15.4);a=Math.round(a*4)/4;var h=z<17.3&&e.viewState.pitch<70,lb=z<15.3;if(a!==detailAmt||h!==hexOn||lb!==labelsOn){detailAmt=a;hexOn=h;labelsOn=lb;draw()}},
       getTooltip:function(i){return i.object&&i.object.count?{text:i.object.count+' reports in this hexagon',style:{font:'12px IBM Plex Mono, monospace',background:'#171b23',color:'#f1f2f4',padding:'6px 8px',borderRadius:'8px'}}:null}});
     $('#tilt').addEventListener('click',function(){is3d=!is3d;this.setAttribute('aria-pressed',is3d);this.textContent=is3d?'3D':'2D';deckInst.setProps({initialViewState:Object.assign({},areaView(cur),{pitch:is3d?60:0,bearing:is3d?cur.b:0,transitionDuration:600}),layers:layers()})});
     $('#reset').addEventListener('click',function(){deckInst.setProps({initialViewState:view(Object.assign({},areaView(cur),{pitch:is3d?60:0,bearing:is3d?cur.b:0}))})});
@@ -742,8 +775,9 @@ section{padding-top:72px}
     AREAS.forEach(function(a){var b=document.createElement('button');b.type='button';b.textContent=a.name;b.setAttribute('aria-pressed',a===cur);
       b.addEventListener('click',function(){selectArea(a)});
       row.appendChild(b)});
+    $('#skyview').addEventListener('click',function(){if(!is3d)$('#tilt').click();deckInst.setProps({initialViewState:view(SKYVIEW)})});
     $('#city').addEventListener('click',function(){deckInst.setProps({initialViewState:view(Object.assign({},CITY,{pitch:is3d?40:0,bearing:is3d?-15:0}))})});
-    loadArea(cur);
+    loadSkyline();loadArea(cur);
   }catch(e){
     var m=document.createElement('div');m.className='deckfail';m.textContent='This map needs WebGL, which is not available here.';$('#deckmap').appendChild(m);
   }
