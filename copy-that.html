@@ -502,7 +502,7 @@ section{padding-top:72px}
 
   // city map (deck.gl): stylized NYC street scene built on the real NYC 3D Building Model
   var CENTER=[-73.9576,40.7178], HOT=[-73.9576,40.7178];
-  var INITIAL={longitude:-73.9565,latitude:40.7170,zoom:14.3,pitch:50,bearing:-18};
+  var INITIAL={longitude:-73.9572,latitude:40.7172,zoom:15.9,pitch:60,bearing:-22};
   var STREET={longitude:-73.9583,latitude:40.7169,zoom:18.0,pitch:72,bearing:-28,maxPitch:85};
   var names=['Bedford Ave','Metropolitan Ave','Grand St','N 6 St','Driggs Ave','Wythe Ave','Kent Ave','Roebling St'];
   function rnd(seed){var x=Math.sin(seed*12.9898)*43758.5453;return x-Math.floor(x)}
@@ -569,7 +569,7 @@ section{padding-top:72px}
   }
   // Stylized 3D-cartoon look: brick and stone palette, soft cel shading, cornices and belt courses, framed windows with sky reflections,
   // air conditioners, fire escapes, shopfronts with awnings and wooden rooftop water tanks. Fine detail fades in with zoom (detailAmt).
-  var detailAmt=0;
+  var detailAmt=0, hexOn=true;
   var PAL=[[181,86,68],[205,128,88],[218,182,128],[232,208,166],[118,134,150],[160,178,194],[150,64,58],[236,222,190]];
   class DetailExt extends deck.LayerExtension{
     getShaders(){return {inject:{
@@ -661,7 +661,7 @@ section{padding-top:72px}
     var O={coordinateSystem:deck.COORDINATE_SYSTEM.METER_OFFSETS,coordinateOrigin:[MA[0],MA[1],0]};
     var ls=[
       new deck.SolidPolygonLayer({id:'ground',data:groundPoly.map(function(p){return {polygon:p}}),getPolygon:function(d){return d.polygon},getFillColor:[88,94,104],material:false}),
-      detailAmt>=.75?null:new deck.HexagonLayer({id:'hex',data:pts,getPosition:function(d){return d.p},radius:90,extruded:false,coverage:.92,opacity:.72-.7*detailAmt,colorRange:range,upperPercentile:100,pickable:true,autoHighlight:true,highlightColor:[255,255,255,120],onClick:pick})
+      !hexOn?null:new deck.HexagonLayer({id:'hex',data:pts,getPosition:function(d){return d.p},radius:90,extruded:false,coverage:.92,opacity:.7-.42*detailAmt,colorRange:range,upperPercentile:100,pickable:true,autoHighlight:true,highlightColor:[255,255,255,120],onClick:pick})
     ];
     if(is3d&&outlines){
       ls.push(new deck.PathLayer(Object.assign({id:'sidewalk',data:outlines,_pathType:'open',getColor:[196,192,184,255],getWidth:5,widthUnits:'meters',jointRounded:true,pickable:false},O)));
@@ -686,7 +686,7 @@ section{padding-top:72px}
   function view(v){return Object.assign({},v,{transitionDuration:900})}
   try{
     deckInst=new deck.Deck({parent:$('#deckmap'),initialViewState:INITIAL,controller:{maxZoom:20,minZoom:12},maxPitch:85,layers:layers(),
-      onViewStateChange:function(e){var z=e.viewState.zoom,a=z<16.6?0:z>17.6?1:(z-16.6);a=Math.round(a*4)/4;if(a!==detailAmt){detailAmt=a;draw()}},
+      onViewStateChange:function(e){var z=e.viewState.zoom,a=z<15.4?0:z>16.4?1:(z-15.4);a=Math.round(a*4)/4;var h=z<17.3;if(a!==detailAmt||h!==hexOn){detailAmt=a;hexOn=h;draw()}},
       getTooltip:function(i){return i.object&&i.object.count?{text:i.object.count+' reports in this hexagon',style:{font:'12px IBM Plex Mono, monospace',background:'#171b23',color:'#f1f2f4',padding:'6px 8px',borderRadius:'8px'}}:null}});
     $('#tilt').addEventListener('click',function(){is3d=!is3d;this.setAttribute('aria-pressed',is3d);this.textContent=is3d?'3D':'2D';deckInst.setProps({initialViewState:Object.assign({},INITIAL,{pitch:is3d?50:0,bearing:is3d?-18:0,transitionDuration:600}),layers:layers()})});
     $('#reset').addEventListener('click',function(){deckInst.setProps({initialViewState:view(Object.assign({},INITIAL,{pitch:is3d?50:0,bearing:is3d?-18:0}))})});
