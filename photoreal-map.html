@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Copy That: photorealistic NYC</title>
+<style>
+  html,body{margin:0;height:100%;background:#0d1016;color:#f1f2f4;font:14px/1.4 system-ui,sans-serif}
+  #map{position:absolute;inset:0}
+  .panel{position:absolute;left:16px;top:16px;z-index:2;background:#171b23;border:1px solid #3a4150;border-radius:14px;padding:14px;max-width:340px}
+  .panel h1{font-size:16px;margin:0 0 6px}
+  .panel p{margin:0 0 10px;color:#9aa1ad}
+  .panel input{width:100%;box-sizing:border-box;padding:9px 10px;border-radius:8px;border:1px solid #3a4150;background:#0d1016;color:#f1f2f4;font:13px ui-monospace,monospace}
+  .panel button{margin-top:8px;padding:9px 14px;border:0;border-radius:99px;background:#FFD21F;color:#101216;font-weight:700;cursor:pointer}
+  #credit{position:absolute;right:8px;bottom:6px;z-index:2;font:11px ui-monospace,monospace;color:#c9ced8;background:rgba(13,16,22,.7);padding:3px 6px;border-radius:6px}
+  #msg{margin-top:8px;color:#ffb4a8;font-size:12px}
+</style>
+</head>
+<body>
+<div class="panel" id="panel">
+  <h1>Photorealistic NYC</h1>
+  <p>Paste a Google Maps Platform API key with the Map Tiles API enabled. It stays in this browser tab and is never saved to the file.</p>
+  <input id="key" type="password" placeholder="API key" autocomplete="off">
+  <button id="go" type="button">Load map</button>
+  <div id="msg"></div>
+</div>
+<div id="map"></div>
+<div id="credit"></div>
+
+<script src="https://unpkg.com/deck.gl@8.9.35/dist.min.js"></script>
+<script>
+// Hotspot from the Copy That concept: Bedford Ave and N 6 St, Williamsburg.
+var HOT=[-73.9576,40.7178];
+var VIEW={longitude:HOT[0],latitude:HOT[1],zoom:16.2,pitch:60,bearing:-20,maxPitch:78};
+var deckInst=null;
+
+function start(key){
+  var credit=document.getElementById('credit');
+  var msg=document.getElementById('msg');
+  msg.textContent='';
+  if(deckInst){deckInst.finalize();document.getElementById('map').innerHTML=''}
+  deckInst=new deck.Deck({
+    parent:document.getElementById('map'),
+    initialViewState:VIEW,
+    controller:{touchRotate:true},
+    getTooltip:null,
+    layers:[
+      new deck.Tile3DLayer({
+        id:'google-3d-tiles',
+        data:'https://tile.googleapis.com/v1/3dtiles/root.json',
+        loadOptions:{fetch:{headers:{'X-GOOG-API-KEY':key}}},
+        onTilesetLoad:function(tileset3d){
+          tileset3d.options.onTraversalComplete=function(selected){
+            var set={};
+            selected.forEach(function(t){var c=t.content&&t.content.gltf&&t.content.gltf.asset&&t.content.gltf.asset.copyright;if(c)c.split(';').forEach(function(x){set[x.trim()]=1})});
+            credit.textContent=Object.keys(set).join(' · ');
+            return selected;
+          };
+        },
+        onTileError:function(){msg.textContent='Some tiles failed to load. Check that the key is valid and the Map Tiles API is enabled.'},
+        operation:'terrain+draw'
+      }),
+      new deck.ScatterplotLayer({
+        id:'ring',data:[{p:HOT}],getPosition:function(d){return d.p},getRadius:60,radiusUnits:'meters',
+        stroked:true,filled:false,getLineColor:[255,210,31],lineWidthMinPixels:3
+      })
+    ]
+  });
+  document.getElementById('panel').style.display='none';
+}
+document.getElementById('go').addEventListener('click',function(){
+  var k=document.getElementById('key').value.trim();
+  if(!k){document.getElementById('msg').textContent='Enter an API key first.';return}
+  start(k);
+});
+</script>
+</body>
+</html>
