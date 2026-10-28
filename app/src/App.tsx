@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react"
-import { ClipboardList, Map as MapIcon, Mic } from "lucide-react"
+import { Bell, ClipboardList, Map as MapIcon, Mic } from "lucide-react"
 
 import {
   loadCases,
@@ -12,15 +12,18 @@ import {
   type Confirmed,
   type Profile,
 } from "@/lib/data"
+import { buildNotices, loadPrefs, loadSeen, savePrefs, saveSeen, type Notice, type Prefs } from "@/lib/notices"
+import { areaName } from "@/lib/data"
 import ClosureScreen from "@/pages/ClosureScreen"
 import MapTab from "@/pages/MapTab"
+import NotificationsScreen from "@/pages/NotificationsScreen"
 import Onboarding from "@/pages/Onboarding"
 import ReportTab from "@/pages/ReportTab"
 import SentScreen from "@/pages/SentScreen"
 import TrackTab from "@/pages/TrackTab"
 
 type Tab = "report" | "track" | "city"
-type Overlay = { kind: "sent"; ref: string } | { kind: "closure"; ref: string } | null
+type Overlay = { kind: "sent"; ref: string } | { kind: "closure"; ref: string } | { kind: "notices" } | null
 
 const now0 = Date.now()
 const SEED: Complaint[] = [
@@ -46,7 +49,10 @@ export default function App() {
   const [tab, setTab] = useState<Tab>("report")
   const [overlay, setOverlay] = useState<Overlay>(null)
   const [selected, setSelected] = useState<string | null>(null)
+  const [mine, setMine] = useState<Complaint | null>(null)
   const [cases, setCases] = useState<Complaint[]>(() => loadCases() ?? SEED)
+  const [prefs, setPrefsState] = useState<Prefs>(() => loadPrefs())
+  const [seenAt, setSeenAt] = useState<number>(() => loadSeen())
   const frameRef = useRef<HTMLIFrameElement>(null)
 
   useEffect(() => saveCases(cases), [cases])
@@ -68,7 +74,7 @@ export default function App() {
           return next
         })
       })
-    }, 9000)
+    }, 20000)
     return () => window.clearInterval(iv)
   }, [])
 
@@ -86,6 +92,7 @@ export default function App() {
   const submit = (c: Complaint) => {
     setCases(cs => [c, ...cs])
     setSelected(c.ref)
+    setMine(c)
     frameRef.current?.contentWindow?.postMessage({ cmd: "complaint" }, "*")
     setOverlay({ kind: "sent", ref: c.ref })
   }
@@ -99,6 +106,29 @@ export default function App() {
       }),
     )
 
+  const setPrefs = (p: Prefs) => {
+    setPrefsState(p)
+    savePrefs(p)
+  }
+  const notices = buildNotices(cases, prefs, areaName(profile.area))
+  const unread = notices.filter(n => n.at > seenAt).length
+  const openNotices = () => {
+    setOverlay({ kind: "notices" })
+  }
+  const closeNotices = () => {
+    const t = Date.now()
+    saveSeen(t)
+    setSeenAt(t)
+    setOverlay(null)
+  }
+  const openNotice = (n: Notice) => {
+    closeNotices()
+    if (!n.ref || !n.action) return
+    setSelected(n.ref)
+    if (n.action.to === "closure") setOverlay({ kind: "closure", ref: n.ref })
+    else setTab("track")
+  }
+
   const idx = tabs.findIndex(t => t.id === tab)
   const sent = overlay?.kind === "sent" ? cases.find(c => c.ref === overlay.ref) : undefined
   const closing = overlay?.kind === "closure" ? cases.find(c => c.ref === overlay.ref) : undefined
@@ -110,7 +140,7 @@ export default function App() {
           className="absolute inset-0 transition-[opacity,filter,transform] duration-500 ease-ios"
           style={{ opacity: tab === "city" ? 1 : 0, filter: tab === "city" ? "none" : "blur(14px)", transform: tab === "city" ? "none" : "scale(0.98)", pointerEvents: tab === "city" ? "auto" : "none" }}
         >
-          <MapTab area={profile.area} setArea={(a: AreaId) => setProfile({ ...profile, area: a })} frameRef={frameRef} active={tab === "city"} />
+          <MapTab area={profile.area} setArea={(a: AreaId) => setProfile({ ...profile, area: a })} frameRef={frameRef} mine={mine} />
         </div>
         {tab === "report" && (
           <div key="report" className="anim-rise absolute inset-0 overflow-y-auto pb-28">
@@ -123,6 +153,19 @@ export default function App() {
           </div>
         )}
       </main>
+
+      {tab !== "city" && (
+        <button
+          onClick={openNotices}
+          aria-label={unread ? `Notifications, ${unread} new` : "Notifications"}
+          className="glass absolute top-[calc(var(--sat)+8px)] right-4 z-30 grid size-11 place-items-center rounded-full transition-transform duration-200 ease-ios active:scale-90"
+        >
+          <Bell className="size-[21px]" strokeWidth={1.8} />
+          {unread > 0 && (
+            <span className="absolute -top-0.5 -right-0.5 grid min-w-[18px] place-items-center rounded-full bg-accent px-1 text-[11px] font-semibold text-white">{unread}</span>
+          )}
+        </button>
+      )}
 
       <nav className="absolute inset-x-3 bottom-[max(var(--sab),12px)] z-30 mx-auto max-w-[406px]" aria-label="Main">
         <ul className="glass relative flex rounded-full p-1.5">
@@ -147,6 +190,9 @@ export default function App() {
         </ul>
       </nav>
 
+      {overlay?.kind === "notices" && (
+        <NotificationsScreen notices={notices} seenAt={seenAt} prefs={prefs} setPrefs={setPrefs} onBack={closeNotices} onOpen={openNotice} />
+      )}
       {sent && (
         <SentScreen
           key={sent.ref}

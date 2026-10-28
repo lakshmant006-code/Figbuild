@@ -1,17 +1,8 @@
-import { useEffect, useRef, useState, type RefObject } from "react"
+import { useEffect, useMemo, useRef, useState, type RefObject } from "react"
 import { Box, Building2, Footprints, Layers } from "lucide-react"
 
 import { IconTile } from "@/components/ui/moment-card"
-import { AREAS, NOISE_TYPES, areaName, type AreaId } from "@/lib/data"
-
-interface FeedItem {
-  id: number
-  type: string
-  at: number
-  status: string
-}
-
-const STATUSES = ["Received", "Sent to the agency", "Checked on site", "Warning issued", "No violation found", "Summons issued"]
+import { AREAS, NOISE_TYPES, areaName, type AreaId, type Complaint } from "@/lib/data"
 
 const cmdButtons = [
   { cmd: "tilt", label: "3D / 2D", Icon: Box },
@@ -46,7 +37,7 @@ function LiveWave({ pulse }: { pulse: number }) {
   return (
     <div className="relative mt-2 h-7 overflow-hidden" aria-hidden="true" style={{ maskImage: "linear-gradient(90deg, transparent, #000 15%, #000 85%, transparent)" }}>
       <div key={pulse} className="absolute inset-0" style={{ animation: "spike 0.7s cubic-bezier(0.32,0.72,0,1)" }}>
-        <svg className="h-7 w-[200%]" viewBox="0 0 400 28" preserveAspectRatio="none" style={{ animation: "ecg 4.5s linear infinite" }}>
+        <svg className="h-7 w-[200%]" viewBox="0 0 400 28" preserveAspectRatio="none">
           <defs>
             <linearGradient id="ecg-g" x1="0" x2="1">
               <stop offset="0" stopColor="#9cc2ff" />
@@ -62,11 +53,6 @@ function LiveWave({ pulse }: { pulse: number }) {
   )
 }
 
-function ago(at: number, now: number) {
-  const s = Math.max(0, Math.round((now - at) / 1000))
-  return s < 5 ? "just now" : s < 60 ? `${s}s ago` : `${Math.round(s / 60)}m ago`
-}
-
 // Single-file builds (the artifact) inline the map page here instead of linking map.html.
 const srcDoc = (window as unknown as { __HUSH_MAP_SRCDOC__?: string }).__HUSH_MAP_SRCDOC__
 
@@ -74,21 +60,17 @@ export default function MapTab({
   area,
   setArea,
   frameRef,
-  active,
+  mine,
 }: {
   area: AreaId
   setArea: (a: AreaId) => void
   frameRef: RefObject<HTMLIFrameElement | null>
-  active: boolean
+  mine?: Complaint | null
 }) {
-  const [feed, setFeed] = useState<FeedItem[]>([])
-  const [total, setTotal] = useState(184)
   const [block, setBlock] = useState<number | null>(null)
   const [ready, setReady] = useState(false)
   const [open, setOpen] = useState(true)
   const dragY = useRef<number | null>(null)
-  const [now, setNow] = useState(() => Date.now())
-  const idRef = useRef(0)
   const areaRef = useRef(area)
   areaRef.current = area
 
@@ -105,27 +87,18 @@ export default function MapTab({
     return () => window.removeEventListener("message", onMsg)
   }, [frameRef])
 
-  // Simulated live feed: a new report every few seconds, pulsing on the map.
-  useEffect(() => {
-    if (!active) return
-    const add = () => {
-      const type = NOISE_TYPES[Math.floor(Math.random() * NOISE_TYPES.length)]
-      idRef.current += 1
-      const status = STATUSES[Math.floor(Math.random() * STATUSES.length)]
-      setFeed(f => [{ id: idRef.current, type, at: Date.now(), status }, ...f].slice(0, 4))
-      setTotal(n => n + 1)
-      send({ cmd: "complaint" })
-    }
-    const first = window.setTimeout(add, 1500)
-    const iv = window.setInterval(add, 4200)
-    const clock = window.setInterval(() => setNow(Date.now()), 1000)
-    return () => {
-      window.clearTimeout(first)
-      window.clearInterval(iv)
-      window.clearInterval(clock)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [active])
+  // A calm, fixed set of recent example reports for the neighborhood. Only your own report adds a new one.
+  const recent = useMemo(() => {
+    const i = Math.max(0, AREAS.findIndex(a => a.id === area))
+    return [
+      { id: "a", type: NOISE_TYPES[(i + 1) % NOISE_TYPES.length], when: "12 min ago", status: "Sent to the agency" },
+      { id: "b", type: NOISE_TYPES[(i + 4) % NOISE_TYPES.length], when: "41 min ago", status: "Checked on site" },
+    ]
+  }, [area])
+  const items = mine
+    ? [{ id: mine.ref, type: mine.type, when: "You · just now", status: "Sent to the agency" }, ...recent.slice(0, 1)]
+    : recent
+  const total = 186 + (mine ? 1 : 0)
 
   // Safety net: never leave the frosted loader up forever.
   useEffect(() => {
@@ -183,7 +156,6 @@ export default function MapTab({
         <div className="px-5 pb-4">
           <div className="flex items-center gap-2">
             <span className="relative grid size-2.5 place-items-center">
-              <span className="absolute size-2.5 animate-ping rounded-full bg-accent/60" />
               <span className="size-2 rounded-full bg-accent" />
             </span>
             <h2 className="text-[20px] font-semibold tracking-[-0.02em]">Is the city listening?</h2>
@@ -192,7 +164,7 @@ export default function MapTab({
             <span key={area} className="anim-feed inline-block font-medium text-foreground">{areaName(area)}</span> · <AnimatedNumber value={total} /> reports this week
             {block !== null ? ` · ${block} on the block you tapped` : ""}
           </p>
-          <LiveWave pulse={total} />
+          <LiveWave pulse={mine ? 1 : 0} />
 
           <div className="mt-1 grid grid-cols-3 gap-2">
             {[
@@ -225,17 +197,16 @@ export default function MapTab({
             className="grid transition-[grid-template-rows,opacity] duration-500 ease-ios"
             style={{ gridTemplateRows: open ? "1fr" : "0fr", opacity: open ? 1 : 0 }}
           >
-            <ul className="min-h-0 overflow-hidden" aria-live="polite">
-              {feed.length === 0 && <li className="pt-3 text-[15px] text-muted-foreground">Listening for new reports…</li>}
-              {feed.slice(0, 2).map((f, i) => (
+            <ul className="min-h-0 overflow-hidden" >
+              {items.map((f, i) => (
                 <li
                   key={f.id}
                   className="anim-feed moment relative mt-2 flex items-center gap-3 overflow-hidden rounded-[20px] p-2.5"
                 >
-                  {i === 0 && <span key={f.id} className="anim-sweep pointer-events-none absolute inset-0" />}
+                  {mine && i === 0 && <span className="anim-sweep pointer-events-none absolute inset-0" />}
                   <IconTile type={f.type} size={46} />
                   <span className="min-w-0 flex-1">
-                    <span className="block text-[12px] text-muted-foreground tabular-nums">{new Date(f.at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })} · {ago(f.at, now)}</span>
+                    <span className="block text-[12px] text-muted-foreground">{f.when}</span>
                     <span className="block truncate text-[16px] leading-tight font-semibold">{f.type}</span>
                     <span className="block truncate text-[13px] text-muted-foreground">{f.status}</span>
                   </span>

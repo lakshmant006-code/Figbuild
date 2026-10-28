@@ -49,7 +49,7 @@ export default function ReportTab({ profile, onSubmit }: { profile: Profile; onS
 
   return (
     <div className="mx-auto flex min-h-full w-full max-w-[430px] flex-col px-5 pt-[max(var(--sat),12px)] pb-6">
-      <h1 className="mt-1 text-[32px] leading-[1.08] font-semibold tracking-[-0.03em] text-balance">What&apos;s bothering you?</h1>
+      <h1 className="mt-1 pr-14 text-[32px] leading-[1.08] font-semibold tracking-[-0.03em] text-balance">What&apos;s bothering you?</h1>
       <p className="mt-2 text-[17px] leading-snug text-muted-foreground">
         Report a disturbance by typing, speaking, or selecting the type of noise.
       </p>

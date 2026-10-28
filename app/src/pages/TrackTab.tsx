@@ -26,7 +26,7 @@ export default function TrackTab({
 
   return (
     <div className="mx-auto w-full max-w-[430px] px-5 pt-[max(var(--sat),12px)] pb-6">
-      <h1 className="mt-1 text-[32px] leading-[1.08] font-semibold tracking-[-0.03em]">Follow your signal.</h1>
+      <h1 className="mt-1 pr-14 text-[32px] leading-[1.08] font-semibold tracking-[-0.03em]">Follow your signal.</h1>
 
       {!c && <p className="mt-6 text-[17px] text-muted-foreground">No cases yet. Send a report and it shows up here.</p>}
 
