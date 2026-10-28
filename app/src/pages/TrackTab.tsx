@@ -1,4 +1,4 @@
-import { Check } from "lucide-react"
+import { Check, ChevronRight, LayoutGrid } from "lucide-react"
 
 import { ComplaintWave } from "@/components/ui/complaint-wave"
 import { MapTile, MomentCard, PhotoTile, photosFor } from "@/components/ui/moment-card"
@@ -15,11 +15,13 @@ export default function TrackTab({
   selected,
   setSelected,
   onClosure,
+  onWidgets,
 }: {
   cases: Complaint[]
   selected: string | null
   setSelected: (ref: string) => void
   onClosure: (ref: string) => void
+  onWidgets: () => void
 }) {
   const c = cases.find(x => x.ref === selected) ?? cases[0]
   const record = cases.filter(x => x.confirmed === "yes" || x.confirmed === "partly")
@@ -138,6 +140,15 @@ export default function TrackTab({
           </ul>
         </>
       )}
+
+      <button onClick={onWidgets} className="moment mt-9 flex w-full items-center gap-3.5 rounded-[26px] p-3 text-left transition-transform duration-300 ease-ios active:scale-[0.985]">
+        <span className="grid size-14 shrink-0 place-items-center rounded-[16px] bg-fill text-muted-foreground"><LayoutGrid className="size-6" strokeWidth={1.6} /></span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-[17px] leading-tight font-semibold">Widgets</span>
+          <span className="block text-[14px] leading-snug text-muted-foreground">Put your signal on the Home Screen.</span>
+        </span>
+        <ChevronRight className="size-5 text-muted-foreground/60" />
+      </button>
 
       <p className="mt-6 text-[13px] leading-snug text-muted-foreground">
         Steps follow the real process for each kind of noise. Progress and outcomes here are simulated, not live 311 data.

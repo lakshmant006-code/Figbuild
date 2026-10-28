@@ -19,11 +19,12 @@ import MapTab from "@/pages/MapTab"
 import NotificationsScreen from "@/pages/NotificationsScreen"
 import Onboarding from "@/pages/Onboarding"
 import ReportTab from "@/pages/ReportTab"
+import WidgetsScreen from "@/pages/WidgetsScreen"
 import SentScreen from "@/pages/SentScreen"
 import TrackTab from "@/pages/TrackTab"
 
 type Tab = "report" | "track" | "city"
-type Overlay = { kind: "sent"; ref: string } | { kind: "closure"; ref: string } | { kind: "notices" } | null
+type Overlay = { kind: "sent"; ref: string } | { kind: "closure"; ref: string } | { kind: "notices" } | { kind: "widgets" } | null
 
 const now0 = Date.now()
 const SEED: Complaint[] = [
@@ -149,7 +150,7 @@ export default function App() {
         )}
         {tab === "track" && (
           <div key="track" className="anim-rise absolute inset-0 overflow-y-auto pb-28">
-            <TrackTab cases={cases} selected={selected} setSelected={setSelected} onClosure={ref => setOverlay({ kind: "closure", ref })} />
+            <TrackTab cases={cases} selected={selected} setSelected={setSelected} onClosure={ref => setOverlay({ kind: "closure", ref })} onWidgets={() => setOverlay({ kind: "widgets" })} />
           </div>
         )}
       </main>
@@ -192,6 +193,9 @@ export default function App() {
 
       {overlay?.kind === "notices" && (
         <NotificationsScreen notices={notices} seenAt={seenAt} prefs={prefs} setPrefs={setPrefs} onBack={closeNotices} onOpen={openNotice} />
+      )}
+      {overlay?.kind === "widgets" && (
+        <WidgetsScreen c={cases.find(x => x.stage < 4) ?? cases[0]} area={profile.area} onBack={() => setOverlay(null)} />
       )}
       {sent && (
         <SentScreen

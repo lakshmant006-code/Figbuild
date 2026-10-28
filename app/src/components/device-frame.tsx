@@ -15,8 +15,12 @@ function useFitScale() {
   const ref = useRef(1)
   useEffect(() => {
     const fit = () => {
-      const s = Math.min(1, (window.innerHeight - 24) / (H + BEZEL * 2 + 52), (window.innerWidth - 16) / (W + BEZEL * 2 + 10))
-      ref.current = Math.max(0.4, s)
+      // The visible area can be shorter than the frame the page is given (browser toolbars, taskbar).
+      // Size from the smaller of the two, so the whole phone is always on screen.
+      const avail = window.screen?.availHeight ? window.screen.availHeight - 96 : Infinity
+      const vh = Math.min(window.innerHeight, avail)
+      const s = Math.min(1, (vh - 20) / (H + BEZEL * 2 + 44), (window.innerWidth - 16) / (W + BEZEL * 2 + 10))
+      ref.current = Math.max(0.35, s)
       setScale(ref.current)
     }
     fit()
@@ -98,8 +102,8 @@ export function DeviceFrame({ children }: { children: ReactNode }) {
   const screen = useRef<HTMLDivElement>(null)
   useDragScroll(screen, ref)
   return (
-    <div className="fixed inset-0 grid place-items-center overflow-hidden" style={{ background: "var(--stage)" }}>
-      <figure className="m-0 flex flex-col items-center gap-5" style={{ transform: `scale(${scale})`, transformOrigin: "center center" }}>
+    <div className="fixed inset-0 flex items-start justify-center overflow-hidden pt-2.5" style={{ background: "var(--stage)" }}>
+      <figure className="m-0 flex flex-col items-center gap-5" style={{ transform: `scale(${scale})`, transformOrigin: "top center" }}>
         <div className="relative" style={{ width: W + BEZEL * 2, height: H + BEZEL * 2 }}>
           {/* side hardware: action button, volume, power, camera control */}
           {[
