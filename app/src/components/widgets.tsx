@@ -2,7 +2,7 @@ import type { CSSProperties, ReactNode } from "react"
 import { Mic } from "lucide-react"
 
 import { ComplaintWave } from "@/components/ui/complaint-wave"
-import { MapTile, PhotoTile, photosFor } from "@/components/ui/moment-card"
+import { photosFor } from "@/components/ui/moment-card"
 import { STAGES, agencyFor, areaName, stageCopy, type Complaint } from "@/lib/data"
 import { cn } from "@/lib/utils"
 
@@ -81,29 +81,56 @@ export function SpeakWidget() {
   )
 }
 
+// Hourly reports for the last 18 hours (example data). Pale blue early, deep blue and dark as the evening gets louder.
+const HOURS = Array.from({ length: 18 }, (_, i) => 0.18 + 0.82 * Math.pow(Math.sin(((i + 2) / 20) * Math.PI), 2) * (0.78 + 0.22 * Math.sin(i * 2.3)))
+
+function HourBars() {
+  return (
+    <div className="flex h-8 items-end gap-[3px]" aria-hidden="true">
+      {HOURS.map((v, i) => {
+        const t = i / (HOURS.length - 1)
+        return (
+          <span
+            key={i}
+            className="w-full rounded-[3px]"
+            style={{
+              height: `${Math.round(v * 100)}%`,
+              background: `hsl(${222 - t * 4} ${95 - t * 30}% ${86 - t * 74}%)`,
+              outline: i === HOURS.length - 1 ? "2px solid var(--accent)" : undefined,
+              outlineOffset: 1,
+            }}
+          />
+        )
+      })}
+    </div>
+  )
+}
+
 export function NearbyWidget({ area }: { area: string }) {
   return (
-    <WidgetShell size="medium" className="flex gap-3 p-4">
-      <div className="flex min-w-0 flex-1 flex-col">
+    <WidgetShell size="medium" className="flex gap-3 p-3">
+      <div className="flex min-w-0 flex-1 flex-col pt-1.5 pl-2.5">
         <Brand />
-        <p className="mt-2 text-[17px] leading-tight font-semibold tracking-[-0.02em]">Is the city listening?</p>
-        <p className="text-[12px] text-muted-foreground">{areaName(area)} · this week</p>
-        <div className="mt-auto grid grid-cols-3 gap-1.5">
-          {[
-            ["Reports", "186"],
-            ["Reply", "2h 10m"],
-            ["Outcome", "78%"],
-          ].map(([k, v]) => (
-            <div key={k} className="rounded-xl bg-fill px-2 py-1.5">
-              <p className="truncate text-[9px] text-muted-foreground">{k}</p>
-              <p className="truncate text-[13px] leading-tight font-semibold tabular-nums">{v}</p>
-            </div>
-          ))}
+        <p className="mt-2 shrink-0 text-[38px] leading-none font-semibold tracking-[-0.04em] tabular-nums">186</p>
+        <p className="mt-1 shrink-0 truncate text-[12px] text-muted-foreground">reports this week</p>
+        <div className="mt-2 shrink-0">
+          <HourBars />
         </div>
+        <p className="mt-auto shrink-0 pb-1 text-[11.5px] leading-tight whitespace-nowrap text-muted-foreground">
+          <span className="font-semibold text-foreground">2h 10m</span> reply · <span className="font-semibold text-foreground">78%</span> outcome
+        </p>
       </div>
-      <div className="grid w-[118px] shrink-0 grid-rows-2 gap-1.5">
-        <PhotoTile src={photosFor(area)[0]} />
-        <MapTile label={areaName(area)} />
+
+      <div className="relative w-[136px] shrink-0 overflow-hidden rounded-[20px] bg-fill">
+        <img src={photosFor(area)[0]} alt="" className="size-full object-cover" draggable={false} />
+        <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgb(255 255 255 / 0.0) 45%, rgb(5 10 36 / 0.55) 100%)" }} />
+        {[58, 36, 18].map((d, i) => (
+          <span key={d} className="absolute top-[46%] left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/70" style={{ width: d * 2, height: d * 2, opacity: 0.85 - i * 0.2, background: i === 2 ? "rgb(8 102 255 / 0.18)" : "transparent" }} />
+        ))}
+        <span className="absolute top-[46%] left-1/2 grid size-[30px] -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-[#0866ff] shadow-[0_4px_14px_rgb(8_102_255/0.55)] ring-[3px] ring-white">
+          <svg viewBox="0 0 24 24" className="size-[17px]" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12h4l2.2-6 3.6 12 2.6-8 1.4 2H22" /></svg>
+        </span>
+        <span className="absolute bottom-2 left-2 max-w-[calc(100%-16px)] truncate rounded-full bg-white/85 px-2.5 py-1 text-[10.5px] font-semibold text-[#0a0f1f] backdrop-blur">{areaName(area)}</span>
       </div>
     </WidgetShell>
   )
