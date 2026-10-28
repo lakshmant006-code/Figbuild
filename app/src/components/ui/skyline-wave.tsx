@@ -55,7 +55,6 @@ const smooth = (a: number, b: number, x: number) => {
 // How far along the wave → skyline change each stage is, and how loud the wave still is.
 const MORPH = [0, 0.2, 0.5, 0.8, 1]
 const LOUD = [1, 0.8, 0.55, 0.3, 0.1]
-const SPEED = [5, 6.5, 8.5, 11, 16] // seconds per drift across the width
 
 const SWEEP = 0.75 // how much of the move is spent travelling left to right (0 = everything at once)
 const DURATION = 3200 // ms for one change of stage
@@ -68,33 +67,33 @@ const U = Float32Array.from({ length: N }, (_, i) => i / (N - 1))
 
 export function SkylineWave({ stage, seed = 1, className }: { stage: number; seed?: number; className?: string }) {
   const path = useRef<SVGPathElement>(null)
+  const still = typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
   // per-point morph amount (0 = wave, 1 = skyline), so a wave-front can sweep across the line
   const cur = useRef(new Float32Array(N))
   const loud = useRef(1)
-  const phase = useRef(0)
 
   useEffect(() => {
     const st = Math.min(4, stage)
     const target = MORPH[st]
     const loudT = LOUD[st]
-    const speed = SPEED[st]
     const from = Float32Array.from(cur.current)
     const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
     const t0 = performance.now()
     let last = t0
     let raf = 0
 
-    const draw = () => {
+    const draw = (tt: number) => {
       let d = ""
       const m = cur.current
       for (let i = 0; i < N; i++) {
         const xw = U[i] * W
         const env = smooth(ZONE[0] * W - 4, ZONE[0] * W + 46, xw) * (1 - smooth(ZONE[1] * W - 46, ZONE[1] * W + 4, xw))
-        const k = (2 * Math.PI * (xw + phase.current)) / W
+        const k = (2 * Math.PI * xw) / W
         const shape = Math.sin(3 * k + seed) * 0.55 + Math.sin(5 * k + seed * 2.3) * 0.3 + Math.sin(8 * k + seed * 0.7) * 0.15
-        const wy = B + env * (-20 + 22 * loud.current * shape)
+        // the shape stays put; it only breathes a little
+        const wy = B + env * (-20 + 22 * loud.current * (1 + 0.05 * Math.sin(tt * 0.8)) * shape)
         const x = xw + (SKY[i][0] - xw) * m[i]
-        const y = wy + (SKY[i][1] - wy) * m[i]
+        const y = wy + (SKY[i][1] - wy) * m[i] + env * 0.75 * Math.sin(tt * 1.2 + xw * 0.08)
         d += (i ? "L" : "M") + x.toFixed(1) + " " + y.toFixed(1)
       }
       path.current?.setAttribute("d", d)
@@ -110,21 +109,15 @@ export function SkylineWave({ stage, seed = 1, className }: { stage: number; see
         cur.current[i] = from[i] + (target - from[i]) * easeOutBack(local)
       }
       loud.current += (loudT - loud.current) * (1 - Math.exp(-dt * 1.6))
-      phase.current = (phase.current + (W / speed) * dt) % W
-      draw()
-      // the finished skyline holds perfectly still
-      if (target === 1 && p >= 1) {
-        cur.current.fill(1)
-        draw()
-        return
-      }
+      if (target === 1 && p >= 1) cur.current.fill(1)
+      draw(now / 1000)
       raf = requestAnimationFrame(tick)
     }
 
     if (reduce) {
       cur.current.fill(target)
       loud.current = loudT
-      draw()
+      draw(0)
     } else {
       raf = requestAnimationFrame(tick)
     }
@@ -134,10 +127,13 @@ export function SkylineWave({ stage, seed = 1, className }: { stage: number; see
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className={cn("block h-[72px] w-full", className)} role="img" aria-label="Your complaint as a sound wave that settles into the New York skyline">
       <defs>
-        <linearGradient id="sky-g" gradientUnits="userSpaceOnUse" x1="0" x2={W} y1="0" y2="0">
-          <stop offset="0" stopColor="#9cc2ff" />
-          <stop offset="0.5" stopColor="#0866ff" />
-          <stop offset="1" style={{ stopColor: "var(--foreground)" }} />
+        <linearGradient id="sky-g" gradientUnits="userSpaceOnUse" x1="0" x2={W} y1="0" y2="0" spreadMethod="repeat">
+          <stop offset="0" stopColor="#a9ccff" />
+          <stop offset="0.25" stopColor="#0866ff" />
+          <stop offset="0.5" style={{ stopColor: "var(--foreground)" }} />
+          <stop offset="0.75" stopColor="#0866ff" />
+          <stop offset="1" stopColor="#a9ccff" />
+          {!still && <animateTransform attributeName="gradientTransform" type="translate" from="0 0" to={`${W} 0`} dur="5.5s" repeatCount="indefinite" />}
         </linearGradient>
       </defs>
       <path ref={path} fill="none" stroke="url(#sky-g)" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" />
