@@ -2,7 +2,7 @@
 
 Everything here is exported from the working prototype, for dropping into Figma or a deck.
 
-- `screens/` all 22 screens at iPhone 17 Pro resolution (1206 × 2622 px, transparent rounded corners). File names follow the flow: onboarding, report, confirmation, tracker (five stages), closure, notifications, widgets, city map.
+- `screens/` all 23 screens at iPhone 17 Pro resolution (1206 × 2622 px, transparent rounded corners). File names follow the flow: onboarding, report, confirmation, tracker (five stages), closure, notifications, widgets, city map.
 - `chime-brand-board.png` logo, colour, type and the wave-to-skyline line. Source: `brand-board.html`.
 - `chime-app-icon.png` the app icon (512 px). `chime-mark.png` the mark alone on a transparent background.
 

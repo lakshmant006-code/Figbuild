@@ -1,4 +1,4 @@
-import { ChevronLeft } from "lucide-react"
+import { ChevronLeft, ChevronRight, Smartphone } from "lucide-react"
 
 import { MomentCard } from "@/components/ui/moment-card"
 import { Switch } from "@/components/ui/switch"
@@ -22,6 +22,7 @@ export default function NotificationsScreen({
   setPrefs,
   onBack,
   onOpen,
+  onHome,
 }: {
   notices: Notice[]
   seenAt: number
@@ -29,6 +30,7 @@ export default function NotificationsScreen({
   setPrefs: (p: Prefs) => void
   onBack: () => void
   onOpen: (n: Notice) => void
+  onHome: () => void
 }) {
   const now = Date.now()
   const today = notices.filter(n => sameDay(n.at, now))
@@ -74,6 +76,15 @@ export default function NotificationsScreen({
         </button>
         <h1 className="mt-2 text-[32px] leading-[1.08] font-semibold tracking-[-0.03em]">Notifications</h1>
         <p className="mt-2 text-[17px] leading-snug text-muted-foreground">Only things that need you. Quiet by default.</p>
+
+        <button onClick={onHome} className="moment mt-6 flex w-full items-center gap-3.5 rounded-[26px] p-3 text-left transition-transform duration-300 ease-ios active:scale-[0.985]">
+          <span className="grid size-14 shrink-0 place-items-center rounded-[16px] bg-fill text-muted-foreground"><Smartphone className="size-6" strokeWidth={1.6} /></span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-[17px] leading-tight font-semibold">See it on your Home Screen</span>
+            <span className="block text-[14px] leading-snug text-muted-foreground">How a Chime notification arrives.</span>
+          </span>
+          <ChevronRight className="size-5 text-muted-foreground/60" />
+        </button>
 
         {notices.length === 0 && (
           <div className="moment mt-7 rounded-[26px] p-6 text-center">

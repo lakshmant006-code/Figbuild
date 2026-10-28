@@ -16,6 +16,7 @@ import { buildNotices, loadPrefs, loadSeen, savePrefs, saveSeen, type Notice, ty
 import { areaName } from "@/lib/data"
 import ClosureScreen from "@/pages/ClosureScreen"
 import MapTab from "@/pages/MapTab"
+import HomeScreenNotify from "@/pages/HomeScreenNotify"
 import NotificationsScreen from "@/pages/NotificationsScreen"
 import Onboarding from "@/pages/Onboarding"
 import ReportTab from "@/pages/ReportTab"
@@ -24,7 +25,7 @@ import SentScreen from "@/pages/SentScreen"
 import TrackTab from "@/pages/TrackTab"
 
 type Tab = "report" | "track" | "city"
-type Overlay = { kind: "sent"; ref: string } | { kind: "closure"; ref: string } | { kind: "notices" } | { kind: "widgets" } | null
+type Overlay = { kind: "sent"; ref: string } | { kind: "closure"; ref: string } | { kind: "notices" } | { kind: "widgets" } | { kind: "home" } | null
 
 const now0 = Date.now()
 const SEED: Complaint[] = [
@@ -192,10 +193,13 @@ export default function App() {
       </nav>
 
       {overlay?.kind === "notices" && (
-        <NotificationsScreen notices={notices} seenAt={seenAt} prefs={prefs} setPrefs={setPrefs} onBack={closeNotices} onOpen={openNotice} />
+        <NotificationsScreen notices={notices} seenAt={seenAt} prefs={prefs} setPrefs={setPrefs} onBack={closeNotices} onOpen={openNotice} onHome={() => setOverlay({ kind: "home" })} />
       )}
       {overlay?.kind === "widgets" && (
         <WidgetsScreen c={cases.find(x => x.stage < 4) ?? cases[0]} area={profile.area} onBack={() => setOverlay(null)} />
+      )}
+      {overlay?.kind === "home" && (
+        <HomeScreenNotify notices={notices} c={cases.find(x => x.stage < 4) ?? cases[0]} area={profile.area} onOpenChime={closeNotices} onOpenNotice={openNotice} />
       )}
       {sent && (
         <SentScreen

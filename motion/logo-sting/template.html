@@ -100,7 +100,7 @@ window.draw = (t) => {
   }
 
   // 5. wordmark: letters pop in one by one
-  ctx.save(); ctx.font = "700 270px "SF Stand-in""; ctx.textBaseline = "alphabetic";
+  ctx.save(); ctx.font = '700 270px "SF Stand-in"'; ctx.textBaseline = "alphabetic";
   const sp = -8, widths = LETTERS.map(l => ctx.measureText(l).width);
   const total = widths.reduce((a, b) => a + b, 0) + sp * 3; let x0 = W / 2 - total / 2;
   LETTERS.forEach((l, i) => {
@@ -114,7 +114,7 @@ window.draw = (t) => {
   const tg = ease((t - 3.7) / 0.6);
   if (tg > 0) {
     ctx.save(); ctx.globalAlpha = tg; ctx.fillStyle = NAVY; ctx.textAlign = "center";
-    ctx.font = "600 64px "SF Stand-in""; ctx.fillText("Give every complaint", W / 2, 1400 + (1 - tg) * 24); ctx.fillText("a heartbeat.", W / 2, 1480 + (1 - tg) * 24); ctx.restore();
+    ctx.font = '600 64px "SF Stand-in"'; ctx.fillText("Give every complaint", W / 2, 1400 + (1 - tg) * 24); ctx.fillText("a heartbeat.", W / 2, 1480 + (1 - tg) * 24); ctx.restore();
   }
 
   // 7. the living wave: loud and tangerine, then calmed to a flat blue line

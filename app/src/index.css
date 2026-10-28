@@ -128,3 +128,11 @@ html, body { height: 100%; overflow: hidden; }
 @keyframes twinkle { 0%, 100% { opacity: 0.2; } 50% { opacity: 1; } }
 @keyframes listen { 0% { transform: scale(0.25); opacity: 0.75; } 100% { transform: scale(1); opacity: 0; } }
 @keyframes float-y { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2.5px); } }
+
+/* ---- iOS-style notification banner ---- */
+@keyframes banner-in {
+  0% { transform: translateY(-130px) scale(0.84); opacity: 0; filter: blur(10px); }
+  60% { transform: translateY(5px) scale(1.01); opacity: 1; filter: blur(0); }
+  100% { transform: translateY(0) scale(1); opacity: 1; filter: blur(0); }
+}
+@keyframes banner-out { to { transform: translateY(-130px) scale(0.9); opacity: 0; filter: blur(8px); } }
