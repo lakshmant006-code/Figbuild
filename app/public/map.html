@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>HUSH city map</title>
+<style>
+html,body{margin:0;height:100%;background:#d4e2f6;overflow:hidden;font:13px -apple-system,BlinkMacSystemFont,Inter,Helvetica,Arial,sans-serif}
+#deckwrap{position:fixed;inset:0;background:linear-gradient(180deg,#b9d0f0 0%,#d9e6f8 40%,#eef3fb 100%)}
+#deckmap{position:absolute;inset:0}
+#mapstatus{position:absolute;left:12px;top:12px;z-index:2;background:#fff;color:#0a0f1f;border-radius:99px;padding:7px 12px;font-weight:600;box-shadow:0 1px 6px rgba(0,0,0,.15)}
+.deckfail{position:absolute;inset:0;display:grid;place-items:center;color:#5b6475;padding:20px;text-align:center}
+#ui{display:none}
+</style></head><body>
+<div id="deckwrap"><div id="deckmap" role="img" aria-label="3D map of noise complaints built on the NYC 3D Building Model"></div><div id="mapstatus" role="status" hidden></div></div>
+<div id="ui"><button id="tilt" aria-pressed="true">3D</button><button id="city"></button><button id="skyview"></button><button id="street"></button><button id="reset"></button><div id="areas"></div><div id="sBlock"></div><div id="sBlockP"></div></div>
+<script src="https://cdn.jsdelivr.net/npm/deck.gl@8.9.35/dist.min.js"></script>
+<script>
+(function(){
+  var $=function(s,r){return (r||document).querySelector(s)}, $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
+  var RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // city map (deck.gl): stylized NYC street scene built on the real NYC 3D Building Model
+  var CENTER=[-73.9576,40.7178], HOT=[-73.9576,40.7178];
+  // Each area is a slice of the NYC 3D Building Model, prepared as a binary mesh file next to this page.
+  var AREAS=[
+    {id:'williamsburg',name:'Williamsburg',c:[-73.9576,40.7178],b:-22},
+    {id:'greenpoint',name:'Greenpoint',c:[-73.9540,40.7302],b:-22},
+    {id:'bushwick',name:'Bushwick',c:[-73.9210,40.6944],b:-35},
+    {id:'dumbo',name:'DUMBO',c:[-73.9897,40.7033],b:-20},
+    {id:'dtbk',name:'Downtown Brooklyn',c:[-73.9870,40.6930],b:-20},
+    {id:'lic',name:'Long Island City',c:[-73.9480,40.7447],b:-30},
+    {id:'fidi',name:'Financial District',c:[-74.0090,40.7075],b:-30},
+    {id:'chinatown',name:'Chinatown',c:[-73.9970,40.7158],b:-30},
+    {id:'les',name:'Lower East Side',c:[-73.9890,40.7187],b:-30},
+    {id:'soho',name:'SoHo',c:[-74.0000,40.7233],b:-30},
+    {id:'village',name:'Greenwich Village',c:[-74.0000,40.7336],b:-30},
+    {id:'eastvillage',name:'East Village',c:[-73.9840,40.7270],b:-30},
+    {id:'chelsea',name:'Chelsea',c:[-73.9997,40.7465],b:-29},
+    {id:'timessq',name:'Times Square',c:[-73.9855,40.7580],b:-29},
+    {id:'midtown',name:'Midtown',c:[-73.9857,40.7484],b:-29}
+  ];
+  var cur=AREAS[0];
+  function areaView(a){return {longitude:a.c[0]+.0004,latitude:a.c[1]-.0006,zoom:15.9,pitch:60,bearing:a.b,maxPitch:85}}
+  var CITY={longitude:-73.962,latitude:40.722,zoom:11.35,pitch:38,bearing:-15,maxPitch:85};
+  var SKYVIEW={longitude:-74.0045,latitude:40.7105,zoom:14.6,pitch:78,bearing:-38,maxPitch:85};
+  var INITIAL=CITY;
+  // real borough coastlines (simplified from the NYC borough boundaries), drawn as land over water
+  var boroughs=[], BLABELS=[{t:'MANHATTAN',p:[-73.9690,40.7700]},{t:'BROOKLYN',p:[-73.9500,40.6990]},{t:'QUEENS',p:[-73.9150,40.7400]},{t:'THE BRONX',p:[-73.8648,40.8448]},{t:'STATEN ISLAND',p:[-74.1502,40.5795]}];
+  fetch('areas/boroughs.json').then(function(r){return r.json()}).then(function(b){boroughs=[];b.forEach(function(x){x.polys.forEach(function(p){boroughs.push({name:x.name,polygon:p})})});draw()}).catch(function(){});
+  var names=['Bedford Ave','Metropolitan Ave','Grand St','N 6 St','Driggs Ave','Wythe Ave','Kent Ave','Roebling St'];
+  function rnd(seed){var x=Math.sin(seed*12.9898)*43758.5453;return x-Math.floor(x)}
+  var pts=[],k=0;
+  function cluster(c,n,sx,sy,w){for(var i=0;i<n;i++){k++;var a=rnd(k)*6.283,r=Math.sqrt(-2*Math.log(Math.max(.0001,rnd(k+777))));pts.push({p:[c[0]+Math.cos(a)*r*sx,c[1]+Math.sin(a)*r*sy],w:w||1})}}
+  cluster(HOT,150,.0011,.0008,1);cluster([-73.9488,40.7215],70,.0016,.0010,1);cluster([-73.9660,40.7140],60,.0014,.0011,1);cluster(CENTER,260,.0050,.0034,1);
+  AREAS.slice(1).forEach(function(a,i){cluster([a.c[0]+.0012*(i%2?1:-1),a.c[1]+.0008],60+i*12,.0012,.0009,1);cluster(a.c,140,.0042,.003,1)});
+  var range=[[214,229,255],[140,180,255],[8,102,255],[14,38,130],[4,8,28]];
+  var is3d=true, deckInst=null, picked=null, live=[], liveTick=0, liveRaf=0;
+  function addLive(p){
+    live.push({p:p,t0:performance.now()}); if(live.length>40)live.shift();
+    pts=pts.concat([{p:p,w:1}]);
+    if(!liveRaf)(function tick(){var now=performance.now();live=live.filter(function(l){return now-l.t0<4200});liveTick++;draw();liveRaf=live.length?requestAnimationFrame(tick):0})();
+  }
+  // NYC 3D Building Model (enhanced CityGML, georocket/new-york-city-model-enhanced), tile DA19, about 1.3 km square around the hotspot.
+  function b64(s,T){var b=atob(s),u=new Uint8Array(b.length);for(var i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return new T(u.buffer)}
+  // small mesh helpers for trees and cars
+  function box(sx,sy,z0,z1,out){
+    var x=sx/2,y=sy/2,f=[[[1,0,0],[[x,-y,z0],[x,y,z0],[x,y,z1],[x,-y,z1]]],[[-1,0,0],[[-x,y,z0],[-x,-y,z0],[-x,-y,z1],[-x,y,z1]]],[[0,1,0],[[x,y,z0],[-x,y,z0],[-x,y,z1],[x,y,z1]]],[[0,-1,0],[[-x,-y,z0],[x,-y,z0],[x,-y,z1],[-x,-y,z1]]],[[0,0,1],[[-x,-y,z1],[x,-y,z1],[x,y,z1],[-x,y,z1]]]];
+    f.forEach(function(q){var b=out.p.length/3;q[1].forEach(function(v){out.p.push(v[0],v[1],v[2]);out.n.push(q[0][0],q[0][1],q[0][2])});out.i.push(b,b+1,b+2,b,b+2,b+3)});
+  }
+  function toMesh(o){return {attributes:{positions:{value:new Float32Array(o.p),size:3},normals:{value:new Float32Array(o.n),size:3}},indices:{value:new Uint32Array(o.i),size:1}}}
+  function sphere(r,sx,sy,sz,cz){var o={p:[],n:[],i:[]},A=28,Bn=18;for(var a=0;a<=Bn;a++){var th=a/Bn*Math.PI;for(var b=0;b<=A;b++){var ph=b/A*Math.PI*2,nx=Math.sin(th)*Math.cos(ph),ny=Math.sin(th)*Math.sin(ph),nz=Math.cos(th);o.p.push(nx*sx,ny*sy,nz*sz+cz);var l=Math.hypot(nx/sx,ny/sy,nz/sz);o.n.push(nx/sx/l,ny/sy/l,nz/sz/l)}}for(var a2=0;a2<Bn;a2++)for(var b2=0;b2<A;b2++){var p0=a2*(A+1)+b2,p1=p0+A+1;o.i.push(p0,p1,p0+1,p0+1,p1,p1+1)}return toMesh(o)}
+  function trunk(r,h){var o={p:[],n:[],i:[]},n=16;for(var i=0;i<=n;i++){var ph=i/n*Math.PI*2,c=Math.cos(ph),s=Math.sin(ph);o.p.push(c*r,s*r,0,c*r,s*r,h);o.n.push(c,s,0,c,s,0)}for(var j=0;j<n;j++){var a=j*2;o.i.push(a,a+2,a+1,a+1,a+2,a+3)}return toMesh(o)}
+  var treeCrown=sphere(1,2.5,2.5,2.2,4.6), treeTrunk=trunk(.22,3.6);
+  // binary layout: [u32 header length][JSON header {anchor, nv, h, b:{name:[byteOffset,count]}}][typed buffers]
+  function parseArea(buf){
+    var hl=new DataView(buf).getUint32(0,true), M=JSON.parse(new TextDecoder().decode(new Uint8Array(buf,4,hl))), o=4+hl;
+    function g(k,T){return new T(buf,o+M.b[k][0],M.b[k][1])}
+    var q=g('pos',Int16Array), idx=g('idx',Uint32Array), bid=g('bid',Uint16Array), fl=g('fl',Uint8Array), op=g('ol',Int16Array), on=g('oln',Uint16Array);
+    var nv=M.nv, pos=new Float32Array(nv*3), nor=new Float32Array(nv*3), tc=new Float32Array(nv*2);
+    for(var i=0;i<q.length;i++)pos[i]=q[i]/10;
+    for(var t=0;t<idx.length;t+=3){
+      var a=idx[t]*3,b=idx[t+1]*3,c=idx[t+2]*3;
+      var ux=pos[b]-pos[a],uy=pos[b+1]-pos[a+1],uz=pos[b+2]-pos[a+2],vx=pos[c]-pos[a],vy=pos[c+1]-pos[a+1],vz=pos[c+2]-pos[a+2];
+      var nx=uy*vz-uz*vy,ny=uz*vx-ux*vz,nz=ux*vy-uy*vx,l=Math.hypot(nx,ny,nz)||1;
+      nx/=l;ny/=l;nz/=l;
+      nor[a]=nor[b]=nor[c]=nx;nor[a+1]=nor[b+1]=nor[c+1]=ny;nor[a+2]=nor[b+2]=nor[c+2]=nz;
+    }
+    for(var vv=0;vv<nv;vv++){tc[vv*2]=M.h[bid[vv]];tc[vv*2+1]=fl[vv]}
+    var NP=8, cls=[];for(var ci=0;ci<NP;ci++)cls.push([]);
+    for(var t2=0;t2<idx.length;t2+=3){var bb=bid[idx[t2]];cls[(Math.imul(bb+7,2654435761)>>>0)%NP].push(idx[t2],idx[t2+1],idx[t2+2])}
+    var meshes=cls.map(function(c){return {attributes:{positions:{value:pos,size:3},normals:{value:nor,size:3},texCoords:{value:tc,size:2}},indices:{value:new Uint32Array(c),size:1}}});
+    // footprints become sidewalks; trees go along the curb; curbside road points seed the street-level camera
+    var opf=new Float32Array(op.length), st=new Uint32Array(on.length+1), acc=0, trees=[], spots=[];
+    for(var oi=0;oi<op.length;oi++)opf[oi]=op[oi]/10;
+    for(var ok=0;ok<on.length;ok++){st[ok]=acc;acc+=on[ok]}st[on.length]=acc;
+    var seed=11, R=function(){seed=(seed*16807)%2147483647;return seed/2147483647};
+    for(var r=0;r<on.length;r++){
+      var s0=st[r],n0=on[r],area=0;
+      for(var e=0;e<n0-1;e++){var P0=(s0+e)*3,P1=(s0+e+1)*3;area+=opf[P0]*opf[P1+1]-opf[P1]*opf[P0+1]}
+      var sg=area>=0?1:-1;
+      for(var e2=0;e2<n0-1;e2++){
+        var A0=(s0+e2)*3,A1=(s0+e2+1)*3,dx=opf[A1]-opf[A0],dy=opf[A1+1]-opf[A0+1],L=Math.hypot(dx,dy);
+        if(L<7)continue;
+        var ux2=dx/L,uy2=dy/L,onx=uy2*sg,ony=-ux2*sg;
+        for(var d=3;d<L-2;d+=11){if(R()<.5&&trees.length<3200)trees.push({p:[opf[A0]+ux2*d+onx*2.5,opf[A0+1]+uy2*d+ony*2.5,0],s:.8+R()*.5,g:R()})}
+        if(L>20)spots.push({p:[opf[A0]+ux2*L/2+onx*5.9,opf[A0+1]+uy2*L/2+ony*5.9],yaw:Math.atan2(dy,dx)*180/Math.PI});
+      }
+    }
+    var best=null,bd=1e9;spots.forEach(function(c){var d=Math.hypot(c.p[0]+40,c.p[1]);if(d<bd){bd=d;best=c}});
+    var kx=111320*Math.cos(M.anchor[1]*Math.PI/180);
+    var street=best?{longitude:M.anchor[0]+best.p[0]/kx,latitude:M.anchor[1]+best.p[1]/110574,zoom:18.0,pitch:72,bearing:90-best.yaw,maxPitch:85}:null;
+    return {anchor:M.anchor,meshes:meshes,outlines:{length:on.length,startIndices:st,attributes:{getPath:{value:opf,size:3}}},trees:trees,street:street};
+  }
+  // area files are gzip-compressed binary, base64-encoded so they can be served as text
+  function unpack(txt){
+    var b=atob(txt.trim()),u=new Uint8Array(b.length);for(var i=0;i<b.length;i++)u[i]=b.charCodeAt(i);
+    return new Response(new Blob([u]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();
+  }
+  function loadArea(a){
+    if(a.data||a.loading)return a.loading||Promise.resolve(a.data);
+    setStatus('Loading '+a.name+'\u2026');
+    a.loading=fetch('areas/'+a.id+'.txt').then(function(r){if(!r.ok)throw new Error(r.status);return r.text()}).then(unpack).then(function(buf){a.data=parseArea(buf);a.loading=null;setStatus('');draw();return a.data})
+      .catch(function(){a.loading=null;setStatus('Could not load '+a.name+'. Try again.')});
+    return a.loading;
+  }
+  // Skyline: every NYC building taller than 150 ft (NYC Open Data building footprints), drawn from the city's official
+  // 3D Building Model where it has them, and extruded from the current footprint and roof height where it doesn't (mostly built after 2014).
+  var skyline=[];
+  function loadSkyline(){
+    fetch('areas/skyline.txt').then(function(r){if(!r.ok)throw new Error(r.status);return r.text()}).then(unpack).then(function(buf){
+      var hl=new DataView(buf).getUint32(0,true), M=JSON.parse(new TextDecoder().decode(new Uint8Array(buf,4,hl))), o=4+hl;
+      skyline=M.groups.map(function(G){
+        function g(k,T){return new T(buf,o+G.b[k][0],G.b[k][1])}
+        var q=g('pos',Int16Array), idx=g('idx',Uint32Array), bid=g('bid',Uint16Array), nv=G.nv;
+        var pos=new Float32Array(nv*3), nor=new Float32Array(nv*3), tc=new Float32Array(nv*2);
+        for(var i=0;i<q.length;i++)pos[i]=q[i]/10;
+        for(var t=0;t<idx.length;t+=3){
+          var a=idx[t]*3,b=idx[t+1]*3,c=idx[t+2]*3;
+          var ux=pos[b]-pos[a],uy=pos[b+1]-pos[a+1],uz=pos[b+2]-pos[a+2],vx=pos[c]-pos[a],vy=pos[c+1]-pos[a+1],vz=pos[c+2]-pos[a+2];
+          var nx=uy*vz-uz*vy,ny=uz*vx-ux*vz,nz=ux*vy-uy*vx,l=Math.hypot(nx,ny,nz)||1;
+          nor[a]=nor[b]=nor[c]=nx/l;nor[a+1]=nor[b+1]=nor[c+1]=ny/l;nor[a+2]=nor[b+2]=nor[c+2]=nz/l;
+        }
+        for(var v=0;v<nv;v++){tc[v*2]=G.h[bid[v]];tc[v*2+1]=2+((Math.imul(bid[v]+7,2654435761)>>>0)%8)}
+        return {key:G.key,area:G.key.indexOf('area:')===0?G.key.slice(5):null,anchor:G.anchor,
+          mesh:{attributes:{positions:{value:pos,size:3},normals:{value:nor,size:3},texCoords:{value:tc,size:2}},indices:{value:idx,size:1}}};
+      });
+      draw();
+    }).catch(function(){});
+  }
+  function setStatus(t){var el=$('#mapstatus');if(el){el.textContent=t;el.hidden=!t}}
+  function pick(info){
+    var o=info&&info.object; if(!o)return;try{parent.postMessage({type:'hex',count:o.count},'*')}catch(e){}
+    picked=o.index;
+    var count=o.count, nm=names[Math.abs(Math.round(o.position[0]*1e4+o.position[1]*1e4))%names.length];
+    $('#sBlock').textContent=count+' reports';
+    $('#sBlockP').textContent=nm+' area · '+(count>=25?'Repeat location queue, '+Math.max(1,Math.round(count/14))+' addresses flagged':'No repeat addresses')+' · '+Math.round(count*.82)+' closed with an outcome';
+    draw();
+  }
+  // Stylized 3D-cartoon look: brick and stone palette, soft cel shading, cornices and belt courses, framed windows with sky reflections,
+  // air conditioners, fire escapes, shopfronts with awnings and wooden rooftop water tanks. Fine detail fades in with zoom (detailAmt).
+  var detailAmt=0, hexOn=true, labelsOn=true;
+  var PAL=[[228,231,238],[216,221,231],[240,242,246],[203,210,224],[190,199,216],[233,236,242],[210,216,228],[246,247,250]];
+  class DetailExt extends deck.LayerExtension{
+    getShaders(){return {inject:{
+      'vs:#decl':'varying vec3 vWp; varying vec3 vNn; varying vec2 vTc;',
+      'vs:#main-end':'vWp=positions; vNn=normals; vTc=texCoords;',
+      'fs:#decl':'uniform float detailAmt; varying vec3 vWp; varying vec3 vNn; varying vec2 vTc;\nfloat h21(vec2 p){return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453);}\nfloat rbox(vec2 p,vec2 b,float r){return length(max(abs(p)-b+r,0.0))-r;}',
+      'fs:DECKGL_FILTER_COLOR':`
+        vec3 n=normalize(vNn);
+        float H=vTc.x;
+        float L=dot(n,normalize(vec3(-0.45,-0.6,0.66)));
+        float band=0.8+0.28*smoothstep(-0.3,0.9,L);
+        if(vTc.y>1.5){
+          float c=vTc.y-2.0;
+          color.rgb=c<0.5?vec3(0.71,0.34,0.27):c<1.5?vec3(0.8,0.5,0.35):c<2.5?vec3(0.85,0.71,0.5):c<3.5?vec3(0.91,0.82,0.65):c<4.5?vec3(0.46,0.53,0.59):c<5.5?vec3(0.63,0.7,0.76):c<6.5?vec3(0.59,0.25,0.23):vec3(0.93,0.87,0.75);
+        }
+        if(vTc.y>0.5&&vTc.y<1.5){
+          float zz=vWp.z-H;
+          vec3 wood=vec3(0.66,0.45,0.28);
+          if(zz<1.6) wood=vec3(0.26,0.25,0.27);
+          else if(zz>4.2) wood=vec3(0.45,0.28,0.2);
+          else wood*=0.9+0.1*sin(atan(vWp.y,vWp.x)*18.0);
+          color.rgb=wood*band;
+        } else if(n.z>0.7){
+          color.rgb=mix(color.rgb*0.55,vec3(0.43,0.41,0.40),0.62)*band;
+          vec2 g=fract(vWp.xy/1.8);
+          color.rgb*=1.0-detailAmt*0.08*step(0.95,max(g.x,g.y));
+        } else {
+          color.rgb*=band;
+          if(abs(n.z)<0.35){
+            vec2 t=normalize(vec2(-n.y,n.x));
+            float along=dot(vWp.xy,t);
+            float u=along/3.0, v=vWp.z/3.4;
+            vec2 id=floor(vec2(u,v)); vec2 f=fract(vec2(u,v));
+            float hs=h21(id*0.37+floor(vWp.xy*0.02));
+            float up=step(3.6,vWp.z)*step(vWp.z,H-1.4);
+            vec3 stone=vec3(0.93,0.89,0.8)*band;
+            // soft ground-contact shadow
+            color.rgb*=0.82+0.18*smoothstep(0.0,3.0,vWp.z);
+            // cornice and belt course
+            float top=smoothstep(H-1.2,H-1.0,vWp.z);
+            color.rgb=mix(color.rgb,stone,top);
+            color.rgb*=1.0-0.28*(smoothstep(H-1.6,H-1.15,vWp.z)*(1.0-top))*detailAmt;
+            float belt=step(f.y,0.07)*step(7.0,vWp.z)*step(0.6,h21(vec2(floor(v/3.0),floor(along*0.01))));
+            color.rgb=mix(color.rgb,stone,belt*detailAmt);
+            // brick courses
+            float row=floor(vWp.z/0.22); float bx=fract(along/0.5+0.5*mod(row,2.0));
+            float brick=max(1.0-smoothstep(0.03,0.09,fract(vWp.z/0.22)),1.0-smoothstep(0.02,0.07,bx));
+            color.rgb*=1.0-detailAmt*0.045*brick;
+            // framed windows
+            vec2 p=f-vec2(0.5,0.52);
+            float d=rbox(p,vec2(0.27,0.32),0.04);
+            float win=(1.0-smoothstep(-0.01,0.025,d))*up;
+            float frame=(1.0-smoothstep(-0.01,0.025,d-0.05))*up;
+            float lintel=step(abs(p.x),0.33)*step(0.34,p.y)*step(p.y,0.42)*up;
+            vec3 sky=mix(vec3(0.45,0.66,0.9),vec3(0.78,0.9,1.0),clamp(p.y+0.5,0.0,1.0));
+            float lit=step(0.84,hs);
+            vec3 glass=mix(sky,vec3(1.0,0.84,0.5),lit);
+            float sh=p.x*0.9-p.y*0.7+0.05;
+            glass=mix(glass,vec3(1.0),0.55*smoothstep(0.0,0.03,sh)*(1.0-smoothstep(0.06,0.11,sh)));
+            float mull=(1.0-smoothstep(0.008,0.02,abs(p.x)))+(1.0-smoothstep(0.008,0.02,abs(p.y)));
+            glass=mix(glass,vec3(0.95),mull*0.8);
+            vec3 c=mix(color.rgb,stone,max(frame,lintel)*detailAmt);
+            c=mix(c,glass,win*detailAmt);
+            // sill and air conditioner
+            float sill=step(abs(p.x),0.31)*step(-0.4,p.y)*step(p.y,-0.34)*up;
+            c=mix(c,stone*0.9,sill*detailAmt);
+            float ac=step(0.78,hs)*step(abs(p.x),0.2)*step(-0.5+0.0,p.y)*step(p.y,-0.14)*up*win;
+            c=mix(c,vec3(0.72,0.74,0.77),ac*detailAmt);
+            // fire escape on some facades
+            float fe=step(0.66,h21(floor(vWp.xy*0.03)+floor(vec2(n.x,n.y)*2.0)))*step(8.0,H);
+            float plat=step(f.y,0.09)*step(0.1,f.x)*step(f.x,0.9)*step(6.5,vWp.z)*step(vWp.z,H-2.0);
+            float rail=step(0.09,f.y)*step(f.y,0.36)*step(0.1,f.x)*step(f.x,0.9)*step(6.5,vWp.z)*step(vWp.z,H-2.0)*(1.0-smoothstep(0.05,0.14,abs(fract(f.x*7.0)-0.5)*2.0-0.84));
+            float stair=step(0.55,f.x)*step(f.x,0.9)*step(6.5,vWp.z)*step(vWp.z,H-2.0)*step(abs(f.y-(f.x-0.55)/0.35),0.045);
+            c=mix(c,vec3(0.12,0.13,0.15),clamp(plat+rail*0.8+stair,0.0,1.0)*fe*detailAmt);
+            // shopfront on the ground floor
+            float gf=step(vWp.z,3.4);
+            float shop=step(0.3,vWp.z)*step(vWp.z,2.45)*step(0.1,fract(u*0.5+hs))*step(fract(u*0.5+hs),0.9);
+            vec3 sg=vec3(0.18,0.28,0.38)+vec3(1.0,0.8,0.4)*0.35*step(0.5,hs);
+            c=mix(c,sg,shop*gf*detailAmt*step(0.25,hs));
+            float aw=step(2.45,vWp.z)*step(vWp.z,3.3)*gf;
+            vec3 awc=hs<0.5?vec3(0.2,0.55,0.4):(hs<0.75?vec3(0.2,0.4,0.75):vec3(0.85,0.28,0.25));
+            c=mix(c,mix(vec3(1.0),awc,step(0.5,fract(u*2.0))),aw*detailAmt*step(0.3,hs));
+            color.rgb=c;
+          }
+        }`
+    }}}
+    draw(params,extension){this.state.model.setUniforms({detailAmt:extension.opts.amount||0})}
+  }
+  DetailExt.extensionName='DetailExt';DetailExt.componentName='DetailExt';
+  var GC=[-73.95,40.70], GR=0.45, groundPoly=[[[GC[0]-GR,GC[1]-GR*.75,-.6],[GC[0]+GR,GC[1]-GR*.75,-.6],[GC[0]+GR,GC[1]+GR*.75,-.6],[GC[0]-GR,GC[1]+GR*.75,-.6]]];
+  var TREE_G=[[86,168,92],[110,190,100],[70,150,96]];
+  function layers(){
+    var ls=[
+      new deck.SolidPolygonLayer({id:'water',data:groundPoly.map(function(p){return {polygon:p}}),getPolygon:function(d){return d.polygon},getFillColor:[196,214,240],material:false}),
+      new deck.SolidPolygonLayer({id:'land',data:boroughs,getPolygon:function(d){return d.polygon},getFillColor:[236,238,242],material:false,parameters:{depthTest:false}}),
+      new deck.PathLayer({id:'shore',data:boroughs,getPath:function(d){return d.polygon},getColor:[255,255,255],getWidth:2,widthUnits:'pixels',widthMinPixels:1.5,parameters:{depthTest:false}}),
+      !hexOn?null:new deck.HexagonLayer({id:'hex',data:pts,getPosition:function(d){return d.p},radius:90,extruded:false,coverage:.92,opacity:.7-.42*detailAmt,colorRange:range,upperPercentile:100,pickable:true,autoHighlight:true,highlightColor:[255,255,255,120],onClick:pick})
+    ];
+    if(is3d)skyline.forEach(function(G){
+      if(G.area){var ar=AREAS.filter(function(a){return a.id===G.area})[0];if(ar&&ar.data)return}
+      ls.push(new deck.SimpleMeshLayer({id:'sky-'+G.key,data:[{}],mesh:G.mesh,getPosition:[0,0,0],coordinateSystem:deck.COORDINATE_SYSTEM.METER_OFFSETS,coordinateOrigin:[G.anchor[0],G.anchor[1],0],getColor:[255,255,255,255],extensions:[new DetailExt({amount:detailAmt})],pickable:false,material:false}));
+    });
+    if(is3d)AREAS.forEach(function(ar){
+      var D=ar.data;if(!D)return;
+      var O={coordinateSystem:deck.COORDINATE_SYSTEM.METER_OFFSETS,coordinateOrigin:[D.anchor[0],D.anchor[1],0]}, id=ar.id+'-';
+      ls.push(new deck.PathLayer(Object.assign({id:id+'sidewalk',data:D.outlines,_pathType:'open',getColor:[214,218,226,255],getWidth:5,widthUnits:'meters',jointRounded:true,pickable:false},O)));
+      ls.push(new deck.PathLayer(Object.assign({id:id+'curb',data:D.outlines,_pathType:'open',getColor:[190,196,208,255],getWidth:.5,widthUnits:'meters',pickable:false},O)));
+      D.meshes.forEach(function(m,i){ls.push(new deck.SimpleMeshLayer(Object.assign({id:id+'b'+i,data:[{}],mesh:m,getPosition:[0,0,0],getColor:PAL[i].concat(255),extensions:[new DetailExt({amount:detailAmt})],pickable:false,material:false},O)))});
+      ls.push(new deck.SimpleMeshLayer(Object.assign({id:id+'trunks',data:D.trees,mesh:treeTrunk,getPosition:function(d){return d.p},getColor:[110,78,52,255],getScale:function(d){return [d.s,d.s,d.s]},material:{ambient:.6,diffuse:.6}},O)));
+      ls.push(new deck.SimpleMeshLayer(Object.assign({id:id+'crowns',data:D.trees,mesh:treeCrown,getPosition:function(d){return d.p},getColor:function(d){return TREE_G[Math.floor(d.g*3)].concat(255)},getScale:function(d){return [d.s,d.s,d.s]},material:{ambient:.5,diffuse:.7,shininess:4,specularColor:[30,40,30]}},O)));
+    });
+    if(labelsOn){
+      ls.push(new deck.TextLayer({id:'boro-labels',data:BLABELS,getPosition:function(d){return d.p},getText:function(d){return d.t},getSize:20,getColor:[60,64,74,235],fontFamily:'-apple-system, BlinkMacSystemFont, Inter, Helvetica, Arial, sans-serif',fontWeight:800,characterSet:'auto',fontSettings:{sdf:true},outlineWidth:4,outlineColor:[255,255,255,220],billboard:true,parameters:{depthTest:false}}));
+      ls.push(new deck.TextLayer({id:'area-labels',data:AREAS,getPosition:function(d){return d.c},getText:function(d){return d.name},getSize:13,getColor:function(d){return d===cur?[16,18,22,255]:[40,44,54,230]},fontFamily:'-apple-system, BlinkMacSystemFont, Inter, Helvetica, Arial, sans-serif',fontWeight:700,characterSet:'auto',fontSettings:{sdf:true},outlineWidth:5,outlineColor:[255,255,255,240],background:false,billboard:true,pickable:true,onClick:function(i){if(i.object)selectArea(i.object)},updateTriggers:{getColor:cur.id},parameters:{depthTest:false}}));
+    }
+    if(live.length){
+      var T=liveTick;
+      ls.push(new deck.ScatterplotLayer({id:'live-pulse',data:live,getPosition:function(d){return d.p},radiusUnits:'meters',stroked:true,filled:true,
+        getRadius:function(d){return 30+300*Math.min(1,(performance.now()-d.t0)/4200)},
+        getFillColor:function(d){return [255,255,255,Math.max(0,110*(1-(performance.now()-d.t0)/4200))]},
+        getLineColor:function(d){return [8,102,255,Math.max(0,255*(1-(performance.now()-d.t0)/4200))]},lineWidthMinPixels:3,
+        updateTriggers:{getRadius:T,getFillColor:T,getLineColor:T},parameters:{depthTest:false}}));
+      ls.push(new deck.ScatterplotLayer({id:'live-core',data:live,getPosition:function(d){return d.p},getRadius:16,radiusUnits:'meters',radiusMinPixels:5,stroked:true,filled:true,
+        getFillColor:[8,102,255,255],getLineColor:[255,255,255,255],lineWidthMinPixels:2,parameters:{depthTest:false}}));
+    }
+    ls.push(new deck.ScatterplotLayer({id:'ring',data:[{p:HOT}],getPosition:function(d){return d.p},getRadius:120,radiusUnits:'meters',stroked:true,filled:false,getLineColor:[8,102,255],lineWidthMinPixels:3}));
+    return ls.filter(Boolean);
+  }
+  function draw(){if(deckInst)deckInst.setProps({layers:layers()})}
+  function selectArea(a){
+    cur=a;var row=$('#areas');Array.prototype.forEach.call(row.children,function(x){x.setAttribute('aria-pressed',x.textContent===a.name)});
+    loadArea(a);draw();
+    deckInst.setProps({initialViewState:view(Object.assign({},areaView(a),{pitch:is3d?60:0,bearing:is3d?a.b:0}))});
+  }
+  function view(v){return Object.assign({},v,{transitionDuration:1400,transitionInterpolator:new deck.FlyToInterpolator({speed:1.4})})}
+  try{
+    deckInst=new deck.Deck({parent:$('#deckmap'),useDevicePixels:true,glOptions:{antialias:true},initialViewState:INITIAL,controller:{maxZoom:20,minZoom:10},maxPitch:85,layers:layers(),
+      onViewStateChange:function(e){var z=e.viewState.zoom,a=z<15.4?0:z>16.4?1:(z-15.4);a=Math.round(a*4)/4;var h=z<17.3&&e.viewState.pitch<70,lb=z<15.3;if(a!==detailAmt||h!==hexOn||lb!==labelsOn){detailAmt=a;hexOn=h;labelsOn=lb;draw()}},
+      getTooltip:function(i){return i.object&&i.object.count?{text:i.object.count+' reports in this hexagon',style:{font:'12px -apple-system, Inter, sans-serif',background:'#0a0f1f',color:'#f1f2f4',padding:'6px 8px',borderRadius:'8px'}}:null}});
+    $('#tilt').addEventListener('click',function(){is3d=!is3d;this.setAttribute('aria-pressed',is3d);this.textContent=is3d?'3D':'2D';deckInst.setProps({initialViewState:Object.assign({},areaView(cur),{pitch:is3d?60:0,bearing:is3d?cur.b:0,transitionDuration:600}),layers:layers()})});
+    $('#reset').addEventListener('click',function(){deckInst.setProps({initialViewState:view(Object.assign({},areaView(cur),{pitch:is3d?60:0,bearing:is3d?cur.b:0}))})});
+    $('#street').addEventListener('click',function(){if(!is3d)$('#tilt').click();loadArea(cur).then(function(D){if(D&&D.street)deckInst.setProps({initialViewState:view(D.street)})})});
+    var row=$('#areas');
+    AREAS.forEach(function(a){var b=document.createElement('button');b.type='button';b.textContent=a.name;b.setAttribute('aria-pressed',a===cur);
+      b.addEventListener('click',function(){selectArea(a)});
+      row.appendChild(b)});
+    $('#skyview').addEventListener('click',function(){if(!is3d)$('#tilt').click();deckInst.setProps({initialViewState:view(SKYVIEW)})});
+    $('#city').addEventListener('click',function(){deckInst.setProps({initialViewState:view(Object.assign({},CITY,{pitch:is3d?40:0,bearing:is3d?-15:0}))})});
+    loadSkyline();loadArea(cur);
+    var qa=new URLSearchParams(location.search).get('area');
+    if(qa){var a0=AREAS.filter(function(x){return x.id===qa})[0];if(a0)setTimeout(function(){selectArea(a0)},300)}
+    addEventListener('message',function(e){
+      var m=e.data;if(!m||!m.cmd)return;
+      if(m.cmd==='area'){var a=AREAS.filter(function(x){return x.id===m.id})[0];if(a)selectArea(a)}
+      else if(m.cmd==='city')$('#city').click();
+      else if(m.cmd==='sky')$('#skyview').click();
+      else if(m.cmd==='street')$('#street').click();
+      else if(m.cmd==='tilt')$('#tilt').click();
+      else if(m.cmd==='complaint'){
+        var c=m.p||[cur.c[0]+(Math.random()-.5)*.006,cur.c[1]+(Math.random()-.5)*.004];
+        addLive(c);
+      }
+    });
+    try{parent.postMessage({type:'ready',areas:AREAS.map(function(a){return {id:a.id,name:a.name,c:a.c}})},'*')}catch(e){}
+  }catch(e){
+    var m=document.createElement('div');m.className='deckfail';m.textContent='This map needs WebGL, which is not available here.';$('#deckmap').appendChild(m);
+  }
+
+
+})();
+</script>
+</body></html>
