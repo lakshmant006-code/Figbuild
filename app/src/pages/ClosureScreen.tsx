@@ -74,7 +74,7 @@ export default function ClosureScreen({
             <p className="mt-2 text-[17px] leading-snug text-muted-foreground">
               {ag.short} says: <span className="font-medium text-foreground">{c.outcome}</span> Your answer closes the case, or sends it back to them.
             </p>
-            <ComplaintWave amplitude={0.5} seed={3} className="mt-4" />
+            <ComplaintWave flow speed={6} amplitude={0.5} seed={3} className="mt-4" />
             <div className="mt-4 flex flex-col gap-3">
               {(
                 [
@@ -111,7 +111,7 @@ export default function ClosureScreen({
 
         {closed && (
           <div key="rec" className="anim-step">
-            <ComplaintWave amplitude={amp} seed={5} color="var(--accent)" className="mt-4" />
+            <ComplaintWave flow speed={14} amplitude={amp} seed={5} color="var(--accent)" className="mt-4" />
             <h1 className="mt-1 text-[32px] leading-[1.08] font-semibold tracking-[-0.03em]">
               {c.confirmed === "yes" ? "Glad it's quiet." : "Good to hear it's better."}
             </h1>
