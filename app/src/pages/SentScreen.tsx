@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 import { ArrowRight } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { MapTile, PhotoTile, photosFor } from "@/components/ui/moment-card"
 import { agencyFor, areaName, type Complaint } from "@/lib/data"
 
 // 03 · Your voice is on its way.  A confirmation with the official complaint reference.
@@ -26,7 +27,7 @@ export default function SentScreen({ c, onTrack, onAnother }: { c: Complaint; on
   return (
     <div className="anim-rise absolute inset-0 z-40 overflow-y-auto bg-background">
       <div className="mx-auto flex min-h-full max-w-[430px] flex-col px-5 pt-[max(var(--sat),12px)] pb-[max(var(--sab),20px)]">
-        <div className="relative mt-16 grid h-[230px] place-items-center">
+        <div className="relative mt-6 grid h-[190px] place-items-center">
           {[0, 1, 2].map(i => (
             <span
               key={i}
@@ -44,15 +45,21 @@ export default function SentScreen({ c, onTrack, onAnother }: { c: Complaint; on
           </div>
         </div>
 
-        <h1 className="anim-rise text-center text-[32px] leading-[1.08] font-bold tracking-[-0.03em] text-balance" style={{ animationDelay: "0.7s" }}>
+        <h1 className="anim-rise text-center text-[32px] leading-[1.08] font-semibold tracking-[-0.03em] text-balance" style={{ animationDelay: "0.7s" }}>
           Your voice is on its way.
         </h1>
-        <p className="anim-rise mt-2 text-center text-[17px] leading-snug text-muted-foreground" style={{ animationDelay: "0.85s" }}>
+        <p className="anim-rise mt-2 text-center text-[16px] leading-snug text-muted-foreground" style={{ animationDelay: "0.85s" }}>
           Filed with {agencyFor(c.type).name}. Keep this reference to follow the case.
         </p>
 
-        <div className="glass anim-rise mt-8 rounded-[24px] p-5 text-center" style={{ animationDelay: "1s" }}>
-          <p className="text-[12px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Official complaint reference</p>
+        <div className="moment anim-rise mt-6 rounded-[28px] p-3 text-center" style={{ animationDelay: "1s" }}>
+          <div className="grid grid-cols-3 gap-2">
+            <PhotoTile src={photosFor(c.ref)[0]} badge="Voice" />
+            <PhotoTile src={photosFor(c.ref)[1]} />
+            <MapTile label={areaName(c.area)} />
+          </div>
+          <div className="px-2 pt-4 pb-3">
+          <p className="text-[12px] font-medium tracking-[0.08em] text-muted-foreground uppercase">Official complaint reference</p>
           <p className="mt-2 min-h-[44px] font-mono text-[34px] font-medium tracking-[0.04em]" aria-label={c.ref}>
             {typed}
             <span className="ml-0.5 inline-block w-[3px] animate-pulse bg-accent align-middle" style={{ height: 30 }} />
@@ -60,10 +67,11 @@ export default function SentScreen({ c, onTrack, onAnother }: { c: Complaint; on
           <p className="mt-1 text-[14px] text-muted-foreground">
             {c.type} · {areaName(c.area)}
           </p>
+          </div>
         </div>
 
         <div className="flex-1" />
-        <div className="mt-8 flex flex-col gap-2">
+        <div className="mt-5 flex flex-col gap-1">
           <Button variant="blue" onClick={onTrack}>
             Follow your signal <ArrowRight className="size-5" />
           </Button>

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 import { ChevronLeft, Check, Copy } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { MapTile, PhotoTile, photosFor } from "@/components/ui/moment-card"
 import { ComplaintWave } from "@/components/ui/complaint-wave"
 import { agencyFor, areaName, type Complaint, type Confirmed } from "@/lib/data"
 
@@ -69,7 +70,7 @@ export default function ClosureScreen({
         {/* question */}
         {!c.confirmed && (
           <div key="q" className="anim-step">
-            <h1 className="mt-2 text-[32px] leading-[1.08] font-bold tracking-[-0.03em]">Did it get better?</h1>
+            <h1 className="mt-2 text-[32px] leading-[1.08] font-semibold tracking-[-0.03em]">Did it get better?</h1>
             <p className="mt-2 text-[17px] leading-snug text-muted-foreground">
               {ag.short} says: <span className="font-medium text-foreground">{c.outcome}</span> Your answer closes the case, or sends it back to them.
             </p>
@@ -100,7 +101,7 @@ export default function ClosureScreen({
 
         {c.confirmed === "no" && (
           <div key="no" className="anim-step">
-            <h1 className="mt-2 text-[32px] leading-[1.08] font-bold tracking-[-0.03em]">Reopened.</h1>
+            <h1 className="mt-2 text-[32px] leading-[1.08] font-semibold tracking-[-0.03em]">Reopened.</h1>
             <p className="mt-2 text-[17px] leading-snug text-muted-foreground">
               We sent {c.ref} back to {ag.name} and marked it as a repeat. You&apos;ll see the new steps in your tracker.
             </p>
@@ -111,14 +112,20 @@ export default function ClosureScreen({
         {closed && (
           <div key="rec" className="anim-step">
             <ComplaintWave amplitude={amp} seed={5} color="var(--accent)" className="mt-4" />
-            <h1 className="mt-1 text-[32px] leading-[1.08] font-bold tracking-[-0.03em]">
+            <h1 className="mt-1 text-[32px] leading-[1.08] font-semibold tracking-[-0.03em]">
               {c.confirmed === "yes" ? "Glad it's quiet." : "Good to hear it's better."}
             </h1>
             <p className="mt-2 text-[17px] leading-snug text-muted-foreground">Saved to your outcome record.</p>
 
-            <section className="glass mt-5 rounded-[24px] p-5">
+            <section className="moment mt-5 rounded-[28px] p-3">
+              <div className="grid grid-cols-3 gap-2">
+                <PhotoTile src={photosFor(c.ref)[0]} badge="Voice" />
+                <PhotoTile src={photosFor(c.ref)[1]} />
+                <MapTile label={areaName(c.area)} />
+              </div>
+              <div className="px-2 pt-4 pb-2">
               <div className="flex items-center justify-between">
-                <p className="text-[12px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Outcome record</p>
+                <p className="text-[12px] font-medium tracking-[0.08em] text-muted-foreground uppercase">Outcome record</p>
                 <span className="flex items-center gap-1 rounded-full bg-accent/15 px-3 py-1 text-[12px] font-semibold text-accent">
                   <Check className="size-3.5" strokeWidth={3} /> Resident confirmed
                 </span>
@@ -139,9 +146,10 @@ export default function ClosureScreen({
                   </div>
                 ))}
               </dl>
+              </div>
             </section>
 
-            <h2 className="mt-7 mb-2 px-1 text-[13px] font-semibold tracking-wide text-muted-foreground uppercase">What next</h2>
+            <h2 className="mt-7 mb-2 px-1 text-[14px] font-medium text-muted-foreground">What next</h2>
             <div className="overflow-hidden rounded-[20px] bg-card">
               <div className="flex min-h-[60px] items-center gap-3 px-4 py-3">
                 <div className="flex-1">

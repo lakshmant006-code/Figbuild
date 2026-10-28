@@ -3,12 +3,12 @@
 /* Minimalist, Apple-HIG-style tokens: grouped backgrounds, one accent, system type.
    HUSH colour lives only in the logo, the shader card and the wave. */
 :root {
-  --background: #f2f2f7;
+  --background: #ffffff;
   --foreground: #000000;
-  --card: #ffffff;
+  --card: #f7f7f8;
   --muted-foreground: #6c6c70;
-  --separator: rgb(60 60 67 / 0.18);
-  --fill: rgb(120 120 128 / 0.12);
+  --separator: rgb(60 60 67 / 0.12);
+  --fill: rgb(120 120 128 / 0.10);
   --stage: #e4e7ee;
   --sat: env(safe-area-inset-top, 0px);
   --sab: env(safe-area-inset-bottom, 0px);
@@ -20,9 +20,9 @@
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --background: #000000;
+    --background: #0b0b0d;
     --foreground: #ffffff;
-    --card: #1c1c1e;
+    --card: #151518;
     --muted-foreground: #98989d;
     --separator: rgb(84 84 88 / 0.5);
     --fill: rgb(120 120 128 / 0.24);
@@ -35,9 +35,9 @@
   }
 }
 :root[data-theme="dark"] {
-  --background: #000000;
+  --background: #0b0b0d;
   --foreground: #ffffff;
-  --card: #1c1c1e;
+  --card: #151518;
   --muted-foreground: #98989d;
   --separator: rgb(84 84 88 / 0.5);
   --fill: rgb(120 120 128 / 0.24);
@@ -134,3 +134,10 @@ button, a { touch-action: manipulation; }
 @keyframes draw { to { stroke-dashoffset: 0; } }
 @keyframes beat { 0%, 100% { box-shadow: 0 0 0 0 rgb(8 102 255 / 0.45); } 50% { box-shadow: 0 0 0 9px rgb(8 102 255 / 0); } }
 .anim-pop { animation: pop 0.7s cubic-bezier(0.32, 0.72, 0, 1) both; }
+
+/* ---- Moment cards: quiet, airy, hairline border ---- */
+.moment {
+  background: var(--card);
+  border: 1px solid color-mix(in srgb, var(--foreground) 7%, transparent);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.03);
+}

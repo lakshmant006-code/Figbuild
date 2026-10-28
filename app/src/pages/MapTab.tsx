@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type RefObject } from "react"
 import { Box, Building2, Footprints, Layers } from "lucide-react"
 
+import { IconTile } from "@/components/ui/moment-card"
 import { AREAS, NOISE_TYPES, areaName, type AreaId } from "@/lib/data"
 
 interface FeedItem {
@@ -185,7 +186,7 @@ export default function MapTab({
               <span className="absolute size-2.5 animate-ping rounded-full bg-accent/60" />
               <span className="size-2 rounded-full bg-accent" />
             </span>
-            <h2 className="text-[20px] font-bold tracking-[-0.02em]">Is the city listening?</h2>
+            <h2 className="text-[20px] font-semibold tracking-[-0.02em]">Is the city listening?</h2>
           </div>
           <p className="mt-0.5 text-[14px] text-muted-foreground">
             <span key={area} className="anim-feed inline-block font-medium text-foreground">{areaName(area)}</span> · <AnimatedNumber value={total} /> reports this week
@@ -226,18 +227,18 @@ export default function MapTab({
           >
             <ul className="min-h-0 overflow-hidden" aria-live="polite">
               {feed.length === 0 && <li className="pt-3 text-[15px] text-muted-foreground">Listening for new reports…</li>}
-              {feed.slice(0, 3).map((f, i) => (
+              {feed.slice(0, 2).map((f, i) => (
                 <li
                   key={f.id}
-                  className={"anim-feed relative flex items-center gap-3 overflow-hidden py-2.5 " + (i ? "border-t border-separator" : "mt-1")}
+                  className="anim-feed moment relative mt-2 flex items-center gap-3 overflow-hidden rounded-[20px] p-2.5"
                 >
                   {i === 0 && <span key={f.id} className="anim-sweep pointer-events-none absolute inset-0" />}
-                  <span className="size-2.5 rounded-full bg-accent" />
+                  <IconTile type={f.type} size={46} />
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-[16px] leading-tight font-medium">{f.type}</span>
+                    <span className="block text-[12px] text-muted-foreground tabular-nums">{new Date(f.at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })} · {ago(f.at, now)}</span>
+                    <span className="block truncate text-[16px] leading-tight font-semibold">{f.type}</span>
                     <span className="block truncate text-[13px] text-muted-foreground">{f.status}</span>
                   </span>
-                  <span className="text-[13px] text-muted-foreground">{ago(f.at, now)}</span>
                 </li>
               ))}
             </ul>

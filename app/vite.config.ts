@@ -23,6 +23,7 @@ function nycAreas(): Plugin {
 }
 
 export default defineConfig({
+  build: { assetsInlineLimit: 1_000_000 },
   plugins: [react(), tailwindcss(), nycAreas()],
   resolve: { alias: { "@": path.resolve(__dirname, "./src") } },
 })

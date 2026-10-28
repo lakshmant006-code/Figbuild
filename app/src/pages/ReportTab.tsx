@@ -49,8 +49,7 @@ export default function ReportTab({ profile, onSubmit }: { profile: Profile; onS
 
   return (
     <div className="mx-auto flex min-h-full w-full max-w-[430px] flex-col px-5 pt-[max(var(--sat),12px)] pb-6">
-      <p className="pt-4 text-[13px] font-semibold tracking-wide text-accent uppercase">Report</p>
-      <h1 className="mt-1 text-[32px] leading-[1.08] font-bold tracking-[-0.03em] text-balance">What&apos;s bothering you?</h1>
+      <h1 className="mt-1 text-[32px] leading-[1.08] font-semibold tracking-[-0.03em] text-balance">What&apos;s bothering you?</h1>
       <p className="mt-2 text-[17px] leading-snug text-muted-foreground">
         Report a disturbance by typing, speaking, or selecting the type of noise.
       </p>
@@ -69,7 +68,7 @@ export default function ReportTab({ profile, onSubmit }: { profile: Profile; onS
       </div>
 
       {/* composer */}
-      <div className="glass mt-5 rounded-[26px] p-3 focus-within:ring-2 focus-within:ring-accent/60">
+      <div className="moment mt-5 rounded-[26px] p-3 focus-within:ring-2 focus-within:ring-accent/60">
         <label htmlFor="describe" className="sr-only">Describe the noise</label>
         <textarea
           id="describe"
@@ -92,7 +91,7 @@ export default function ReportTab({ profile, onSubmit }: { profile: Profile; onS
         </div>
       </div>
 
-      <h2 className="mt-6 mb-2 px-1 text-[13px] font-semibold tracking-wide text-muted-foreground uppercase">Or choose the noise</h2>
+      <h2 className="mt-6 mb-2 px-1 text-[14px] font-medium text-muted-foreground">Or choose the noise</h2>
       <div className="flex flex-wrap gap-2">
         {NOISE_TYPES.map(t => (
           <button

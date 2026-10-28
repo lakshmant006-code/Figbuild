@@ -1,6 +1,7 @@
 import { Check } from "lucide-react"
 
 import { ComplaintWave } from "@/components/ui/complaint-wave"
+import { MapTile, MomentCard, PhotoTile, photosFor } from "@/components/ui/moment-card"
 import { STAGES, agencyFor, areaName, stageCopy, type Complaint } from "@/lib/data"
 import { cn } from "@/lib/utils"
 
@@ -25,44 +26,28 @@ export default function TrackTab({
 
   return (
     <div className="mx-auto w-full max-w-[430px] px-5 pt-[max(var(--sat),12px)] pb-6">
-      <p className="pt-4 text-[13px] font-semibold tracking-wide text-accent uppercase">Track</p>
-      <h1 className="mt-1 text-[32px] leading-[1.08] font-bold tracking-[-0.03em]">Follow your signal.</h1>
+      <h1 className="mt-1 text-[32px] leading-[1.08] font-semibold tracking-[-0.03em]">Follow your signal.</h1>
 
       {!c && <p className="mt-6 text-[17px] text-muted-foreground">No cases yet. Send a report and it shows up here.</p>}
 
-      {cases.length > 1 && (
-        <div className="-mx-5 mt-4 flex gap-2 overflow-x-auto px-5 pb-1 [scrollbar-width:none]">
-          {cases.map(x => (
-            <button
-              key={x.ref}
-              onClick={() => setSelected(x.ref)}
-              aria-pressed={x.ref === c?.ref}
-              className="h-9 shrink-0 rounded-full px-4 font-mono text-[13px] transition-colors duration-300"
-              style={x.ref === c?.ref ? { background: "var(--foreground)", color: "var(--background)" } : { background: "var(--fill)" }}
-            >
-              {x.ref}
-            </button>
-          ))}
-        </div>
-      )}
-
       {c && (
         <div key={c.ref} className="anim-rise">
-          {/* status hero */}
-          <section className="glass mt-4 rounded-[28px] p-5">
-            <div className="flex items-baseline justify-between">
-              <p className="text-[15px] font-semibold">{c.type}</p>
-              <p className="font-mono text-[13px] text-muted-foreground">{c.ref}</p>
-            </div>
-            <p className="text-[13px] text-muted-foreground">{areaName(c.area)} · with {agencyFor(c.type).short}</p>
-            <ComplaintWave amplitude={AMP[c.stage]} seed={c.ref.length + c.stage} color={c.stage === 4 ? "var(--accent)" : undefined} className="mt-1" />
-            <p className="text-[22px] leading-tight font-bold tracking-[-0.02em]">{stageCopy(c, c.stage).title}</p>
-            <p className="mt-1 text-[15px] text-muted-foreground">
-              {c.stage < 4 ? `Next update usually in ${NEXT[c.stage]}.` : `Posted at ${clock(c.times[4] ?? Date.now())}.`}
-            </p>
-          </section>
+          <MomentCard
+            className="mt-5"
+            tiles={[
+              <PhotoTile key="a" src={photosFor(c.ref)[0]} badge="Voice" />,
+              <PhotoTile key="b" src={photosFor(c.ref)[1]} />,
+              <MapTile key="m" label={areaName(c.area)} />,
+            ]}
+            time={`${clock(c.createdAt)} · ${c.ref}`}
+            title={`${c.type} near ${areaName(c.area)}`}
+            body={`${stageCopy(c, c.stage).title} ${c.stage < 4 ? `Next update usually in ${NEXT[c.stage]}.` : `Posted at ${clock(c.times[4] ?? Date.now())}.`}`}
+          >
+            <ComplaintWave amplitude={AMP[c.stage]} seed={c.ref.length + c.stage} color={c.stage === 4 ? "var(--accent)" : undefined} className="-mx-1 mt-2 h-14" />
+          </MomentCard>
 
-          {/* delivery-style stepper */}
+          <p className="mt-7 mb-3 px-1 text-[14px] font-medium text-muted-foreground">Where it is, with {agencyFor(c.type).short}</p>
+
           <ol className="mt-5">
             {STAGES.map((label, i) => {
               const done = i < c.stage || (i === 4 && c.stage === 4)
@@ -91,7 +76,7 @@ export default function TrackTab({
                   <div className={cn("min-w-0 flex-1 transition-opacity duration-500", !done && !now && "opacity-45")}>
                     <div className="flex items-baseline justify-between gap-2">
                       <p className="text-[17px] leading-tight font-semibold">{copy.title}</p>
-                      {c.times[i] && <span className="text-[13px] text-muted-foreground tabular-nums">{clock(c.times[i])}</span>}
+                      {c.times[i] && <span className="shrink-0 text-[13px] whitespace-nowrap text-muted-foreground tabular-nums">{clock(c.times[i])}</span>}
                     </div>
                     {(done || now) && <p className="anim-feed mt-0.5 text-[15px] leading-snug text-muted-foreground">{copy.detail}</p>}
                   </div>
@@ -116,19 +101,38 @@ export default function TrackTab({
         </div>
       )}
 
+      {cases.length > 1 && (
+        <>
+          <p className="mt-9 mb-2 px-1 text-[14px] font-medium text-muted-foreground">Your other cases</p>
+          <ul className="flex flex-col gap-2.5">
+            {cases.filter(x => x.ref !== c?.ref).map(x => (
+              <li key={x.ref}>
+                <MomentCard
+                  type={x.type}
+                  time={`${clock(x.createdAt)} · ${x.ref}`}
+                  title={`${x.type} near ${areaName(x.area)}`}
+                  body={stageCopy(x, x.stage).title}
+                  onClick={() => setSelected(x.ref)}
+                />
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+
       {record.length > 0 && (
         <>
-          <h2 className="mt-10 mb-2 px-1 text-[13px] font-semibold tracking-wide text-muted-foreground uppercase">Your outcome record</h2>
-          <ul className="overflow-hidden rounded-[20px] bg-card">
-            {record.map((r, i) => (
-              <li key={r.ref} className="pl-4">
-                <button onClick={() => onClosure(r.ref)} className={"flex min-h-[60px] w-full items-center gap-3 py-3 pr-4 text-left" + (i ? " border-t border-separator" : "")}>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[16px] font-medium">{r.type}</p>
-                    <p className="truncate text-[14px] text-muted-foreground">{r.outcome}</p>
-                  </div>
-                  <span className="rounded-full bg-accent/15 px-3 py-1 text-[12px] font-semibold text-accent">{r.confirmed === "yes" ? "Quiet" : "Better"}</span>
-                </button>
+          <p className="mt-9 mb-2 px-1 text-[14px] font-medium text-muted-foreground">Your outcome record</p>
+          <ul className="flex flex-col gap-2.5">
+            {record.map(r => (
+              <li key={r.ref}>
+                <MomentCard
+                  type={r.type}
+                  time={`${clock(r.closedAt ?? r.createdAt)} · ${r.ref}`}
+                  title={r.confirmed === "yes" ? "Quiet again" : "A little better"}
+                  body={r.outcome ?? ""}
+                  onClick={() => onClosure(r.ref)}
+                />
               </li>
             ))}
           </ul>

@@ -68,7 +68,7 @@ export default function Onboarding({ onDone }: { onDone: (p: Profile) => void })
 function Title({ children, sub }: { children: React.ReactNode; sub?: React.ReactNode }) {
   return (
     <div className="pt-4 pb-5">
-      <h1 className="text-[30px] leading-[1.1] font-bold tracking-[-0.025em] text-balance">{children}</h1>
+      <h1 className="text-[30px] leading-[1.1] font-semibold tracking-[-0.03em] text-balance">{children}</h1>
       {sub && <p className="mt-2 text-[17px] leading-snug text-muted-foreground">{sub}</p>}
     </div>
   )
@@ -86,7 +86,7 @@ function Welcome() {
         />
       </div>
       <div className="pt-7">
-        <h1 className="anim-rise text-[34px] leading-[1.06] font-bold tracking-[-0.03em] text-balance" style={{ animationDelay: "0.25s" }}>Every noise complaint gets a heartbeat.</h1>
+        <h1 className="anim-rise text-[34px] leading-[1.06] font-semibold tracking-[-0.03em] text-balance" style={{ animationDelay: "0.25s" }}>Every noise complaint gets a heartbeat.</h1>
         <p className="anim-rise mt-3 text-[17px] leading-snug text-muted-foreground" style={{ animationDelay: "0.4s" }}>
           Report in seconds with your voice. Watch the city answer on a live 3D map.
         </p>
