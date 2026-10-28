@@ -2,11 +2,12 @@ import { useEffect, useRef } from "react"
 
 import { cn } from "@/lib/utils"
 
-// One line. It starts as a loud, drifting sound wave and, as the case moves along, calms and reshapes
-// itself into the New York skyline (Chrysler, Empire State, One World Trade). No extra art, no extra space.
+// One line, straight at both ends. Only the middle moves: it starts as a loud, drifting sound wave and, as the
+// case moves along, calms and reshapes itself into the New York skyline (Chrysler, Empire State, One World Trade).
 const W = 340
 const H = 72
-const N = 420
+const B = 64 // the straight baseline the line sits on
+const ZONE = [0.13, 0.87] // where the middle of the line is allowed to move
 
 // Skyline silhouette in a 320 x 88 design space, then mapped into the W x H box (baseline y = 66).
 const RAW: [number, number][] = [
@@ -24,54 +25,76 @@ const RAW: [number, number][] = [
   [258, 88], [258, 70], [290, 70], [290, 60], [304, 60], [304, 88], [320, 88],
 ]
 
-function resample(pts: [number, number][], n: number) {
-  const seg: number[] = [0]
-  for (let i = 1; i < pts.length; i++) seg.push(seg[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]))
-  const total = seg[seg.length - 1]
-  const out: [number, number][] = []
-  let j = 1
-  for (let i = 0; i < n; i++) {
-    const s = (i / (n - 1)) * total
-    while (j < seg.length - 1 && seg[j] < s) j++
-    const k = (s - seg[j - 1]) / Math.max(1e-6, seg[j] - seg[j - 1])
-    out.push([pts[j - 1][0] + (pts[j][0] - pts[j - 1][0]) * k, pts[j - 1][1] + (pts[j][1] - pts[j - 1][1]) * k])
+// Subdivide every segment so corners stay sharp and points spread by horizontal distance (vertical edges need few).
+function densify(pts: [number, number][], total: number) {
+  const weight = (a: [number, number], b: [number, number]) => Math.abs(b[0] - a[0]) + 0.2 * Math.abs(b[1] - a[1])
+  let sum = 0
+  for (let i = 1; i < pts.length; i++) sum += weight(pts[i - 1], pts[i])
+  const out: [number, number][] = [pts[0]]
+  for (let i = 1; i < pts.length; i++) {
+    const m = Math.max(1, Math.round((weight(pts[i - 1], pts[i]) / sum) * total))
+    for (let k = 1; k <= m; k++) out.push([pts[i - 1][0] + ((pts[i][0] - pts[i - 1][0]) * k) / m, pts[i - 1][1] + ((pts[i][1] - pts[i - 1][1]) * k) / m])
   }
   return out
 }
 
-const SKY = resample(
-  RAW.map(([x, y]) => [x * (W / 320), 66 - (88 - y) * 0.7] as [number, number]),
-  N,
+// The skyline fills only the middle of the line; both ends stay flat on the baseline.
+const x0 = ZONE[0] * W
+const x1 = ZONE[1] * W
+const SKY = densify(
+  [[0, B], ...RAW.map(([x, y]) => [x0 + (x / 320) * (x1 - x0), B - (88 - y) * 0.7] as [number, number]), [W, B]],
+  380,
 )
+const N = SKY.length
+
+const smooth = (a: number, b: number, x: number) => {
+  const t = Math.min(1, Math.max(0, (x - a) / (b - a)))
+  return t * t * (3 - 2 * t)
+}
 
 // How far along the wave → skyline change each stage is, and how loud the wave still is.
 const MORPH = [0, 0.2, 0.5, 0.8, 1]
 const LOUD = [1, 0.8, 0.55, 0.3, 0.1]
 const SPEED = [5, 6.5, 8.5, 11, 16] // seconds per drift across the width
 
+const SWEEP = 0.75 // how much of the move is spent travelling left to right (0 = everything at once)
+const DURATION = 3200 // ms for one change of stage
+const easeOutBack = (t: number) => {
+  const c1 = 1.05
+  const c3 = c1 + 1
+  return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2)
+}
+const U = Float32Array.from({ length: N }, (_, i) => i / (N - 1))
+
 export function SkylineWave({ stage, seed = 1, className }: { stage: number; seed?: number; className?: string }) {
   const path = useRef<SVGPathElement>(null)
-  const state = useRef({ m: MORPH[Math.min(4, stage)], loud: LOUD[Math.min(4, stage)], phase: 0 })
+  // per-point morph amount (0 = wave, 1 = skyline), so a wave-front can sweep across the line
+  const cur = useRef(new Float32Array(N))
+  const loud = useRef(1)
+  const phase = useRef(0)
 
   useEffect(() => {
-    const target = MORPH[Math.min(4, stage)]
-    const loudT = LOUD[Math.min(4, stage)]
-    const speed = SPEED[Math.min(4, stage)]
+    const st = Math.min(4, stage)
+    const target = MORPH[st]
+    const loudT = LOUD[st]
+    const speed = SPEED[st]
+    const from = Float32Array.from(cur.current)
     const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
+    const t0 = performance.now()
+    let last = t0
     let raf = 0
-    let last = performance.now()
 
     const draw = () => {
-      const s = state.current
       let d = ""
+      const m = cur.current
       for (let i = 0; i < N; i++) {
-        const x0 = (i / (N - 1)) * W
-        const k = (2 * Math.PI * (x0 + s.phase)) / W
-        const wy = 36 + 26 * s.loud * (Math.sin(3 * k + seed) * 0.55 + Math.sin(5 * k + seed * 2.3) * 0.3 + Math.sin(8 * k + seed * 0.7) * 0.15)
-        const sx = SKY[i][0]
-        const sy = SKY[i][1]
-        const x = x0 + (sx - x0) * s.m
-        const y = wy + (sy - wy) * s.m
+        const xw = U[i] * W
+        const env = smooth(ZONE[0] * W - 4, ZONE[0] * W + 46, xw) * (1 - smooth(ZONE[1] * W - 46, ZONE[1] * W + 4, xw))
+        const k = (2 * Math.PI * (xw + phase.current)) / W
+        const shape = Math.sin(3 * k + seed) * 0.55 + Math.sin(5 * k + seed * 2.3) * 0.3 + Math.sin(8 * k + seed * 0.7) * 0.15
+        const wy = B + env * (-20 + 22 * loud.current * shape)
+        const x = xw + (SKY[i][0] - xw) * m[i]
+        const y = wy + (SKY[i][1] - wy) * m[i]
         d += (i ? "L" : "M") + x.toFixed(1) + " " + y.toFixed(1)
       }
       path.current?.setAttribute("d", d)
@@ -80,24 +103,27 @@ export function SkylineWave({ stage, seed = 1, className }: { stage: number; see
     const tick = (now: number) => {
       const dt = Math.min(0.05, (now - last) / 1000)
       last = now
-      const s = state.current
-      const ease = 1 - Math.exp(-dt * 1.5)
-      s.m += (target - s.m) * ease
-      s.loud += (loudT - s.loud) * ease
-      s.phase = (s.phase + (W / speed) * dt) % W
-      const settled = Math.abs(target - s.m) < 0.0008 && target === 1
-      if (settled) {
-        s.m = 1
-        draw()
-        return // the skyline holds still
+      const p = Math.min(1, (now - t0) / DURATION)
+      for (let i = 0; i < N; i++) {
+        // each point starts a little later than the one to its left: the change travels along the line
+        const local = Math.min(1, Math.max(0, (p * (1 + SWEEP) - U[i] * SWEEP) / 1))
+        cur.current[i] = from[i] + (target - from[i]) * easeOutBack(local)
       }
+      loud.current += (loudT - loud.current) * (1 - Math.exp(-dt * 1.6))
+      phase.current = (phase.current + (W / speed) * dt) % W
       draw()
+      // the finished skyline holds perfectly still
+      if (target === 1 && p >= 1) {
+        cur.current.fill(1)
+        draw()
+        return
+      }
       raf = requestAnimationFrame(tick)
     }
 
     if (reduce) {
-      state.current.m = target
-      state.current.loud = loudT
+      cur.current.fill(target)
+      loud.current = loudT
       draw()
     } else {
       raf = requestAnimationFrame(tick)
@@ -106,7 +132,7 @@ export function SkylineWave({ stage, seed = 1, className }: { stage: number; see
   }, [stage, seed])
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className={cn("block h-[72px] w-full", className)} role="img" aria-label="Your complaint as a sound wave that settles into the New York skyline" style={{ maskImage: "linear-gradient(90deg, transparent 0%, #000 4%, #000 96%, transparent 100%)", WebkitMaskImage: "linear-gradient(90deg, transparent 0%, #000 4%, #000 96%, transparent 100%)" }}>
+    <svg viewBox={`0 0 ${W} ${H}`} className={cn("block h-[72px] w-full", className)} role="img" aria-label="Your complaint as a sound wave that settles into the New York skyline">
       <defs>
         <linearGradient id="sky-g" gradientUnits="userSpaceOnUse" x1="0" x2={W} y1="0" y2="0">
           <stop offset="0" stopColor="#9cc2ff" />
@@ -114,7 +140,7 @@ export function SkylineWave({ stage, seed = 1, className }: { stage: number; see
           <stop offset="1" style={{ stopColor: "var(--foreground)" }} />
         </linearGradient>
       </defs>
-      <path ref={path} fill="none" stroke="url(#sky-g)" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" />
+      <path ref={path} fill="none" stroke="url(#sky-g)" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   )
 }
