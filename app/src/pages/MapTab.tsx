@@ -7,7 +7,10 @@ interface FeedItem {
   id: number
   type: string
   at: number
+  status: string
 }
+
+const STATUSES = ["Received", "Sent to the agency", "Checked on site", "Warning issued", "No violation found", "Summons issued"]
 
 const cmdButtons = [
   { cmd: "tilt", label: "3D / 2D", Icon: Box },
@@ -107,7 +110,8 @@ export default function MapTab({
     const add = () => {
       const type = NOISE_TYPES[Math.floor(Math.random() * NOISE_TYPES.length)]
       idRef.current += 1
-      setFeed(f => [{ id: idRef.current, type, at: Date.now() }, ...f].slice(0, 4))
+      const status = STATUSES[Math.floor(Math.random() * STATUSES.length)]
+      setFeed(f => [{ id: idRef.current, type, at: Date.now(), status }, ...f].slice(0, 4))
       setTotal(n => n + 1)
       send({ cmd: "complaint" })
     }
@@ -181,13 +185,26 @@ export default function MapTab({
               <span className="absolute size-2.5 animate-ping rounded-full bg-accent/60" />
               <span className="size-2 rounded-full bg-accent" />
             </span>
-            <h2 key={area} className="anim-feed text-[20px] font-bold tracking-[-0.02em]">Live in {areaName(area)}</h2>
+            <h2 className="text-[20px] font-bold tracking-[-0.02em]">Is the city listening?</h2>
           </div>
           <p className="mt-0.5 text-[14px] text-muted-foreground">
-            <AnimatedNumber value={total} /> reports this week
-            {block !== null ? ` · ${block} on the block you tapped` : ""} · Simulated example data
+            <span key={area} className="anim-feed inline-block font-medium text-foreground">{areaName(area)}</span> · <AnimatedNumber value={total} /> reports this week
+            {block !== null ? ` · ${block} on the block you tapped` : ""}
           </p>
           <LiveWave pulse={total} />
+
+          <div className="mt-1 grid grid-cols-3 gap-2">
+            {[
+              ["Median reply", "2 h 10 m"],
+              ["Got an outcome", "78%"],
+              ["Most reported", "Music"],
+            ].map(([k, v]) => (
+              <div key={k} className="rounded-2xl bg-fill px-3 py-2">
+                <p className="text-[11px] text-muted-foreground">{k}</p>
+                <p className="text-[15px] leading-tight font-semibold tabular-nums">{v}</p>
+              </div>
+            ))}
+          </div>
 
           <div className="-mx-5 mt-2 flex snap-x gap-2 overflow-x-auto px-5 pb-1 [scrollbar-width:none]">
             {AREAS.map(a => (
@@ -216,11 +233,15 @@ export default function MapTab({
                 >
                   {i === 0 && <span key={f.id} className="anim-sweep pointer-events-none absolute inset-0" />}
                   <span className="size-2.5 rounded-full bg-accent" />
-                  <span className="flex-1 text-[16px] font-medium">{f.type}</span>
-                  <span className="text-[14px] text-muted-foreground">{ago(f.at, now)}</span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-[16px] leading-tight font-medium">{f.type}</span>
+                    <span className="block truncate text-[13px] text-muted-foreground">{f.status}</span>
+                  </span>
+                  <span className="text-[13px] text-muted-foreground">{ago(f.at, now)}</span>
                 </li>
               ))}
             </ul>
+            <p className="min-h-0 overflow-hidden text-[12px] text-muted-foreground">Simulated example data. Replies are modeled on how NYC agencies respond.</p>
           </div>
         </div>
       </section>

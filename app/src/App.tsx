@@ -1,40 +1,72 @@
 import { useEffect, useRef, useState } from "react"
 import { ClipboardList, Map as MapIcon, Mic } from "lucide-react"
 
-import { loadCases, loadProfile, saveCases, saveProfile, type AreaId, type Complaint, type Profile } from "@/lib/data"
-import CasesTab from "@/pages/CasesTab"
+import {
+  loadCases,
+  loadProfile,
+  pickOutcome,
+  saveCases,
+  saveProfile,
+  type AreaId,
+  type Complaint,
+  type Confirmed,
+  type Profile,
+} from "@/lib/data"
+import ClosureScreen from "@/pages/ClosureScreen"
 import MapTab from "@/pages/MapTab"
 import Onboarding from "@/pages/Onboarding"
 import ReportTab from "@/pages/ReportTab"
+import SentScreen from "@/pages/SentScreen"
+import TrackTab from "@/pages/TrackTab"
 
-type Tab = "map" | "report" | "cases"
+type Tab = "report" | "track" | "city"
+type Overlay = { kind: "sent"; ref: string } | { kind: "closure"; ref: string } | null
 
+const now0 = Date.now()
 const SEED: Complaint[] = [
-  { ref: "HSH-48213", type: "Music or party", area: "williamsburg", stage: 2, createdAt: Date.now() - 36e5, note: "Example case" },
+  {
+    ref: "HSH-48213",
+    type: "Music or party",
+    area: "williamsburg",
+    stage: 2,
+    createdAt: now0 - 36e5,
+    times: [now0 - 36e5, now0 - 34e5, now0 - 31e5],
+    note: "Example case",
+  },
 ]
 
 const tabs = [
-  { id: "map", label: "Map", Icon: MapIcon },
   { id: "report", label: "Report", Icon: Mic },
-  { id: "cases", label: "Cases", Icon: ClipboardList },
+  { id: "track", label: "Track", Icon: ClipboardList },
+  { id: "city", label: "City", Icon: MapIcon },
 ] as const
 
 export default function App() {
   const [profile, setProfile] = useState<Profile | null>(() => loadProfile())
-  const [tab, setTab] = useState<Tab>("map")
+  const [tab, setTab] = useState<Tab>("report")
+  const [overlay, setOverlay] = useState<Overlay>(null)
+  const [selected, setSelected] = useState<string | null>(null)
   const [cases, setCases] = useState<Complaint[]>(() => loadCases() ?? SEED)
-  const [toast, setToast] = useState("")
   const frameRef = useRef<HTMLIFrameElement>(null)
 
   useEffect(() => saveCases(cases), [cases])
 
-  // Simulated progress: the newest open case advances every few seconds.
+  // Simulated progress: the newest open case moves forward every few seconds.
   useEffect(() => {
     const iv = window.setInterval(() => {
       setCases(cs => {
         const i = cs.findIndex(c => c.stage < 4)
         if (i < 0) return cs
-        return cs.map((c, j) => (j === i ? { ...c, stage: c.stage + 1 } : c))
+        return cs.map((c, j) => {
+          if (j !== i) return c
+          const stage = c.stage + 1
+          const next: Complaint = { ...c, stage, times: [...c.times, Date.now()] }
+          if (stage === 4) {
+            next.outcome = pickOutcome(c.type)
+            next.confirmed = undefined
+          }
+          return next
+        })
       })
     }, 9000)
     return () => window.clearInterval(iv)
@@ -53,36 +85,41 @@ export default function App() {
 
   const submit = (c: Complaint) => {
     setCases(cs => [c, ...cs])
+    setSelected(c.ref)
     frameRef.current?.contentWindow?.postMessage({ cmd: "complaint" }, "*")
-    setToast(`Sent. Case ${c.ref} is open.`)
-    setTab("cases")
-    window.setTimeout(() => setToast(""), 3200)
+    setOverlay({ kind: "sent", ref: c.ref })
   }
 
+  const confirm = (ref: string, a: Confirmed) =>
+    setCases(cs =>
+      cs.map(c => {
+        if (c.ref !== ref) return c
+        if (a === "no") return { ...c, confirmed: a, stage: 1, times: c.times.slice(0, 2), outcome: undefined, reopened: (c.reopened ?? 0) + 1 }
+        return { ...c, confirmed: a, closedAt: Date.now() }
+      }),
+    )
+
   const idx = tabs.findIndex(t => t.id === tab)
+  const sent = overlay?.kind === "sent" ? cases.find(c => c.ref === overlay.ref) : undefined
+  const closing = overlay?.kind === "closure" ? cases.find(c => c.ref === overlay.ref) : undefined
 
   return (
     <div className="absolute inset-0 bg-background">
       <main className="absolute inset-0 overflow-hidden">
         <div
           className="absolute inset-0 transition-[opacity,filter,transform] duration-500 ease-ios"
-          style={{ opacity: tab === "map" ? 1 : 0, filter: tab === "map" ? "none" : "blur(14px)", transform: tab === "map" ? "none" : "scale(0.98)", pointerEvents: tab === "map" ? "auto" : "none" }}
+          style={{ opacity: tab === "city" ? 1 : 0, filter: tab === "city" ? "none" : "blur(14px)", transform: tab === "city" ? "none" : "scale(0.98)", pointerEvents: tab === "city" ? "auto" : "none" }}
         >
-          <MapTab area={profile.area} setArea={(a: AreaId) => setProfile({ ...profile, area: a })} frameRef={frameRef} active={tab === "map"} />
+          <MapTab area={profile.area} setArea={(a: AreaId) => setProfile({ ...profile, area: a })} frameRef={frameRef} active={tab === "city"} />
         </div>
         {tab === "report" && (
           <div key="report" className="anim-rise absolute inset-0 overflow-y-auto pb-28">
             <ReportTab profile={profile} onSubmit={submit} />
           </div>
         )}
-        {tab === "cases" && (
-          <div key="cases" className="anim-rise absolute inset-0 overflow-y-auto pb-28">
-            <CasesTab cases={cases} />
-          </div>
-        )}
-        {toast && (
-          <div role="status" className="anim-feed glass absolute inset-x-4 top-[max(var(--sat),12px)] z-20 mx-auto max-w-[398px] rounded-full px-5 py-3 text-center text-[15px] font-semibold">
-            {toast}
+        {tab === "track" && (
+          <div key="track" className="anim-rise absolute inset-0 overflow-y-auto pb-28">
+            <TrackTab cases={cases} selected={selected} setSelected={setSelected} onClosure={ref => setOverlay({ kind: "closure", ref })} />
           </div>
         )}
       </main>
@@ -109,6 +146,36 @@ export default function App() {
           ))}
         </ul>
       </nav>
+
+      {sent && (
+        <SentScreen
+          key={sent.ref}
+          c={sent}
+          onTrack={() => {
+            setOverlay(null)
+            setTab("track")
+          }}
+          onAnother={() => {
+            setOverlay(null)
+            setTab("report")
+          }}
+        />
+      )}
+      {closing && (
+        <ClosureScreen
+          key={closing.ref}
+          c={closing}
+          onConfirm={a => confirm(closing.ref, a)}
+          onBack={() => {
+            setOverlay(null)
+            setTab("track")
+          }}
+          onNew={() => {
+            setOverlay(null)
+            setTab("report")
+          }}
+        />
+      )}
     </div>
   )
 }

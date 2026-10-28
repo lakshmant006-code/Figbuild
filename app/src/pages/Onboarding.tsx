@@ -58,7 +58,7 @@ export default function Onboarding({ onDone }: { onDone: (p: Profile) => void })
             Continue
           </Button>
         )}
-        {step === STEPS - 1 && <Button variant="blue" onClick={finish}>Open the map</Button>}
+        {step === STEPS - 1 && <Button variant="blue" onClick={finish}>Start reporting</Button>}
       </div>
     </div>
     </div>
@@ -208,7 +208,7 @@ function Ready({ area, notify, setNotify }: { area: AreaId; notify: boolean; set
   const name = AREAS.find(a => a.id === area)?.name
   return (
     <>
-      <Title sub={`The map opens on ${name}. New reports pulse in blue as they come in.`}>You&apos;re all set.</Title>
+      <Title sub={`Your neighborhood is ${name}. Reports there show up live on the city map.`}>You&apos;re all set.</Title>
       <div className="rounded-[20px] bg-card">
         <div className="flex min-h-[64px] items-center gap-3 px-4 py-3">
           <div className="grid size-9 place-items-center rounded-full bg-fill"><Bell className="size-5" /></div>
