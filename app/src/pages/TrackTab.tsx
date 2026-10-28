@@ -1,12 +1,10 @@
 import { Check, ChevronRight, LayoutGrid } from "lucide-react"
 
-import { ComplaintWave } from "@/components/ui/complaint-wave"
-import { StageScene } from "@/components/stage-scene"
+import { SkylineWave } from "@/components/ui/skyline-wave"
 import { MapTile, MomentCard, PhotoTile, photosFor } from "@/components/ui/moment-card"
 import { STAGES, agencyFor, areaName, stageCopy, type Complaint } from "@/lib/data"
 import { cn } from "@/lib/utils"
 
-const AMP = [1, 0.72, 0.46, 0.22, 0.04]
 const clock = (t: number) => new Date(t).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
 const NEXT = ["a few minutes", "about an hour", "a few hours", "about an hour", ""]
 
@@ -46,10 +44,7 @@ export default function TrackTab({
             title={`${c.type} near ${areaName(c.area)}`}
             body={`${stageCopy(c, c.stage).title} ${c.stage < 4 ? `Next update usually in ${NEXT[c.stage]}.` : `Posted at ${clock(c.times[4] ?? Date.now())}.`}`}
           >
-            <ComplaintWave flow speed={[5, 6.5, 8.5, 11, 16][c.stage]} amplitude={AMP[c.stage]} seed={c.ref.length} color={c.stage === 4 ? "var(--accent)" : undefined} className="-mx-1 mt-2 h-14" />
-            <div className="mt-1 overflow-hidden rounded-[18px]" style={{ background: "linear-gradient(180deg, color-mix(in srgb, var(--fill) 80%, transparent), transparent)" }}>
-              <StageScene stage={c.stage} />
-            </div>
+            <SkylineWave stage={c.stage} seed={c.ref.length} className="mt-2" />
           </MomentCard>
 
           <p className="mt-7 mb-3 px-1 text-[14px] font-medium text-muted-foreground">Where it is, with {agencyFor(c.type).short}</p>
