@@ -1,0 +1,136 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+@font-face { font-family: "Bricolage"; src: url("Bricolage-ExtraBold.ttf"); font-weight: 800; }
+html, body { margin: 0; background: #141B3C; }
+canvas { display: block; }
+#bg { position: absolute; left: -9999px; }
+</style></head>
+<body>
+<canvas id="bg" width="1080" height="1920"></canvas>
+<canvas id="out" width="1080" height="1920"></canvas>
+<script>
+const W = 1080, H = 1920;
+const NAVY = "#141B3C", TANG = "#FF7A1A", BUTTER = "#FFD66B", OFF = "#FFF8EC", CALM = "#3E7BFA";
+const FRAG = `/*FRAG*/`;
+const VERT = "attribute vec2 a_position;void main(){gl_Position=vec4(a_position,0.0,1.0);}";
+// Same uniforms as app/src/components/ui/waves-shaders-homlu-ui.tsx
+const U = /*UNIFORMS*/;
+
+const bg = document.getElementById("bg"), out = document.getElementById("out"), ctx = out.getContext("2d");
+const gl = bg.getContext("webgl", { antialias: false, preserveDrawingBuffer: true });
+const sh = (t, s) => { const o = gl.createShader(t); gl.shaderSource(o, s); gl.compileShader(o); if (!gl.getShaderParameter(o, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(o)); return o; };
+const prog = gl.createProgram();
+gl.attachShader(prog, sh(gl.VERTEX_SHADER, VERT)); gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, FRAG));
+gl.linkProgram(prog); gl.useProgram(prog);
+const buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,3,-1,-1,3]), gl.STATIC_DRAW);
+const loc = gl.getAttribLocation(prog, "a_position"); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+const L = n => gl.getUniformLocation(prog, n);
+gl.uniform3fv(L("u_colors"), new Float32Array(U.colors.flat()));
+gl.uniform4f(L("u_shape"), U.scale, U.intensity, U.paramA, U.warp);
+gl.uniform4f(L("u_surface"), U.detail, U.contrast, U.brightness, U.saturation);
+gl.uniform4f(L("u_finish"), U.hue, U.vignette, U.blur, U.grain);
+gl.uniform4f(L("u_transform"), U.seed, U.rotate, U.drift, U.oklab);
+gl.uniform4f(L("u_space"), U.offsetX, U.offsetY, 0, 0);
+gl.uniform4f(L("u_cursor"), 0, U.cursorEffect, U.cursorStrength, U.cursorRadius);
+gl.viewport(0, 0, W, H);
+
+const logo = new Image(); logo.src = "logo.png";
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const ease = x => (x = clamp(x), x < 0.5 ? 4*x*x*x : 1 - Math.pow(-2*x + 2, 3) / 2);
+const spring = x => x <= 0 ? 0 : 1 - Math.exp(-6.5 * x) * Math.cos(15 * x);
+const rr = (c, x, y, w, h, r) => { c.beginPath(); c.roundRect(x, y, w, h, r); };
+
+const LOGO = 460, LX = W / 2, LY = 640;
+const PULSES = [[1.35, 1.0], [1.8, 0.65], [2.25, 0.35]];
+const LETTERS = ["H", "U", "S", "H"];
+
+function wave(c, y, amp, color, t, from, to, lw) {
+  c.beginPath();
+  for (let x = from; x <= to; x += 6) {
+    const k = (x - W / 2) / (W / 2);
+    const env = Math.pow(1 - Math.min(1, Math.abs(k)), 0.6);
+    const yy = y + amp * env * (Math.sin(x * 0.06 + t * 14) * 0.6 + Math.sin(x * 0.15 - t * 9) * 0.4);
+    x === from ? c.moveTo(x, yy) : c.lineTo(x, yy);
+  }
+  c.strokeStyle = color; c.lineWidth = lw; c.lineCap = "round"; c.lineJoin = "round"; c.stroke();
+}
+
+window.draw = (t) => {
+  // 1. shader (same clock as the component: timeScale * seconds)
+  gl.uniform4f(L("u_scene"), W, H, t * U.timeScale, U.colorCount);
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = NAVY; ctx.fillRect(0, 0, W, H);
+
+  // 2. tide: the waves rise from the bottom and reveal the shader
+  const tide = ease((t - 0.25) / 1.3);
+  const edge = H + 60 - tide * (H + 260);
+  if (tide > 0) {
+    ctx.save(); ctx.beginPath(); ctx.moveTo(0, H);
+    for (let x = 0; x <= W; x += 8) ctx.lineTo(x, edge + Math.sin(x * 0.009 + t * 5) * 46 + Math.sin(x * 0.025 - t * 3) * 18);
+    ctx.lineTo(W, H); ctx.closePath(); ctx.clip();
+    ctx.drawImage(bg, 0, 0, W, H); ctx.restore();
+  }
+
+  // 3. heartbeat rings (squircles echoing the logo), each calmer than the last
+  PULSES.forEach(([t0, amp], i) => {
+    const tau = (t - t0) / 1.5; if (tau < 0 || tau > 1) return;
+    const e = 1 - Math.pow(1 - tau, 3);
+    const size = LOGO + e * (760 * amp + 140);
+    ctx.save(); ctx.globalAlpha = (1 - tau) * (0.55 + 0.45 * amp);
+    ctx.strokeStyle = i % 2 ? TANG : NAVY; ctx.lineWidth = 16 * (1 - tau) + 3;
+    rr(ctx, LX - size / 2, LY - size / 2, size, size, size * 0.22); ctx.stroke(); ctx.restore();
+  });
+
+  // 4. logo: drops in with a spring, then thumps with each pulse
+  const tl = t - 1.05;
+  if (tl > 0 && logo.complete) {
+    let s = spring(tl / 0.9);
+    let bump = 0; PULSES.forEach(([t0, amp]) => { const d = t - t0; if (d > 0) bump += amp * 0.1 * Math.exp(-9 * d) * Math.cos(26 * d); });
+    s = Math.max(0, s + bump);
+    const rot = (1 - spring(tl / 0.9)) * -0.35 + Math.sin(Math.max(0, t - 3.9) * 2.2) * 0.012;
+    const drop = (1 - clamp(tl / 0.5)) * -700 + Math.sin(Math.max(0, t - 3.9) * 2.6) * 6;
+    ctx.save(); ctx.translate(LX, LY + drop); ctx.rotate(rot); ctx.scale(s, s);
+    ctx.shadowColor = "rgba(20,27,60,0.38)"; ctx.shadowOffsetY = 16; ctx.shadowBlur = 0;
+    ctx.drawImage(logo, -LOGO / 2, -LOGO / 2, LOGO, LOGO); ctx.restore();
+  }
+
+  // 5. wordmark: letters pop in one by one
+  ctx.save(); ctx.font = "800 330px Bricolage"; ctx.textBaseline = "alphabetic";
+  const sp = -8, widths = LETTERS.map(l => ctx.measureText(l).width);
+  const total = widths.reduce((a, b) => a + b, 0) + sp * 3; let x0 = W / 2 - total / 2;
+  LETTERS.forEach((l, i) => {
+    const tt = (t - (3.0 + i * 0.09)) / 0.55; const p = spring(tt), a = clamp(tt * 4);
+    if (tt > 0) { ctx.globalAlpha = a; ctx.fillStyle = NAVY; ctx.fillText(l, x0, 1290 + (1 - p) * 140); }
+    x0 += widths[i] + sp;
+  });
+  ctx.restore();
+
+  // 6. tagline
+  const tg = ease((t - 3.7) / 0.6);
+  if (tg > 0) {
+    ctx.save(); ctx.globalAlpha = tg; ctx.fillStyle = NAVY; ctx.textAlign = "center";
+    ctx.font = "800 64px Bricolage"; ctx.fillText("Give every complaint", W / 2, 1400 + (1 - tg) * 24); ctx.fillText("a heartbeat.", W / 2, 1480 + (1 - tg) * 24); ctx.restore();
+  }
+
+  // 7. the living wave: loud and tangerine, then calmed to a flat blue line
+  if (t > 2.0) {
+    const draw = ease((t - 2.0) / 0.7);
+    const calm = ease((t - 2.5) / 1.5);
+    const amp = 150 * (1 - calm) + 6 * (0.5 + 0.5 * Math.sin(t * 3)) * calm;
+    const col = calm > 0.6 ? CALM : TANG;
+    const half = (W / 2 - 60) * draw;
+    ctx.save(); ctx.globalAlpha = 0.95; wave(ctx, 1660, amp, col, t, W / 2 - half, W / 2 + half, 14); ctx.restore();
+  }
+
+  // fade in from black-navy at the start
+  const fi = 1 - clamp(t / 0.25);
+  if (fi > 0) { ctx.fillStyle = `rgba(20,27,60,${fi})`; ctx.fillRect(0, 0, W, H); }
+
+  return out.toDataURL("image/jpeg", 0.96);
+};
+window.ready = Promise.all([document.fonts.load("800 100px Bricolage"), logo.decode()]).then(() => true);
+</script></body></html>
