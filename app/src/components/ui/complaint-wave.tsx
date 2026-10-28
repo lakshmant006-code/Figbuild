@@ -18,7 +18,7 @@ function wavePath(width: number, height: number, amp: number, seed: number) {
 
 export function ComplaintWave({
   amplitude = 1,
-  color = "var(--accent)",
+  color,
   seed = 1,
   className,
 }: {
@@ -30,10 +30,17 @@ export function ComplaintWave({
   const d = useMemo(() => wavePath(320, 96, 40 * amplitude, seed), [amplitude, seed])
   return (
     <svg viewBox="0 0 320 96" className={cn("h-24 w-full", className)} aria-hidden="true">
+      <defs>
+        <linearGradient id="voice-wave" x1="0" x2="1" y1="0" y2="0">
+          <stop offset="0" stopColor="#9cc2ff" />
+          <stop offset="0.5" stopColor="#0866ff" />
+          <stop offset="1" style={{ stopColor: "var(--foreground)" }} />
+        </linearGradient>
+      </defs>
       <path
         d={d}
         fill="none"
-        stroke={color}
+        stroke={color ?? "url(#voice-wave)"}
         strokeWidth={3}
         strokeLinecap="round"
         strokeLinejoin="round"

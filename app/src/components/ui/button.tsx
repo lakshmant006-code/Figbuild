@@ -11,6 +11,7 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default: "bg-primary text-primary-foreground",
+        blue: "bg-accent text-white",
         secondary: "bg-fill text-foreground",
         plain: "text-accent",
       },

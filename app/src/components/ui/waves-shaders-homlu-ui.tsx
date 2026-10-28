@@ -5,7 +5,7 @@
 // canvas that fills its parent. Drop it behind your content with
 // <div className="relative"><ShaderBackground className="absolute inset-0" />…
 //
-// HUSH: colours below are the HUSH palette (midnight navy → tangerine → butter → off-white).
+// HUSH: colours below are the sound-voice gradient (black → blue → pale blue → white).
 
 import { useEffect, useRef } from "react"
 
@@ -278,8 +278,8 @@ void main() {
 `
 
 const UNIFORMS = {
-  // Midnight navy, tangerine, butter, off-white (padded with off-white).
-  colors: [[0.0784313725490196,0.10588235294117647,0.23529411764705882],[1,0.47843137254901963,0.10196078431372549],[1,0.8392156862745098,0.4196078431372549],[1,0.9725490196078431,0.9254901960784314],[1,0.9725490196078431,0.9254901960784314],[1,0.9725490196078431,0.9254901960784314],[1,0.9725490196078431,0.9254901960784314],[1,0.9725490196078431,0.9254901960784314]] as [number, number, number][],
+  // Black, blue, pale blue, white (padded with white).
+  colors: [[0,0,0.02],[0.0314,0.4,1],[0.612,0.761,1],[1,1,1],[1,1,1],[1,1,1],[1,1,1],[1,1,1]] as [number, number, number][],
   colorCount: 4,
   scale: 1.320,
   intensity: 0.490,

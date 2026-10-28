@@ -9,8 +9,9 @@
   --muted-foreground: #6c6c70;
   --separator: rgb(60 60 67 / 0.18);
   --fill: rgb(120 120 128 / 0.12);
-  --accent: #ff7a1a;
-  --calm: #3e7bfa;
+  --accent: #0866ff;
+  --calm: #0866ff;
+  --voice: conic-gradient(from 210deg at 50% 50%, #ffffff, #9cc2ff, #0866ff, #0a1030, #000000, #0866ff, #ffffff);
   --primary: #000000;
   --primary-foreground: #ffffff;
 }
@@ -22,7 +23,8 @@
     --muted-foreground: #98989d;
     --separator: rgb(84 84 88 / 0.5);
     --fill: rgb(120 120 128 / 0.24);
-    --calm: #6f9dff;
+    --accent: #4c8dff;
+    --calm: #4c8dff;
     --primary: #ffffff;
     --primary-foreground: #000000;
     color-scheme: dark;
@@ -35,7 +37,8 @@
   --muted-foreground: #98989d;
   --separator: rgb(84 84 88 / 0.5);
   --fill: rgb(120 120 128 / 0.24);
-  --calm: #6f9dff;
+  --accent: #4c8dff;
+  --calm: #4c8dff;
   --primary: #ffffff;
   --primary-foreground: #000000;
   color-scheme: dark;
@@ -64,6 +67,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
   overscroll-behavior-y: none;
+  overflow: hidden;
 }
 button, a { touch-action: manipulation; }
 @media (prefers-reduced-motion: reduce) {
