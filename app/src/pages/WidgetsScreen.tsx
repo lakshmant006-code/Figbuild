@@ -1,6 +1,7 @@
 import { useState } from "react"
-import { Calendar, Camera, Check, ChevronLeft, Clock, Cloud, Mail, MapPin, MessageCircle, Music, Phone, Plus, Settings } from "lucide-react"
+import { Check, ChevronLeft, Plus } from "lucide-react"
 
+import { HushIcon, IosApp } from "@/components/ios-icons"
 import { WIDGETS, renderWidget, type WidgetId, type WidgetSize } from "@/components/widgets"
 import { cn } from "@/lib/utils"
 import type { Complaint } from "@/lib/data"
@@ -11,38 +12,38 @@ const GROUPS: { size: WidgetSize; label: string }[] = [
   { size: "large", label: "Large" },
 ]
 
-const APPS = [Phone, MessageCircle, Camera, Mail, Music, MapPin, Clock, Calendar, Cloud, Settings]
 
 function HomeScreenMock({ added, c, area }: { added: WidgetId[]; c?: Complaint; area: string }) {
   const smalls = WIDGETS.filter(w => w.size === "small" && added.includes(w.id))
   const rest = WIDGETS.filter(w => w.size !== "small" && added.includes(w.id))
+  const grid = (apps: ("mail" | "maps" | "camera" | "clock" | "calendar" | "weather" | "settings")[], hush: boolean) => (
+    <div className="grid grid-cols-4 gap-y-4">
+      {hush && <HushIcon />}
+      {apps.map(a => <IosApp key={a} app={a} />)}
+    </div>
+  )
   return (
-    <div className="relative mt-5 overflow-hidden rounded-[34px] p-4 pb-5" style={{ background: "linear-gradient(175deg,#e9f1ff 0%,#a9c6ff 38%,#3b79ff 72%,#0a1030 100%)" }}>
+    <div className="relative mt-5 flex flex-col overflow-hidden rounded-[34px] px-4 pt-5 pb-4" style={{ background: "linear-gradient(175deg,#eaf2ff 0%,#a9c6ff 36%,#3b79ff 70%,#0a1030 100%)" }}>
       <div className="flex flex-col gap-4" style={{ zoom: 0.88 }}>
         {smalls.length > 0 && (
           <div className="flex justify-between gap-3">
             {smalls.map(w => <div key={w.id} className="anim-pop">{renderWidget(w.id, c, area)}</div>)}
             {smalls.length === 1 && (
-              <div className="grid size-[170px] grid-cols-2 gap-x-6 gap-y-3 p-2">
-                {APPS.slice(0, 4).map((I, i) => (
-                  <span key={i} className="grid size-[60px] place-items-center rounded-[16px] bg-white/55 backdrop-blur-md"><I className="size-6 text-white" strokeWidth={1.6} /></span>
-                ))}
+              <div className="grid size-[170px] grid-cols-2 place-items-center gap-y-2">
+                <IosApp app="mail" /><IosApp app="maps" /><IosApp app="camera" /><IosApp app="clock" />
               </div>
             )}
           </div>
         )}
         {rest.map(w => <div key={w.id} className="anim-pop">{renderWidget(w.id, c, area)}</div>)}
-        <div className="grid grid-cols-4 gap-y-4">
-          {[null, ...APPS].slice(0, 8).map((I, i) => (
-            <div key={i} className="grid place-items-center">
-              {I === null ? (
-                <img src="logo.png" alt="HUSH" className="size-[60px] rounded-[16px] shadow-lg" />
-              ) : (
-                <span className="grid size-[60px] place-items-center rounded-[16px] bg-white/55 backdrop-blur-md"><I className="size-6 text-white" strokeWidth={1.6} /></span>
-              )}
-            </div>
-          ))}
-        </div>
+        {grid(smalls.length === 1 ? ["calendar", "weather", "settings"] : ["mail", "maps", "camera"], true)}
+      </div>
+      {/* dock */}
+      <div className="mt-4 flex justify-around rounded-[30px] bg-white/30 px-3 py-3 backdrop-blur-xl" style={{ zoom: 0.88 }}>
+        <IosApp app="phone" label={false} />
+        <IosApp app="safari" label={false} />
+        <IosApp app="messages" label={false} />
+        <IosApp app="music" label={false} />
       </div>
     </div>
   )
