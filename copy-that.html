@@ -97,6 +97,8 @@ section{padding-top:88px}
 .areas{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
 .areas button{font:600 13px var(--display);border:1.5px solid var(--line);background:var(--card);color:var(--fg);border-radius:99px;padding:7px 12px;cursor:pointer}
 .areas button[aria-pressed="true"]{background:var(--tang);color:#141B3C;border-color:var(--tang)}
+.deckwrap.night .mapctl button{background:rgba(255,248,236,.12);box-shadow:inset 0 0 0 1px rgba(255,248,236,.25)}
+.deckwrap.night{background:linear-gradient(180deg,#05081a 0%,#141B3C 45%,#2a2f6a 62%,#1c2552 100%)}
 .deckfail{position:absolute;inset:0;display:grid;place-items:center;color:#9aa1ad;font:500 13px var(--mono);padding:20px;text-align:center}
 
 /* brand */
@@ -223,11 +225,11 @@ section{padding-top:88px}
   <div class="sec-head">
     <div class="eyebrow"><span class="num">02</span> · The city has ears</div>
     <h2>Is it just you, or the whole block?</h2>
-    <p>Complaints show up as clusters, so you can tell a one-off from a neighborhood-wide problem. Hotter hexagons mean more reports in the last 30 days. Tap a neighborhood name to fly in, City to zoom back out, Skyline for the view from the harbor and Street level to stand on the avenue. Buildings come from the NYC 3D Building Model. Every tower over 150 ft is on the map, and the tangerine ring marks a repeat location.</p>
+    <p>Complaints show up as clusters, so you can tell a one-off from a neighborhood-wide problem. Hotter hexagons mean more reports in the last 30 days. Tap a neighborhood name to fly in, City to zoom back out, Skyline for the view from the harbor and Street level to stand on the avenue. Buildings come from the NYC 3D Building Model. Every tower over 150 ft is on the map, and the tangerine ring marks a repeat location. Press Night for the after-dark view: tangerine pulses are complaints coming in, soft blue pulses are agencies responding.</p>
   </div>
   <div class="pattern">
     <div class="cityMap">
-      <div class="deckwrap"><div id="deckmap" role="img" aria-label="Example 3D map of noise complaints by area, built with deck.gl"></div><div class="mapstatus" id="mapstatus" role="status" hidden></div><div class="mapctl"><button type="button" id="tilt" aria-pressed="true">3D</button><button type="button" id="city">City</button><button type="button" id="skyview">Skyline</button><button type="button" id="street">Street level</button><button type="button" id="reset">Reset view</button></div></div>
+      <div class="deckwrap"><div id="deckmap" role="img" aria-label="Example 3D map of noise complaints by area, built with deck.gl"></div><div class="mapstatus" id="mapstatus" role="status" hidden></div><div class="mapctl"><button type="button" id="nightbtn" aria-pressed="false">Night</button><button type="button" id="tilt" aria-pressed="true">3D</button><button type="button" id="city">City</button><button type="button" id="skyview">Skyline</button><button type="button" id="street">Street level</button><button type="button" id="reset">Reset view</button></div></div>
       <div class="areas" id="areas" aria-label="Neighborhoods"></div>
       <div class="legend"><span>Fewer</span><i style="background:#FFECAA"></i><i style="background:#FFD66B"></i><i style="background:#FFAA46"></i><i style="background:#FF7A1A"></i><span>More complaints</span><span style="margin-left:auto">Example data</span></div>
     </div>
@@ -457,9 +459,11 @@ section{padding-top:88px}
   var names=['Bedford Ave','Metropolitan Ave','Grand St','N 6 St','Driggs Ave','Wythe Ave','Kent Ave','Roebling St'];
   function rnd(seed){var x=Math.sin(seed*12.9898)*43758.5453;return x-Math.floor(x)}
   var pts=[],k=0;
-  function cluster(c,n,sx,sy,w){for(var i=0;i<n;i++){k++;var a=rnd(k)*6.283,r=Math.sqrt(-2*Math.log(Math.max(.0001,rnd(k+777))));pts.push({p:[c[0]+Math.cos(a)*r*sx,c[1]+Math.sin(a)*r*sy],w:w||1})}}
+  var hubs=[];
+  function cluster(c,n,sx,sy,w){hubs.push({p:c,n:n,k:hubs.length});for(var i=0;i<n;i++){k++;var a=rnd(k)*6.283,r=Math.sqrt(-2*Math.log(Math.max(.0001,rnd(k+777))));pts.push({p:[c[0]+Math.cos(a)*r*sx,c[1]+Math.sin(a)*r*sy],w:w||1})}}
   cluster(HOT,150,.0011,.0008,1);cluster([-73.9488,40.7215],70,.0016,.0010,1);cluster([-73.9660,40.7140],60,.0014,.0011,1);cluster(CENTER,260,.0050,.0034,1);
   AREAS.slice(1).forEach(function(a,i){cluster([a.c[0]+.0012*(i%2?1:-1),a.c[1]+.0008],60+i*12,.0012,.0009,1);cluster(a.c,140,.0042,.003,1)});
+  var NRANGE=[[70,52,80],[130,64,52],[200,88,36],[255,122,26],[255,186,90]];
   var range=[[255,236,170],[255,214,107],[255,170,70],[255,122,26],[214,80,20]];
   var is3d=true, deckInst=null, picked=null;
   // NYC 3D Building Model (enhanced CityGML, georocket/new-york-city-model-enhanced), tile DA19, about 1.3 km square around the hotspot.
@@ -566,10 +570,11 @@ section{padding-top:88px}
     getShaders(){return {inject:{
       'vs:#decl':'varying vec3 vWp; varying vec3 vNn; varying vec2 vTc;',
       'vs:#main-end':'vWp=positions; vNn=normals; vTc=texCoords;',
-      'fs:#decl':'uniform float detailAmt; varying vec3 vWp; varying vec3 vNn; varying vec2 vTc;\nfloat h21(vec2 p){return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453);}\nfloat rbox(vec2 p,vec2 b,float r){return length(max(abs(p)-b+r,0.0))-r;}',
+      'fs:#decl':'uniform float detailAmt; uniform float night; varying vec3 vWp; varying vec3 vNn; varying vec2 vTc;\nfloat h21(vec2 p){return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453);}\nfloat rbox(vec2 p,vec2 b,float r){return length(max(abs(p)-b+r,0.0))-r;}',
       'fs:DECKGL_FILTER_COLOR':`
         vec3 n=normalize(vNn);
         float H=vTc.x;
+        float winM=0.0,litM=0.0,winRaw=0.0,shopM=0.0;
         float L=dot(n,normalize(vec3(-0.45,-0.6,0.66)));
         float band=0.8+0.28*smoothstep(-0.3,0.9,L);
         if(vTc.y>1.5){
@@ -624,6 +629,7 @@ section{padding-top:88px}
             glass=mix(glass,vec3(0.95),mull*0.8);
             vec3 c=mix(color.rgb,stone,max(frame,lintel)*detailAmt);
             c=mix(c,glass,win*detailAmt);
+            winRaw=win;litM=lit;winM=win*detailAmt;
             // sill and air conditioner
             float sill=step(abs(p.x),0.31)*step(-0.4,p.y)*step(p.y,-0.34)*up;
             c=mix(c,stone*0.9,sill*detailAmt);
@@ -640,46 +646,99 @@ section{padding-top:88px}
             float shop=step(0.3,vWp.z)*step(vWp.z,2.45)*step(0.1,fract(u*0.5+hs))*step(fract(u*0.5+hs),0.9);
             vec3 sg=vec3(0.18,0.28,0.38)+vec3(1.0,0.8,0.4)*0.35*step(0.5,hs);
             c=mix(c,sg,shop*gf*detailAmt*step(0.25,hs));
+            shopM=shop*gf*step(0.25,hs);
             float aw=step(2.45,vWp.z)*step(vWp.z,3.3)*gf;
             vec3 awc=hs<0.5?vec3(0.2,0.55,0.4):(hs<0.75?vec3(0.2,0.4,0.75):vec3(0.85,0.28,0.25));
             c=mix(c,mix(vec3(1.0),awc,step(0.5,fract(u*2.0))),aw*detailAmt*step(0.3,hs));
             color.rgb=c;
           }
+        }
+        if(night>0.5){
+          // HUSH night: midnight-blue massing, warm lit windows, cool unlit glass, faint height glow
+          vec3 base=vec3(0.085,0.115,0.27)*(0.72+0.42*smoothstep(-0.3,0.9,L));
+          if(n.z>0.7) base=vec3(0.06,0.08,0.2);
+          if(vTc.y>0.5&&vTc.y<1.5) base=vec3(0.05,0.06,0.13);
+          base+=vec3(0.12,0.16,0.36)*0.35*smoothstep(20.0,250.0,vWp.z);
+          float wm=max(winM,winRaw*0.55);
+          vec3 warm=mix(vec3(1.0,0.48,0.1),vec3(1.0,0.84,0.42),fract(H*7.13));
+          color.rgb=base+warm*litM*wm*0.95+vec3(0.18,0.26,0.55)*wm*(1.0-litM)*0.35+vec3(1.0,0.6,0.25)*shopM*0.55;
         }`
     }}}
-    draw(params,extension){this.state.model.setUniforms({detailAmt:extension.opts.amount||0})}
+    draw(params,extension){this.state.model.setUniforms({detailAmt:extension.opts.amount||0,night:extension.opts.night||0})}
   }
+  var night=0, extCache={};
+  function ext(){var k=detailAmt+'|'+night;return extCache[k]||(extCache[k]=new DetailExt({amount:detailAmt,night:night}))}
   DetailExt.extensionName='DetailExt';DetailExt.componentName='DetailExt';
   var GC=[-73.95,40.70], GR=0.45, groundPoly=[[[GC[0]-GR,GC[1]-GR*.75,-.6],[GC[0]+GR,GC[1]-GR*.75,-.6],[GC[0]+GR,GC[1]+GR*.75,-.6],[GC[0]-GR,GC[1]+GR*.75,-.6]]];
   var TREE_G=[[86,168,92],[110,190,100],[70,150,96]];
   function layers(){
     var ls=[
-      new deck.SolidPolygonLayer({id:'water',data:groundPoly.map(function(p){return {polygon:p}}),getPolygon:function(d){return d.polygon},getFillColor:[128,190,230],material:false}),
-      new deck.SolidPolygonLayer({id:'land',data:boroughs,getPolygon:function(d){return d.polygon},getFillColor:[178,176,170],material:false,parameters:{depthTest:false}}),
-      new deck.PathLayer({id:'shore',data:boroughs,getPath:function(d){return d.polygon},getColor:[236,240,242],getWidth:2,widthUnits:'pixels',widthMinPixels:1.5,parameters:{depthTest:false}}),
-      !hexOn?null:new deck.HexagonLayer({id:'hex',data:pts,getPosition:function(d){return d.p},radius:90,extruded:false,coverage:.92,opacity:.7-.42*detailAmt,colorRange:range,upperPercentile:100,pickable:true,autoHighlight:true,highlightColor:[255,255,255,120],onClick:pick})
+      new deck.SolidPolygonLayer({id:'water',data:groundPoly.map(function(p){return {polygon:p}}),getPolygon:function(d){return d.polygon},getFillColor:night?[8,13,34]:[128,190,230],material:false,updateTriggers:{getFillColor:night}}),
+      new deck.SolidPolygonLayer({id:'land',data:boroughs,getPolygon:function(d){return d.polygon},getFillColor:night?[22,30,66]:[178,176,170],material:false,updateTriggers:{getFillColor:night},parameters:{depthTest:false}}),
+      new deck.PathLayer({id:'shore',data:boroughs,getPath:function(d){return d.polygon},getColor:night?[62,92,180]:[236,240,242],updateTriggers:{getColor:night},getWidth:2,widthUnits:'pixels',widthMinPixels:1.5,parameters:{depthTest:false}}),
+      !hexOn?null:new deck.HexagonLayer({id:'hex',data:pts,getPosition:function(d){return d.p},radius:90,extruded:false,coverage:.92,opacity:(night?.5:.7)-.3*detailAmt,colorRange:night?NRANGE:range,upperPercentile:100,pickable:true,autoHighlight:true,highlightColor:[255,255,255,120],onClick:pick})
     ];
     if(is3d)skyline.forEach(function(G){
       if(G.area){var ar=AREAS.filter(function(a){return a.id===G.area})[0];if(ar&&ar.data)return}
-      ls.push(new deck.SimpleMeshLayer({id:'sky-'+G.key,data:[{}],mesh:G.mesh,getPosition:[0,0,0],coordinateSystem:deck.COORDINATE_SYSTEM.METER_OFFSETS,coordinateOrigin:[G.anchor[0],G.anchor[1],0],getColor:[255,255,255,255],extensions:[new DetailExt({amount:detailAmt})],pickable:false,material:false}));
+      ls.push(new deck.SimpleMeshLayer({id:'sky-'+G.key,data:[{}],mesh:G.mesh,getPosition:[0,0,0],coordinateSystem:deck.COORDINATE_SYSTEM.METER_OFFSETS,coordinateOrigin:[G.anchor[0],G.anchor[1],0],getColor:[255,255,255,255],extensions:[ext()],pickable:false,material:false}));
     });
     if(is3d)AREAS.forEach(function(ar){
       var D=ar.data;if(!D)return;
       var O={coordinateSystem:deck.COORDINATE_SYSTEM.METER_OFFSETS,coordinateOrigin:[D.anchor[0],D.anchor[1],0]}, id=ar.id+'-';
-      ls.push(new deck.PathLayer(Object.assign({id:id+'sidewalk',data:D.outlines,_pathType:'open',getColor:[196,192,184,255],getWidth:5,widthUnits:'meters',jointRounded:true,pickable:false},O)));
-      ls.push(new deck.PathLayer(Object.assign({id:id+'curb',data:D.outlines,_pathType:'open',getColor:[160,156,150,255],getWidth:.5,widthUnits:'meters',pickable:false},O)));
-      D.meshes.forEach(function(m,i){ls.push(new deck.SimpleMeshLayer(Object.assign({id:id+'b'+i,data:[{}],mesh:m,getPosition:[0,0,0],getColor:PAL[i].concat(255),extensions:[new DetailExt({amount:detailAmt})],pickable:false,material:false},O)))});
-      ls.push(new deck.SimpleMeshLayer(Object.assign({id:id+'trunks',data:D.trees,mesh:treeTrunk,getPosition:function(d){return d.p},getColor:[110,78,52,255],getScale:function(d){return [d.s,d.s,d.s]},material:{ambient:.6,diffuse:.6}},O)));
-      ls.push(new deck.SimpleMeshLayer(Object.assign({id:id+'crowns',data:D.trees,mesh:treeCrown,getPosition:function(d){return d.p},getColor:function(d){return TREE_G[Math.floor(d.g*3)].concat(255)},getScale:function(d){return [d.s,d.s,d.s]},material:{ambient:.5,diffuse:.7,shininess:4,specularColor:[30,40,30]}},O)));
+      ls.push(new deck.PathLayer(Object.assign({id:id+'sidewalk',data:D.outlines,_pathType:'open',getColor:night?[40,52,98,255]:[196,192,184,255],updateTriggers:{getColor:night},getWidth:5,widthUnits:'meters',jointRounded:true,pickable:false},O)));
+      ls.push(new deck.PathLayer(Object.assign({id:id+'curb',data:D.outlines,_pathType:'open',getColor:night?[255,190,110,170]:[160,156,150,255],updateTriggers:{getColor:night},getWidth:night?.9:.5,widthUnits:'meters',pickable:false},O)));
+      D.meshes.forEach(function(m,i){ls.push(new deck.SimpleMeshLayer(Object.assign({id:id+'b'+i,data:[{}],mesh:m,getPosition:[0,0,0],getColor:PAL[i].concat(255),extensions:[ext()],pickable:false,material:false},O)))});
+      ls.push(new deck.SimpleMeshLayer(Object.assign({id:id+'trunks',data:D.trees,mesh:treeTrunk,getPosition:function(d){return d.p},getColor:night?[30,26,34,255]:[110,78,52,255],updateTriggers:{getColor:night},getScale:function(d){return [d.s,d.s,d.s]},material:{ambient:.6,diffuse:.6}},O)));
+      ls.push(new deck.SimpleMeshLayer(Object.assign({id:id+'crowns',data:D.trees,mesh:treeCrown,getPosition:function(d){return d.p},getColor:function(d){return night?[22,58,64,255]:TREE_G[Math.floor(d.g*3)].concat(255)},updateTriggers:{getColor:night},getScale:function(d){return [d.s,d.s,d.s]},material:{ambient:.5,diffuse:.7,shininess:4,specularColor:[30,40,30]}},O)));
     });
     if(labelsOn){
-      ls.push(new deck.TextLayer({id:'boro-labels',data:BLABELS,getPosition:function(d){return d.p},getText:function(d){return d.t},getSize:20,getColor:[60,64,74,235],fontFamily:'Bricolage Grotesque, Helvetica, Arial, sans-serif',fontWeight:800,characterSet:'auto',fontSettings:{sdf:true},outlineWidth:4,outlineColor:[255,255,255,220],billboard:true,parameters:{depthTest:false}}));
-      ls.push(new deck.TextLayer({id:'area-labels',data:AREAS,getPosition:function(d){return d.c},getText:function(d){return d.name},getSize:13,getColor:function(d){return d===cur?[16,18,22,255]:[40,44,54,230]},fontFamily:'Bricolage Grotesque, Helvetica, Arial, sans-serif',fontWeight:700,characterSet:'auto',fontSettings:{sdf:true},outlineWidth:5,outlineColor:[255,214,107,240],background:false,billboard:true,pickable:true,onClick:function(i){if(i.object)selectArea(i.object)},updateTriggers:{getColor:cur.id},parameters:{depthTest:false}}));
+      ls.push(new deck.TextLayer({id:'boro-labels',data:BLABELS,getPosition:function(d){return d.p},getText:function(d){return d.t},getSize:20,getColor:night?[255,248,236,235]:[60,64,74,235],fontFamily:'Bricolage Grotesque, Helvetica, Arial, sans-serif',fontWeight:800,characterSet:'auto',fontSettings:{sdf:true},outlineWidth:4,outlineColor:night?[20,27,60,230]:[255,255,255,220],updateTriggers:{getColor:night},billboard:true,parameters:{depthTest:false}}));
+      ls.push(new deck.TextLayer({id:'area-labels',data:AREAS,getPosition:function(d){return d.c},getText:function(d){return d.name},getSize:13,getColor:function(d){return night?(d===cur?[255,214,107,255]:[255,248,236,240]):(d===cur?[16,18,22,255]:[40,44,54,230])},fontFamily:'Bricolage Grotesque, Helvetica, Arial, sans-serif',fontWeight:700,characterSet:'auto',fontSettings:{sdf:true},outlineWidth:5,outlineColor:night?[14,20,48,235]:[255,214,107,240],background:false,billboard:true,pickable:true,onClick:function(i){if(i.object)selectArea(i.object)},updateTriggers:{getColor:cur.id+night},parameters:{depthTest:false}}));
     }
     ls.push(new deck.ScatterplotLayer({id:'ring',data:[{p:HOT}],getPosition:function(d){return d.p},getRadius:120,radiusUnits:'meters',stroked:true,filled:false,getLineColor:[255,122,26],lineWidthMinPixels:4}));
     return ls.filter(Boolean);
   }
-  function draw(){if(deckInst)deckInst.setProps({layers:layers()})}
+  // Night pulses are animated on the GPU: one static layer each, a time uniform, and deck's _animate redraw loop.
+  // Per-hub phase rides in the fill alpha so the rings don't beat in unison.
+  class PulseExt extends deck.LayerExtension{
+    getShaders(){return {inject:{
+      'fs:#decl':'uniform float uTime; uniform float uSpeed; uniform vec3 uRing; uniform float uCore;',
+      'fs:DECKGL_FILTER_COLOR':`
+        float ph=color.a;
+        float r=length(geometry.uv);
+        float k=fract(uTime*uSpeed+ph);
+        float ring=(1.0-smoothstep(0.0,0.07,abs(r-k)))*(1.0-k);
+        float ring2=(1.0-smoothstep(0.0,0.05,abs(r-fract(k+0.5))))*(1.0-fract(k+0.5))*0.6;
+        float core=uCore*(1.0-smoothstep(0.045,0.07,r))*(0.85+0.15*sin(uTime*3.0+ph*6.28));
+        float glow=uCore*(1.0-smoothstep(0.0,0.22,r))*0.18;
+        vec3 rgb=mix(uRing,vec3(1.0,0.84,0.42),core);
+        color=vec4(rgb,clamp(max(max(ring,ring2),max(core,glow)),0.0,1.0));
+      `}}}
+    draw(params,extension){var o=extension.opts;this.state.model.setUniforms({uTime:(performance.now()/1000)%1000,uSpeed:o.speed,uRing:o.ring,uCore:o.core})}
+  }
+  PulseExt.extensionName='PulseExt';PulseExt.componentName='PulseExt';
+  var pulseC=new PulseExt({speed:.5,ring:[1,.478,.102],core:1}), pulseA=new PulseExt({speed:.28,ring:[.56,.69,1],core:0});
+  function pulseLayers(){
+    if(!night||detailAmt>=1)return [];
+    var op=1-.6*detailAmt;
+    return [
+      new deck.ScatterplotLayer({id:'pulse-complaints',data:hubs,getPosition:function(d){return d.p},radiusUnits:'meters',getRadius:function(d){return 200+d.n*1.6},
+        getFillColor:function(d){return [255,255,255,Math.round(((d.k*0.37)%1)*255)]},extensions:[pulseC],opacity:op,parameters:{depthMask:false}}),
+      new deck.ScatterplotLayer({id:'pulse-agency',data:hubs.filter(function(d){return d.k%3===1}),getPosition:function(d){return [d.p[0]+.0018,d.p[1]-.0012]},radiusUnits:'meters',getRadius:220,
+        getFillColor:function(d){return [255,255,255,Math.round(((d.k*0.21)%1)*255)]},extensions:[pulseA],opacity:op,parameters:{depthMask:false}})
+    ];
+  }
+  // redraw at ~20 fps while Night is on, so pulses move without a full-speed render loop
+  var pulseTimer=0, mapVisible=true;
+  try{new IntersectionObserver(function(es){mapVisible=es[0].isIntersecting}).observe($('#deckmap'))}catch(e){}
+  function pulseClock(){
+    if(night&&!pulseTimer)pulseTimer=setInterval(function(){if(deckInst&&!document.hidden&&mapVisible&&detailAmt<1)deckInst.redraw(true)},50);
+    if(!night&&pulseTimer){clearInterval(pulseTimer);pulseTimer=0}
+  }
+  function draw(){if(!deckInst)return;deckInst.setProps({layers:layers().concat(pulseLayers())});pulseClock()}
+  function setNight(on){
+    night=on?1:0;$('.deckwrap').classList.toggle('night',!!on);var b=$('#nightbtn');b.setAttribute('aria-pressed',!!on);b.textContent=on?'Day':'Night';draw();
+  }
   function selectArea(a){
     cur=a;var row=$('#areas');Array.prototype.forEach.call(row.children,function(x){x.setAttribute('aria-pressed',x.textContent===a.name)});
     loadArea(a);draw();
@@ -698,6 +757,7 @@ section{padding-top:88px}
       b.addEventListener('click',function(){selectArea(a)});
       row.appendChild(b)});
     $('#skyview').addEventListener('click',function(){if(!is3d)$('#tilt').click();deckInst.setProps({initialViewState:view(SKYVIEW)})});
+    $('#nightbtn').addEventListener('click',function(){setNight(!night)});
     $('#city').addEventListener('click',function(){deckInst.setProps({initialViewState:view(Object.assign({},CITY,{pitch:is3d?40:0,bearing:is3d?-15:0}))})});
     loadSkyline();loadArea(cur);
   }catch(e){
