@@ -5,7 +5,7 @@ const AMP = [1, 0.7, 0.45, 0.22, 0.04]
 
 export default function CasesTab({ cases }: { cases: Complaint[] }) {
   return (
-    <div className="mx-auto w-full max-w-[430px] px-5 pt-[max(env(safe-area-inset-top),12px)] pb-6">
+    <div className="mx-auto w-full max-w-[430px] px-5 pt-[max(var(--sat),12px)] pb-6">
       <h1 className="pt-4 text-[30px] leading-[1.1] font-bold tracking-[-0.025em]">Your cases</h1>
       <p className="mt-2 text-[17px] text-muted-foreground">Each wave calms as the city acts.</p>
       <ul className="mt-5 flex flex-col gap-3">

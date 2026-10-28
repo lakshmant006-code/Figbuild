@@ -41,7 +41,7 @@ export default function ReportTab({ profile, onSubmit }: { profile: Profile; onS
   }
 
   return (
-    <div className="mx-auto flex min-h-full w-full max-w-[430px] flex-col px-5 pt-[max(env(safe-area-inset-top),12px)] pb-6">
+    <div className="mx-auto flex min-h-full w-full max-w-[430px] flex-col px-5 pt-[max(var(--sat),12px)] pb-6">
       <h1 className="pt-4 text-[30px] leading-[1.1] font-bold tracking-[-0.025em]">What are you hearing?</h1>
       <p className="mt-2 text-[17px] text-muted-foreground">Near {areaName(profile.area)}. Tap the orb and say it.</p>
 

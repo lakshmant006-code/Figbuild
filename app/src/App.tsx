@@ -59,40 +59,50 @@ export default function App() {
     window.setTimeout(() => setToast(""), 3200)
   }
 
+  const idx = tabs.findIndex(t => t.id === tab)
+
   return (
-    <div className="fixed inset-0 flex flex-col bg-background">
-      <main className="relative flex-1 overflow-hidden">
-        <div className={tab === "map" ? "absolute inset-0" : "hidden"}>
+    <div className="absolute inset-0 bg-background">
+      <main className="absolute inset-0 overflow-hidden">
+        <div
+          className="absolute inset-0 transition-[opacity,filter,transform] duration-500 ease-ios"
+          style={{ opacity: tab === "map" ? 1 : 0, filter: tab === "map" ? "none" : "blur(14px)", transform: tab === "map" ? "none" : "scale(0.98)", pointerEvents: tab === "map" ? "auto" : "none" }}
+        >
           <MapTab area={profile.area} setArea={(a: AreaId) => setProfile({ ...profile, area: a })} frameRef={frameRef} active={tab === "map"} />
         </div>
         {tab === "report" && (
-          <div className="absolute inset-0 overflow-y-auto">
+          <div key="report" className="anim-rise absolute inset-0 overflow-y-auto pb-28">
             <ReportTab profile={profile} onSubmit={submit} />
           </div>
         )}
         {tab === "cases" && (
-          <div className="absolute inset-0 overflow-y-auto">
+          <div key="cases" className="anim-rise absolute inset-0 overflow-y-auto pb-28">
             <CasesTab cases={cases} />
           </div>
         )}
         {toast && (
-          <div role="status" className="absolute inset-x-4 top-[max(env(safe-area-inset-top),12px)] z-20 mx-auto max-w-[398px] rounded-full bg-primary px-5 py-3 text-center text-[15px] font-medium text-primary-foreground shadow-lg">
+          <div role="status" className="anim-feed glass absolute inset-x-4 top-[max(var(--sat),12px)] z-20 mx-auto max-w-[398px] rounded-full px-5 py-3 text-center text-[15px] font-semibold">
             {toast}
           </div>
         )}
       </main>
 
-      <nav className="border-t border-separator bg-card/90 pb-[max(env(safe-area-inset-bottom),6px)] backdrop-blur-xl" aria-label="Main">
-        <ul className="mx-auto flex max-w-[430px]">
+      <nav className="absolute inset-x-3 bottom-[max(var(--sab),12px)] z-30 mx-auto max-w-[406px]" aria-label="Main">
+        <ul className="glass relative flex rounded-full p-1.5">
+          <span
+            aria-hidden="true"
+            className="absolute top-1.5 bottom-1.5 left-1.5 rounded-full bg-accent/15 transition-transform duration-500 ease-ios"
+            style={{ width: "calc((100% - 12px) / 3)", transform: `translateX(${idx * 100}%)` }}
+          />
           {tabs.map(({ id, label, Icon }) => (
-            <li key={id} className="flex-1">
+            <li key={id} className="relative flex-1">
               <button
                 onClick={() => setTab(id)}
                 aria-current={tab === id ? "page" : undefined}
-                className="flex h-[54px] w-full flex-col items-center justify-center gap-0.5 text-[11px] font-medium"
+                className="flex h-[50px] w-full flex-col items-center justify-center gap-0.5 text-[11px] font-semibold transition-colors duration-300"
                 style={{ color: tab === id ? "var(--accent)" : "var(--muted-foreground)" }}
               >
-                <Icon className="size-[22px]" />
+                <Icon className="size-[22px] transition-transform duration-500 ease-ios" style={{ transform: tab === id ? "translateY(-1px) scale(1.1)" : "none" }} />
                 {label}
               </button>
             </li>

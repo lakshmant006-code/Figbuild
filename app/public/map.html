@@ -117,7 +117,7 @@ html,body{margin:0;height:100%;background:#d4e2f6;overflow:hidden;font:13px -app
   function loadArea(a){
     if(a.data||a.loading)return a.loading||Promise.resolve(a.data);
     setStatus('Loading '+a.name+'\u2026');
-    a.loading=fetch('areas/'+a.id+'.txt').then(function(r){if(!r.ok)throw new Error(r.status);return r.text()}).then(unpack).then(function(buf){a.data=parseArea(buf);a.loading=null;setStatus('');draw();return a.data})
+    a.loading=fetch('areas/'+a.id+'.txt').then(function(r){if(!r.ok)throw new Error(r.status);return r.text()}).then(unpack).then(function(buf){a.data=parseArea(buf);a.loading=null;setStatus('');draw();try{parent.postMessage({type:'loaded',id:a.id},'*')}catch(e){}return a.data})
       .catch(function(){a.loading=null;setStatus('Could not load '+a.name+'. Try again.')});
     return a.loading;
   }
@@ -147,7 +147,7 @@ html,body{margin:0;height:100%;background:#d4e2f6;overflow:hidden;font:13px -app
   }
   function setStatus(t){var el=$('#mapstatus');if(el){el.textContent=t;el.hidden=!t}}
   function pick(info){
-    var o=info&&info.object; if(!o)return;try{parent.postMessage({type:'hex',count:o.count},'*')}catch(e){}
+    var o=info&&info.object; if(!o)return;var cnt=typeof o.count==='number'?o.count:(o.points?o.points.length:null);if(cnt!==null){try{parent.postMessage({type:'hex',count:cnt},'*')}catch(e){}}
     picked=o.index;
     var count=o.count, nm=names[Math.abs(Math.round(o.position[0]*1e4+o.position[1]*1e4))%names.length];
     $('#sBlock').textContent=count+' reports';

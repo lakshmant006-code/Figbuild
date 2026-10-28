@@ -30,7 +30,9 @@ sub("outlineColor:[255,214,107,240]", "outlineColor:[255,255,255,240]")
 sub("getLineColor:[255,122,26],lineWidthMinPixels:4", "getLineColor:[8,102,255],lineWidthMinPixels:3")
 sub("font:'12px IBM Plex Mono, monospace',background:'#171b23'", "font:'12px -apple-system, Inter, sans-serif',background:'#0a0f1f'")
 sub("var o=info&&info.object; if(!o)return;",
-    "var o=info&&info.object; if(!o)return;try{parent.postMessage({type:'hex',count:o.count},'*')}catch(e){}")
+    "var o=info&&info.object; if(!o)return;var cnt=typeof o.count==='number'?o.count:(o.points?o.points.length:null);if(cnt!==null){try{parent.postMessage({type:'hex',count:cnt},'*')}catch(e){}}")
+sub("a.data=parseArea(buf);a.loading=null;setStatus('');draw();return a.data",
+    "a.data=parseArea(buf);a.loading=null;setStatus('');draw();try{parent.postMessage({type:'loaded',id:a.id},'*')}catch(e){}return a.data")
 
 # live complaints: pulsing rings that also feed the density hexagons
 sub("    ls.push(new deck.ScatterplotLayer({id:'ring'",

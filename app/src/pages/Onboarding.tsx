@@ -16,14 +16,15 @@ export default function Onboarding({ onDone }: { onDone: (p: Profile) => void })
   const [hears, setHears] = useState<string[]>(["Music or party"])
   const [notify, setNotify] = useState(true)
   const [q, setQ] = useState("")
+  const [dir, setDir] = useState(1)
 
-  const next = () => setStep(s => Math.min(STEPS - 1, s + 1))
-  const back = () => setStep(s => Math.max(0, s - 1))
+  const next = () => { setDir(1); setStep(s => Math.min(STEPS - 1, s + 1)) }
+  const back = () => { setDir(-1); setStep(s => Math.max(0, s - 1)) }
   const finish = () => onDone({ area, hears, notify })
 
   return (
-    <div className="fixed inset-0 overflow-y-auto">
-    <div className="mx-auto flex min-h-dvh w-full max-w-[430px] flex-col px-5 pt-[max(env(safe-area-inset-top),12px)] pb-[max(env(safe-area-inset-bottom),20px)]">
+    <div className="absolute inset-0 overflow-y-auto">
+    <div className="mx-auto flex min-h-full w-full max-w-[430px] flex-col px-5 pt-[max(var(--sat),12px)] pb-[max(var(--sab),20px)]">
       {step > 0 && (
         <header className="flex h-12 items-center gap-3">
           <button onClick={back} aria-label="Back" className="-ml-2 grid size-11 place-items-center rounded-full active:bg-fill">
@@ -40,7 +41,7 @@ export default function Onboarding({ onDone }: { onDone: (p: Profile) => void })
         </header>
       )}
 
-      <div className="flex flex-1 flex-col">
+      <div key={step} className="anim-step flex flex-1 flex-col" style={{ ["--dx" as string]: `${dir * 28}px` }}>
         {step === 0 && <Welcome />}
         {step === 1 && <Neighborhood area={area} setArea={setArea} q={q} setQ={setQ} />}
         {step === 2 && <Hears hears={hears} setHears={setHears} />}
@@ -81,12 +82,12 @@ function Welcome() {
         <img
           src="logo.png"
           alt="HUSH"
-          className="absolute top-1/2 left-1/2 size-[112px] -translate-x-1/2 -translate-y-1/2 rounded-[28px] shadow-[0_14px_40px_rgb(0_0_0/0.35)]"
+          className="anim-rise absolute top-1/2 left-1/2 size-[112px] -translate-x-1/2 -translate-y-1/2 rounded-[28px] shadow-[0_14px_40px_rgb(0_0_0/0.35)]" style={{ animationDelay: "0.1s" }}
         />
       </div>
       <div className="pt-7">
-        <h1 className="text-[34px] leading-[1.06] font-bold tracking-[-0.03em] text-balance">Every noise complaint gets a heartbeat.</h1>
-        <p className="mt-3 text-[17px] leading-snug text-muted-foreground">
+        <h1 className="anim-rise text-[34px] leading-[1.06] font-bold tracking-[-0.03em] text-balance" style={{ animationDelay: "0.25s" }}>Every noise complaint gets a heartbeat.</h1>
+        <p className="anim-rise mt-3 text-[17px] leading-snug text-muted-foreground" style={{ animationDelay: "0.4s" }}>
           Report in seconds with your voice. Watch the city answer on a live 3D map.
         </p>
       </div>
@@ -143,7 +144,7 @@ function Hears({ hears, setHears }: { hears: string[]; setHears: (h: string[]) =
               onClick={() => toggle(t)}
               aria-pressed={on}
               className={cn(
-                "h-11 rounded-full px-5 text-[16px] font-medium transition-colors",
+                "h-11 rounded-full px-5 text-[16px] font-medium transition-[background-color,color,transform] duration-300 ease-ios active:scale-95",
                 on ? "bg-accent text-white" : "bg-fill text-foreground",
               )}
             >

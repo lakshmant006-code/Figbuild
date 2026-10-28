@@ -16,6 +16,48 @@ const cmdButtons = [
   { cmd: "street", label: "Street level", Icon: Footprints },
 ] as const
 
+function AnimatedNumber({ value }: { value: number }) {
+  const [shown, setShown] = useState(value)
+  const from = useRef(value)
+  useEffect(() => {
+    const start = performance.now()
+    const a = from.current
+    let raf = 0
+    const step = (t: number) => {
+      const k = Math.min(1, (t - start) / 500)
+      const e = 1 - Math.pow(1 - k, 3)
+      setShown(Math.round(a + (value - a) * e))
+      if (k < 1) raf = requestAnimationFrame(step)
+      else from.current = value
+    }
+    raf = requestAnimationFrame(step)
+    return () => cancelAnimationFrame(raf)
+  }, [value])
+  return <span className="tabular-nums">{shown}</span>
+}
+
+// A thin heartbeat line that scrolls forever and spikes whenever a new report lands.
+function LiveWave({ pulse }: { pulse: number }) {
+  const path = "M0 14 L40 14 L48 14 L54 4 L60 24 L66 10 L72 14 L120 14 L130 14 L136 7 L142 21 L148 14 L200 14"
+  return (
+    <div className="relative mt-2 h-7 overflow-hidden" aria-hidden="true" style={{ maskImage: "linear-gradient(90deg, transparent, #000 15%, #000 85%, transparent)" }}>
+      <div key={pulse} className="absolute inset-0" style={{ animation: "spike 0.7s cubic-bezier(0.32,0.72,0,1)" }}>
+        <svg className="h-7 w-[200%]" viewBox="0 0 400 28" preserveAspectRatio="none" style={{ animation: "ecg 4.5s linear infinite" }}>
+          <defs>
+            <linearGradient id="ecg-g" x1="0" x2="1">
+              <stop offset="0" stopColor="#9cc2ff" />
+              <stop offset="0.5" stopColor="#0866ff" />
+              <stop offset="1" style={{ stopColor: "var(--foreground)" }} />
+            </linearGradient>
+          </defs>
+          <path d={path} fill="none" stroke="url(#ecg-g)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          <path d={path} transform="translate(200 0)" fill="none" stroke="url(#ecg-g)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </div>
+    </div>
+  )
+}
+
 function ago(at: number, now: number) {
   const s = Math.max(0, Math.round((now - at) / 1000))
   return s < 5 ? "just now" : s < 60 ? `${s}s ago` : `${Math.round(s / 60)}m ago`
@@ -38,6 +80,9 @@ export default function MapTab({
   const [feed, setFeed] = useState<FeedItem[]>([])
   const [total, setTotal] = useState(184)
   const [block, setBlock] = useState<number | null>(null)
+  const [ready, setReady] = useState(false)
+  const [open, setOpen] = useState(true)
+  const dragY = useRef<number | null>(null)
   const [now, setNow] = useState(() => Date.now())
   const idRef = useRef(0)
   const areaRef = useRef(area)
@@ -48,7 +93,8 @@ export default function MapTab({
   useEffect(() => {
     const onMsg = (e: MessageEvent) => {
       if (e.source !== frameRef.current?.contentWindow) return
-      if (e.data?.type === "hex") setBlock(e.data.count)
+      if (e.data?.type === "hex" && typeof e.data.count === "number") setBlock(e.data.count)
+      if (e.data?.type === "loaded") window.setTimeout(() => setReady(true), 500)
       if (e.data?.type === "ready") send({ cmd: "area", id: areaRef.current })
     }
     window.addEventListener("message", onMsg)
@@ -76,6 +122,12 @@ export default function MapTab({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active])
 
+  // Safety net: never leave the frosted loader up forever.
+  useEffect(() => {
+    const t = window.setTimeout(() => setReady(true), 20000)
+    return () => window.clearTimeout(t)
+  }, [])
+
   const pick = (id: AreaId) => {
     setArea(id)
     setBlock(null)
@@ -92,40 +144,58 @@ export default function MapTab({
         allow="fullscreen"
       />
 
-      <div className="absolute top-[max(env(safe-area-inset-top),12px)] right-4 flex flex-col gap-2">
-        {cmdButtons.map(({ cmd, label, Icon }) => (
+      <div className="absolute top-[max(var(--sat),12px)] right-4 flex flex-col gap-2">
+        {cmdButtons.map(({ cmd, label, Icon }, i) => (
           <button
             key={cmd}
             onClick={() => send({ cmd })}
             aria-label={label}
-            className="grid size-11 place-items-center rounded-full bg-card/95 text-foreground shadow-[0_1px_8px_rgb(0_0_0/0.18)] backdrop-blur active:scale-95"
+            className="glass anim-rise grid size-11 place-items-center rounded-full text-foreground transition-transform duration-200 ease-ios active:scale-90"
+            style={{ animationDelay: `${0.5 + i * 0.07}s` }}
           >
             <Icon className="size-5" />
           </button>
         ))}
       </div>
 
-      <section className="absolute inset-x-0 bottom-0 rounded-t-[28px] bg-card/95 pt-2 pb-3 shadow-[0_-8px_30px_rgb(0_0_0/0.14)] backdrop-blur-xl">
-        <div className="mx-auto h-1 w-9 rounded-full bg-fill" />
-        <div className="mx-auto max-w-[430px] px-5 pt-3">
+      <section
+        className="glass absolute inset-x-2 bottom-[calc(max(var(--sab),12px)+74px)] mx-auto max-w-[414px] rounded-[30px] anim-rise"
+        style={{ animationDelay: "0.35s" }}
+      >
+        <button
+          aria-label={open ? "Collapse the live feed" : "Expand the live feed"}
+          aria-expanded={open}
+          onClick={() => setOpen(o => !o)}
+          onPointerDown={e => (dragY.current = e.clientY)}
+          onPointerUp={e => {
+            if (dragY.current !== null && Math.abs(e.clientY - dragY.current) > 24) setOpen(e.clientY < dragY.current)
+            dragY.current = null
+          }}
+          className="mx-auto block h-6 w-full touch-none"
+        >
+          <span className="mx-auto mt-2 block h-1 w-9 rounded-full bg-foreground/20 transition-all duration-300 ease-ios" style={{ width: open ? 36 : 52 }} />
+        </button>
+        <div className="px-5 pb-4">
           <div className="flex items-center gap-2">
             <span className="relative grid size-2.5 place-items-center">
               <span className="absolute size-2.5 animate-ping rounded-full bg-accent/60" />
               <span className="size-2 rounded-full bg-accent" />
             </span>
-            <h2 className="text-[20px] font-bold tracking-[-0.02em]">Live in {areaName(area)}</h2>
+            <h2 key={area} className="anim-feed text-[20px] font-bold tracking-[-0.02em]">Live in {areaName(area)}</h2>
           </div>
           <p className="mt-0.5 text-[14px] text-muted-foreground">
-            {total} reports this week{block !== null ? ` · ${block} on the block you tapped` : ""} · Simulated example data
+            <AnimatedNumber value={total} /> reports this week
+            {block !== null ? ` · ${block} on the block you tapped` : ""} · Simulated example data
           </p>
+          <LiveWave pulse={total} />
 
-          <div className="-mx-5 mt-3 flex gap-2 overflow-x-auto px-5 pb-1 [scrollbar-width:none]">
+          <div className="-mx-5 mt-2 flex snap-x gap-2 overflow-x-auto px-5 pb-1 [scrollbar-width:none]">
             {AREAS.map(a => (
               <button
                 key={a.id}
                 onClick={() => pick(a.id)}
                 aria-pressed={a.id === area}
-                className="h-9 shrink-0 rounded-full px-4 text-[14px] font-medium transition-colors"
+                className="h-9 shrink-0 snap-start rounded-full px-4 text-[14px] font-medium transition-[background-color,color,transform] duration-300 ease-ios active:scale-95"
                 style={a.id === area ? { background: "var(--foreground)", color: "var(--background)" } : { background: "var(--fill)" }}
               >
                 {a.name}
@@ -133,18 +203,39 @@ export default function MapTab({
             ))}
           </div>
 
-          <ul className="mt-3 flex flex-col" aria-live="polite">
-            {feed.length === 0 && <li className="py-3 text-[15px] text-muted-foreground">Listening for new reports…</li>}
-            {feed.slice(0, 3).map((f, i) => (
-              <li key={f.id} className={"flex items-center gap-3 py-2.5 " + (i ? "border-t border-separator" : "")}>
-                <span className="size-2.5 rounded-full bg-accent" />
-                <span className="flex-1 text-[16px] font-medium">{f.type}</span>
-                <span className="text-[14px] text-muted-foreground">{ago(f.at, now)}</span>
-              </li>
-            ))}
-          </ul>
+          <div
+            className="grid transition-[grid-template-rows,opacity] duration-500 ease-ios"
+            style={{ gridTemplateRows: open ? "1fr" : "0fr", opacity: open ? 1 : 0 }}
+          >
+            <ul className="min-h-0 overflow-hidden" aria-live="polite">
+              {feed.length === 0 && <li className="pt-3 text-[15px] text-muted-foreground">Listening for new reports…</li>}
+              {feed.slice(0, 3).map((f, i) => (
+                <li
+                  key={f.id}
+                  className={"anim-feed relative flex items-center gap-3 overflow-hidden py-2.5 " + (i ? "border-t border-separator" : "mt-1")}
+                >
+                  {i === 0 && <span key={f.id} className="anim-sweep pointer-events-none absolute inset-0" />}
+                  <span className="size-2.5 rounded-full bg-accent" />
+                  <span className="flex-1 text-[16px] font-medium">{f.type}</span>
+                  <span className="text-[14px] text-muted-foreground">{ago(f.at, now)}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       </section>
+
+      {/* frosted loader, lifts once the first neighborhood has loaded */}
+      <div
+        aria-hidden={ready}
+        className="glass pointer-events-none absolute inset-0 z-10 grid place-items-center rounded-none transition-[opacity,backdrop-filter] duration-[900ms] ease-ios"
+        style={{ opacity: ready ? 0 : 1, backdropFilter: ready ? "blur(0px)" : undefined, WebkitBackdropFilter: ready ? "blur(0px)" : undefined, pointerEvents: ready ? "none" : "auto" }}
+      >
+        <div className="flex flex-col items-center gap-4">
+          <img src="logo.png" alt="" className="size-20 rounded-[22px] shadow-[0_12px_40px_rgb(8_102_255/0.35)]" style={{ animation: "breathe 1.8s ease-in-out infinite" }} />
+          <p className="text-[15px] font-medium text-muted-foreground">Loading the city in 3D…</p>
+        </div>
+      </div>
     </div>
   )
 }
