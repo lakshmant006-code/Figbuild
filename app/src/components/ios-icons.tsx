@@ -59,11 +59,11 @@ export function IosApp({ app, label = true, size = 60 }: { app: AppKey; label?: 
   }
 }
 
-export function HushIcon({ size = 60, label = true }: { size?: number; label?: boolean }) {
+export function ChimeIcon({ size = 60, label = true }: { size?: number; label?: boolean }) {
   return (
     <div className="flex flex-col items-center gap-1.5">
-      <img src="logo.png" alt="HUSH" className="shadow-[0_2px_6px_rgb(0_0_0/0.22)]" style={{ width: size, height: size, borderRadius: size * 0.2237 }} />
-      {label && <span className="text-[11px] leading-none font-medium tracking-tight text-white" style={{ textShadow: "0 1px 2px rgb(0 0 0 / 0.25)" }}>HUSH</span>}
+      <img src="logo.png" alt="Chime" className="shadow-[0_2px_6px_rgb(0_0_0/0.22)]" style={{ width: size, height: size, borderRadius: size * 0.2237 }} />
+      {label && <span className="text-[11px] leading-none font-medium tracking-tight text-white" style={{ textShadow: "0 1px 2px rgb(0 0 0 / 0.25)" }}>Chime</span>}
     </div>
   )
 }

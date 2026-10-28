@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /* Light-only. Airy white surfaces, one accent, system type.
-   HUSH colour lives only in the logo, the shader card and the wave. */
+   Chime blue lives only in the logo, the shader card and the wave. */
 :root {
   color-scheme: light;
   --background: #ffffff;

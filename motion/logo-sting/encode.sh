@@ -12,5 +12,5 @@ ffmpeg -y -v error \
   -f lavfi -i "anoisesrc=d=6:c=pink:a=0.5,lowpass=f=900,afade=t=in:st=0.25:d=0.9,afade=t=out:st=1.15:d=0.5,volume=0.35" \
   -filter_complex "amix=inputs=10:normalize=0,alimiter=limit=0.9,afade=t=out:st=5.5:d=0.5" -t 6 -ar 44100 audio.wav
 ffmpeg -y -v error -framerate 30 -i frames/f%04d.jpg -i audio.wav \
-  -c:v libx264 -preset slow -crf 17 -pix_fmt yuv420p -movflags +faststart -c:a aac -b:a 160k -shortest ../hush-logo-motion.mp4
-echo "wrote $(cd .. && pwd)/hush-logo-motion.mp4"
+  -c:v libx264 -preset slow -crf 17 -pix_fmt yuv420p -movflags +faststart -c:a aac -b:a 160k -shortest ../chime-logo-motion.mp4
+echo "wrote $(cd .. && pwd)/chime-logo-motion.mp4"

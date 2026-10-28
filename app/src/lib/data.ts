@@ -142,4 +142,4 @@ export const loadCases = () => read<Complaint[]>(CASES_KEY)
 export const saveCases = (c: Complaint[]) => write(CASES_KEY, c)
 
 export const areaName = (id: string) => AREAS.find(a => a.id === id)?.name ?? "your area"
-export const newRef = () => `HSH-${Math.floor(10000 + Math.random() * 89999)}`
+export const newRef = () => `CHM-${Math.floor(10000 + Math.random() * 89999)}`

@@ -18,7 +18,7 @@ js = js
   .replace(/<\/script/gi, "<\\/script")
 if (/logo\.png/.test(js)) throw new Error("logo.png reference left in the bundle")
 
-const html = `<title>HUSH</title>
+const html = `<title>Chime</title>
 <style>
 ${css}
 </style>

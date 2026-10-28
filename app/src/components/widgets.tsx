@@ -39,8 +39,8 @@ export function WidgetShell({ size, className, style, children }: { size: Widget
 function Brand({ ref_ }: { ref_?: string }) {
   return (
     <div className="flex items-center gap-1.5">
-      <img src="logo.png" alt="" className="size-[18px] rounded-[5px]" />
-      <span className="text-[12px] font-semibold tracking-tight">HUSH</span>
+      <img src="logo.png" alt="" className="size-[18px] rounded-[5px] ring-1 ring-black/10" />
+      <span className="text-[12px] font-semibold tracking-tight">Chime</span>
       {ref_ && <span className="ml-auto font-mono text-[10px] text-muted-foreground">{ref_}</span>}
     </div>
   )
@@ -115,7 +115,7 @@ export function SpeakWidget() {
         <Mic className="size-[22px] text-white drop-shadow" strokeWidth={2} />
       </div>
       <div className="absolute right-4 bottom-4 left-4">
-        <p className="text-[18px] leading-tight font-semibold tracking-[-0.02em]">Tell HUSH</p>
+        <p className="text-[18px] leading-tight font-semibold tracking-[-0.02em]">Tell Chime</p>
         <p className="text-[12px] text-white/75">Tap to speak</p>
       </div>
     </WidgetShell>

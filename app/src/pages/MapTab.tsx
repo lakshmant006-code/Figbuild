@@ -225,7 +225,7 @@ export default function MapTab({
         style={{ opacity: ready ? 0 : 1, backdropFilter: ready ? "blur(0px)" : undefined, WebkitBackdropFilter: ready ? "blur(0px)" : undefined, pointerEvents: ready ? "none" : "auto" }}
       >
         <div className="flex flex-col items-center gap-4">
-          <img src="logo.png" alt="" className="size-20 rounded-[22px] shadow-[0_12px_40px_rgb(8_102_255/0.35)]" style={{ animation: "breathe 1.8s ease-in-out infinite" }} />
+          <img src="logo.png" alt="" className="size-20 rounded-[22px] ring-1 ring-black/10 shadow-[0_12px_40px_rgb(8_102_255/0.35)]" style={{ animation: "breathe 1.8s ease-in-out infinite" }} />
           <p className="text-[15px] font-medium text-muted-foreground">Loading the city in 3D…</p>
         </div>
       </div>

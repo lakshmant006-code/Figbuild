@@ -5,7 +5,7 @@
 // canvas that fills its parent. Drop it behind your content with
 // <div className="relative"><ShaderBackground className="absolute inset-0" />…
 //
-// HUSH: colours below are the sound-voice gradient (black → blue → pale blue → white).
+// Chime: colours below are the sound-voice gradient (black → blue → pale blue → white).
 
 import { useEffect, useRef } from "react"
 

@@ -47,7 +47,7 @@ export default function ClosureScreen({
     return () => cancelAnimationFrame(raf)
   }, [c.confirmed])
 
-  const share = `HUSH outcome record\n${c.ref} · ${c.type} · ${areaName(c.area)}\n${ag.short}: ${c.outcome}\nConfirmed by resident: ${c.confirmed === "yes" ? "quiet" : "better, not gone"}`
+  const share = `Chime outcome record\n${c.ref} · ${c.type} · ${areaName(c.area)}\n${ag.short}: ${c.outcome}\nConfirmed by resident: ${c.confirmed === "yes" ? "quiet" : "better, not gone"}`
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(share)

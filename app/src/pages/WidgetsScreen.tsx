@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { Check, ChevronLeft, Plus } from "lucide-react"
 
-import { HushIcon, IosApp } from "@/components/ios-icons"
+import { ChimeIcon, IosApp } from "@/components/ios-icons"
 import { WIDGETS, renderWidget, type WidgetId, type WidgetSize } from "@/components/widgets"
 import { cn } from "@/lib/utils"
 import type { Complaint } from "@/lib/data"
@@ -18,7 +18,7 @@ function HomeScreenMock({ added, c, area }: { added: WidgetId[]; c?: Complaint; 
   const rest = WIDGETS.filter(w => w.size !== "small" && added.includes(w.id))
   const grid = (apps: ("mail" | "maps" | "camera" | "clock" | "calendar" | "weather" | "settings")[], hush: boolean) => (
     <div className="grid grid-cols-4 gap-y-4">
-      {hush && <HushIcon />}
+      {hush && <ChimeIcon />}
       {apps.map(a => <IosApp key={a} app={a} />)}
     </div>
   )
@@ -112,7 +112,7 @@ export default function WidgetsScreen({ c, area, onBack }: { c?: Complaint; area
               )
             })}
             <p className="mt-7 px-1 text-[13px] leading-snug text-muted-foreground">
-              Prototype preview. On a real iPhone you touch and hold the Home Screen, tap +, and pick HUSH.
+              Prototype preview. On a real iPhone you touch and hold the Home Screen, tap +, and pick Chime.
             </p>
           </div>
         ) : (

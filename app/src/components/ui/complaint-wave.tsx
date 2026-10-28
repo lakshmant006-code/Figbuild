@@ -19,7 +19,7 @@ function flowPath(seed: number) {
   return pts.join(" ")
 }
 
-// The HUSH "living wave": loud (1) to calm (~0). It can drift sideways forever (flow), and eases to a new height when the stage changes.
+// The Chime "living wave": loud (1) to calm (~0). It can drift sideways forever (flow), and eases to a new height when the stage changes.
 export function ComplaintWave({
   amplitude = 1,
   color,

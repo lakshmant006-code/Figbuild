@@ -81,7 +81,7 @@ function Welcome() {
         <ShaderBackground className="absolute inset-0 h-full w-full" />
         <img
           src="logo.png"
-          alt="HUSH"
+          alt="Chime"
           className="anim-rise absolute top-1/2 left-1/2 size-[112px] -translate-x-1/2 -translate-y-1/2 rounded-[28px] shadow-[0_14px_40px_rgb(0_0_0/0.35)]" style={{ animationDelay: "0.1s" }}
         />
       </div>
@@ -185,7 +185,7 @@ function Voice() {
 
   return (
     <>
-      <Title sub="Tap the orb and describe the noise. HUSH turns it into a case.">Say it out loud.</Title>
+      <Title sub="Tap the orb and describe the noise. Chime turns it into a case.">Say it out loud.</Title>
       <div className="grid flex-1 place-items-center">
         <div className="flex flex-col items-center">
           <button onClick={toggle} aria-label={listening ? "Stop listening" : "Start listening"} className="rounded-full">

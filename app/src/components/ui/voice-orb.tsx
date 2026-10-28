@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react"
 
 import { cn } from "@/lib/utils"
 
-// The HUSH voice: a glass orb that goes white → blue → black and swells with the sound.
+// The Chime voice: a glass orb that goes white → blue → black and swells with the sound.
 export function VoiceOrb({ level, active, className }: { level: number; active: boolean; className?: string }) {
   const ref = useRef<HTMLCanvasElement>(null)
   const levelRef = useRef(level)

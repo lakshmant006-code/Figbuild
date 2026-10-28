@@ -1,31 +1,32 @@
-# HUSH
+# Chime
 
-"Give every complaint a heartbeat." A concept for tracking NYC noise complaints, where each complaint gets its own wave that calms as the case progresses.
+Give every complaint a heartbeat. Chime is a mobile prototype for reporting NYC noise complaints by voice and following each one until the city answers, on a live 3D map built from the official NYC 3D Building Model.
 
-Conceptual stages only. This is not live 311 data.
+Everything shown is a concept. Case progress, agency replies and the live feed are simulated, not live 311 data.
 
-## Links
+## Try it
 
-- Live page (artifact, version 12): https://claude.ai/artifact/YNj5idB5kJKqTjb3aH7z5i
-- Figma file (first page is HUSH, old pages kept as "Archive · Copy That · …"): https://www.figma.com/design/ceVg13RB731RYvg2kdbSJo
-- Source: [`copy-that.html`](copy-that.html), preview in [`hush-preview.png`](hush-preview.png)
-- Rebrand commit: https://github.com/lakshmant006-code/Figbuild/commit/48344663ce3738d64eed4cf10a84d2c275d7ae1a
+- Prototype (private artifact): https://claude.ai/artifact/RFmPjkXxW9VoUkY4z7apNH
+- Run it yourself: `cd app && npm install && npm run dev`
 
-## What's in it
+## What's in the app
 
-- **Hero:** a live wave for one complaint (HSH-48213), stages 1-5 from "The city received it." to "Official outcome posted."
-- **01 Drop a sound:** tap the block, a ripple becomes a tracked reference number.
-- **02 The city has ears:** 3D map with 15 neighborhoods, the citywide skyline and street level.
-- **03 The silence moment:** "Did it actually get quieter?" Yes settles the wave, No reopens the case.
-- **Brand:** wordmark, animated icon, palette (midnight navy, tangerine, butter, off-white), three posters.
+- **Onboarding:** neighborhood, the noises you hear, a voice demo.
+- **Report:** type it, say it, or pick the kind of noise.
+- **Track:** a delivery-style tracker. One line starts as a sound wave and settles into the New York skyline as the case moves along.
+- **City:** a live 3D map with complaint clusters and recent reports.
+- **Closure:** confirm it got better and keep an outcome record.
+- **Notifications and widgets:** calm by default, with Home Screen widget designs in three sizes.
 
-## Skyline data
+## Repo layout
 
-- Official NYC 3D Building Model from `s-media.nyc.gov` (916 MB, downloaded once).
-- NYC Open Data: 5,206 buildings over 150 ft. 4,496 use real shapes from the 3D model; 710 (mostly built after the 2014 survey) are extruded from footprint and roof height.
+- `app/` Vite, React, TypeScript, Tailwind (shadcn layout, components in `src/components/ui`).
+- `app/public/map.html` the 3D map engine, generated from `copy-that.html` by `app/scripts/make-map.py`.
+- `areas/` building-model tiles read by the map.
+- `motion/logo-sting/` the logo motion video (source and render scripts).
+- `copy-that.html` the earlier single-file web prototype (previous name and visuals).
 
-## Not done
+## Notes
 
-- Dark midnight-blue map with orange pulses (the cartoon map was kept).
-- Mapbox (needs an API key; deck.gl is used instead).
-- HUSH-branded phone screens and animation frames in Figma.
+- Single-file build for sharing: `cd app && npm run build && node scripts/build-artifact.mjs out.html`.
+- The Figma file's first page still carries the earlier brand and has not been updated to Chime.
