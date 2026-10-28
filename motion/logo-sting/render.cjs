@@ -13,7 +13,7 @@ const html = fs.readFileSync(path.join(here, "template.html"), "utf8")
   .replace("/*UNIFORMS*/", () => uniforms)
 fs.mkdirSync(path.join(here, "build"), { recursive: true })
 fs.writeFileSync(path.join(here, "build/index.html"), html)
-for (const f of ["Bricolage-ExtraBold.ttf", "logo.png"]) fs.copyFileSync(path.join(here, f), path.join(here, "build", f))
+for (const f of ["Inter-Bold.otf", "Inter-SemiBold.otf", "logo.png"]) fs.copyFileSync(path.join(here, f), path.join(here, "build", f))
 const frames = path.join(here, "build/frames"); fs.rmSync(frames, { recursive: true, force: true }); fs.mkdirSync(frames)
 
 ;(async () => {

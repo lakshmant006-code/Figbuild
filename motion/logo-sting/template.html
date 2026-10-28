@@ -1,7 +1,8 @@
 <!doctype html>
 <html><head><meta charset="utf-8">
 <style>
-@font-face { font-family: "Bricolage"; src: url("Bricolage-ExtraBold.ttf"); font-weight: 800; }
+@font-face { font-family: "SF Stand-in"; src: url("Inter-Bold.otf"); font-weight: 700; }
+@font-face { font-family: "SF Stand-in"; src: url("Inter-SemiBold.otf"); font-weight: 600; }
 html, body { margin: 0; background: #141B3C; }
 canvas { display: block; }
 #bg { position: absolute; left: -9999px; }
@@ -11,7 +12,7 @@ canvas { display: block; }
 <canvas id="out" width="1080" height="1920"></canvas>
 <script>
 const W = 1080, H = 1920;
-const NAVY = "#141B3C", TANG = "#FF7A1A", BUTTER = "#FFD66B", OFF = "#FFF8EC", CALM = "#3E7BFA";
+const NAVY = "#141B3C", TANG = "#0866FF", BUTTER = "#FFD66B", OFF = "#FFF8EC", CALM = "#0866FF";
 const FRAG = `/*FRAG*/`;
 const VERT = "attribute vec2 a_position;void main(){gl_Position=vec4(a_position,0.0,1.0);}";
 // Same uniforms as app/src/components/ui/waves-shaders-homlu-ui.tsx
@@ -99,7 +100,7 @@ window.draw = (t) => {
   }
 
   // 5. wordmark: letters pop in one by one
-  ctx.save(); ctx.font = "800 270px Bricolage"; ctx.textBaseline = "alphabetic";
+  ctx.save(); ctx.font = "700 270px "SF Stand-in""; ctx.textBaseline = "alphabetic";
   const sp = -8, widths = LETTERS.map(l => ctx.measureText(l).width);
   const total = widths.reduce((a, b) => a + b, 0) + sp * 3; let x0 = W / 2 - total / 2;
   LETTERS.forEach((l, i) => {
@@ -113,7 +114,7 @@ window.draw = (t) => {
   const tg = ease((t - 3.7) / 0.6);
   if (tg > 0) {
     ctx.save(); ctx.globalAlpha = tg; ctx.fillStyle = NAVY; ctx.textAlign = "center";
-    ctx.font = "800 64px Bricolage"; ctx.fillText("Give every complaint", W / 2, 1400 + (1 - tg) * 24); ctx.fillText("a heartbeat.", W / 2, 1480 + (1 - tg) * 24); ctx.restore();
+    ctx.font = "600 64px "SF Stand-in""; ctx.fillText("Give every complaint", W / 2, 1400 + (1 - tg) * 24); ctx.fillText("a heartbeat.", W / 2, 1480 + (1 - tg) * 24); ctx.restore();
   }
 
   // 7. the living wave: loud and tangerine, then calmed to a flat blue line
@@ -132,5 +133,5 @@ window.draw = (t) => {
 
   return out.toDataURL("image/jpeg", 0.96);
 };
-window.ready = Promise.all([document.fonts.load("800 100px Bricolage"), logo.decode()]).then(() => true);
+window.ready = Promise.all([document.fonts.load("700 100px \"SF Stand-in\""), document.fonts.load("600 100px \"SF Stand-in\""), logo.decode()]).then(() => true);
 </script></body></html>
