@@ -18,6 +18,6 @@ for k in range(10):
     else: fc.append(f"{prev}[c{k+1}]xfade=transition=custom:duration={OV}:offset={C[k+1]:.3f}:expr='A*(1-{s})+B*{s}'{out}")
     prev=out
 fc.append(f'{prev}fade=t=out:st={END-0.9:.2f}:d=0.9[vout]')
-fc.append('[11:a]loudnorm=I=-15:TP=-1.5:LRA=9[aout]')
+fc.append('[11:a]loudnorm=I=-16:TP=-2:LRA=9,alimiter=limit=0.84:level=disabled[aout]')
 cmd=['ffmpeg','-y','-loglevel','error']+inp+['-filter_complex',';'.join(fc),'-map','[vout]','-map','[aout]','-c:v','libx264','-preset','slow','-crf','17','-pix_fmt','yuv420p','-r','30','-c:a','aac','-b:a','192k','-t',f'{END+0.6:.2f}','-movflags','+faststart','chime-film-61s.mp4']
 subprocess.run(cmd,check=True); print('ok',END)
