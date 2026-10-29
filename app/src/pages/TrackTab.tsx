@@ -15,12 +15,14 @@ export default function TrackTab({
   setSelected,
   onClosure,
   onWidgets,
+  onAllCases,
 }: {
   cases: Complaint[]
   selected: string | null
   setSelected: (ref: string) => void
   onClosure: (ref: string) => void
   onWidgets: () => void
+  onAllCases: () => void
 }) {
   const c = cases.find(x => x.ref === selected) ?? cases[0]
   const record = cases.filter(x => x.confirmed === "yes" || x.confirmed === "partly")
@@ -28,6 +30,16 @@ export default function TrackTab({
   return (
     <div className="mx-auto w-full max-w-[430px] px-5 pt-[max(var(--sat),12px)] pb-6">
       <h1 className="mt-1 pr-14 text-[32px] leading-[1.08] font-semibold tracking-[-0.03em]">Follow your signal.</h1>
+
+      {cases.length > 1 && (
+        <button
+          onClick={onAllCases}
+          className="mt-3 inline-flex h-9 items-center gap-1.5 rounded-full bg-fill pr-3 pl-4 text-[14px] font-medium transition-transform duration-200 ease-ios active:scale-95"
+        >
+          All cases · {cases.length}
+          <ChevronRight className="size-4" />
+        </button>
+      )}
 
       {!c && <p className="mt-6 text-[17px] text-muted-foreground">No cases yet. Send a report and it shows up here.</p>}
 
@@ -100,25 +112,6 @@ export default function TrackTab({
             </button>
           )}
         </div>
-      )}
-
-      {cases.length > 1 && (
-        <>
-          <p className="mt-9 mb-2 px-1 text-[14px] font-medium text-muted-foreground">Your other cases</p>
-          <ul className="flex flex-col gap-2.5">
-            {cases.filter(x => x.ref !== c?.ref).map(x => (
-              <li key={x.ref}>
-                <MomentCard
-                  type={x.type}
-                  time={`${clock(x.createdAt)} · ${x.ref}`}
-                  title={`${x.type} near ${areaName(x.area)}`}
-                  body={stageCopy(x, x.stage).title}
-                  onClick={() => setSelected(x.ref)}
-                />
-              </li>
-            ))}
-          </ul>
-        </>
       )}
 
       {record.length > 0 && (

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react"
-import { Bell, ClipboardList, Map as MapIcon, Mic } from "lucide-react"
+import { BarChart3, Bell, ClipboardList, Map as MapIcon, Mic } from "lucide-react"
 
 import {
   loadCases,
@@ -14,7 +14,9 @@ import {
 } from "@/lib/data"
 import { buildNotices, loadPrefs, loadSeen, savePrefs, saveSeen, type Notice, type Prefs } from "@/lib/notices"
 import { areaName } from "@/lib/data"
+import CasesScreen from "@/pages/CasesScreen"
 import ClosureScreen from "@/pages/ClosureScreen"
+import InsightsTab from "@/pages/InsightsTab"
 import MapTab from "@/pages/MapTab"
 import HomeScreenNotify from "@/pages/HomeScreenNotify"
 import NotificationsScreen from "@/pages/NotificationsScreen"
@@ -24,8 +26,8 @@ import WidgetsScreen from "@/pages/WidgetsScreen"
 import SentScreen from "@/pages/SentScreen"
 import TrackTab from "@/pages/TrackTab"
 
-type Tab = "report" | "track" | "city"
-type Overlay = { kind: "sent"; ref: string } | { kind: "closure"; ref: string } | { kind: "notices" } | { kind: "widgets" } | { kind: "home" } | null
+type Tab = "report" | "track" | "city" | "insights"
+type Overlay = { kind: "sent"; ref: string } | { kind: "closure"; ref: string } | { kind: "notices" } | { kind: "widgets" } | { kind: "home" } | { kind: "cases" } | null
 
 const now0 = Date.now()
 const SEED: Complaint[] = [
@@ -44,6 +46,7 @@ const tabs = [
   { id: "report", label: "Report", Icon: Mic },
   { id: "track", label: "Track", Icon: ClipboardList },
   { id: "city", label: "City", Icon: MapIcon },
+  { id: "insights", label: "Insights", Icon: BarChart3 },
 ] as const
 
 export default function App() {
@@ -149,9 +152,14 @@ export default function App() {
             <ReportTab profile={profile} onSubmit={submit} />
           </div>
         )}
+        {tab === "insights" && (
+          <div key="insights" className="anim-rise absolute inset-0 overflow-y-auto pb-28">
+            <InsightsTab profile={profile} cases={cases} />
+          </div>
+        )}
         {tab === "track" && (
           <div key="track" className="anim-rise absolute inset-0 overflow-y-auto pb-28">
-            <TrackTab cases={cases} selected={selected} setSelected={setSelected} onClosure={ref => setOverlay({ kind: "closure", ref })} onWidgets={() => setOverlay({ kind: "widgets" })} />
+            <TrackTab cases={cases} selected={selected} setSelected={setSelected} onClosure={ref => setOverlay({ kind: "closure", ref })} onWidgets={() => setOverlay({ kind: "widgets" })} onAllCases={() => setOverlay({ kind: "cases" })} />
           </div>
         )}
       </main>
@@ -174,7 +182,7 @@ export default function App() {
           <span
             aria-hidden="true"
             className="absolute top-1.5 bottom-1.5 left-1.5 rounded-full bg-accent/15 transition-transform duration-500 ease-ios"
-            style={{ width: "calc((100% - 12px) / 3)", transform: `translateX(${idx * 100}%)` }}
+            style={{ width: `calc((100% - 12px) / ${tabs.length})`, transform: `translateX(${idx * 100}%)` }}
           />
           {tabs.map(({ id, label, Icon }) => (
             <li key={id} className="relative flex-1">
@@ -200,6 +208,18 @@ export default function App() {
       )}
       {overlay?.kind === "home" && (
         <HomeScreenNotify notices={notices} c={cases.find(x => x.stage < 4) ?? cases[0]} area={profile.area} onOpenChime={closeNotices} onOpenNotice={openNotice} />
+      )}
+      {overlay?.kind === "cases" && (
+        <CasesScreen
+          cases={cases}
+          current={selected}
+          onBack={() => setOverlay(null)}
+          onPick={ref => {
+            setSelected(ref)
+            setOverlay(null)
+            setTab("track")
+          }}
+        />
       )}
       {sent && (
         <SentScreen
