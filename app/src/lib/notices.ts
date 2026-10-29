@@ -55,7 +55,7 @@ export function buildNotices(cases: Complaint[], prefs: Prefs, nearbyArea?: stri
           type: c.type,
           ref: c.ref,
           title: stageCopy(c, i).title,
-          body: `${ag.short} · ${c.ref}`,
+          body: i === 3 ? `${ag.visitor} went to your block and heard it · ${c.ref}` : `${ag.short} · ${c.ref}`,
           action: { label: "View case", to: "track" },
         })
       }
@@ -66,7 +66,7 @@ export function buildNotices(cases: Complaint[], prefs: Prefs, nearbyArea?: stri
         at: c.times[4],
         type: c.type,
         ref: c.ref,
-        title: "Outcome posted.",
+        title: "They answered you.",
         body: `${c.outcome ?? ""} Did it get better?`,
         action: c.confirmed ? { label: "View record", to: "closure" } : { label: "Did it get better?", to: "closure" },
       })

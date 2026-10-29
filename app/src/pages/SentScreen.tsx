@@ -17,7 +17,7 @@ export default function SentScreen({ c, onTrack, onAnother }: { c: Complaint; on
         setTyped(c.ref.slice(0, i))
         if (i >= c.ref.length) window.clearInterval(iv)
       }, 70)
-    }, 1100)
+    }, 1700)
     return () => {
       window.clearTimeout(start)
       window.clearInterval(iv)
@@ -32,27 +32,41 @@ export default function SentScreen({ c, onTrack, onAnother }: { c: Complaint; on
             <span
               key={i}
               className="absolute size-[130px] rounded-full border-2 border-accent"
-              style={{ animation: "ring-out 2.6s cubic-bezier(0.32,0.72,0,1) infinite", animationDelay: `${0.5 + i * 0.8}s`, opacity: 0 }}
+              style={{ animation: "ring-out 2.6s cubic-bezier(0.32,0.72,0,1) infinite", animationDelay: `${1.1 + i * 0.8}s`, opacity: 0 }}
             />
           ))}
+          {/* your voice gathers into the check */}
+          <div aria-hidden="true" className="pointer-events-none absolute inset-0 grid place-items-center">
+            {Array.from({ length: 15 }, (_, i) => {
+              const d = i - 7
+              const h = 0.35 + 0.65 * Math.exp(-(d * d) / 14) * (0.6 + 0.4 * Math.abs(Math.sin(i * 2.3)))
+              return (
+                <span
+                  key={i}
+                  className="absolute h-[70px] w-[5px] rounded-full"
+                  style={{ ["--x" as string]: `${d * 11}px`, ["--h" as string]: h, background: "linear-gradient(#9cc2ff,#0866ff 55%,#050a24)", animation: "gather 1.05s cubic-bezier(0.32,0.72,0,1) both", animationDelay: `${i * 0.012}s` }}
+                />
+              )
+            })}
+          </div>
           <div
             className="anim-pop relative grid size-[130px] place-items-center rounded-full shadow-[0_20px_50px_rgb(8_102_255/0.45)]"
-            style={{ background: "linear-gradient(150deg,#ffffff 0%,#9cc2ff 28%,#0866ff 62%,#050a24 100%)", animationDelay: "0.1s" }}
+            style={{ background: "linear-gradient(150deg,#ffffff 0%,#9cc2ff 28%,#0866ff 62%,#050a24 100%)", animationDelay: "0.75s", opacity: 0 }}
           >
             <svg viewBox="0 0 52 52" className="size-[60px]" fill="none" stroke="#fff" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M13 27 L22 36 L40 16" strokeDasharray="48" strokeDashoffset="48" style={{ animation: "draw 0.6s cubic-bezier(0.32,0.72,0,1) 0.55s forwards" }} />
+              <path d="M13 27 L22 36 L40 16" strokeDasharray="48" strokeDashoffset="48" style={{ animation: "draw 0.6s cubic-bezier(0.32,0.72,0,1) 1.2s forwards" }} />
             </svg>
           </div>
         </div>
 
-        <h1 className="anim-rise text-center text-[32px] leading-[1.08] font-semibold tracking-[-0.03em] text-balance" style={{ animationDelay: "0.7s" }}>
+        <h1 className="anim-rise text-center text-[32px] leading-[1.08] font-semibold tracking-[-0.03em] text-balance" style={{ animationDelay: "1.2s" }}>
           We heard you.
         </h1>
-        <p className="anim-rise mt-2 text-center text-[16px] leading-snug text-muted-foreground" style={{ animationDelay: "0.85s" }}>
+        <p className="anim-rise mt-2 text-center text-[16px] leading-snug text-muted-foreground" style={{ animationDelay: "1.35s" }}>
           {comfort(c)} Filed with {agencyFor(c.type).name}.
         </p>
 
-        <div className="moment anim-rise mt-6 rounded-[28px] p-3 text-center" style={{ animationDelay: "1s" }}>
+        <div className="moment anim-rise mt-6 rounded-[28px] p-3 text-center" style={{ animationDelay: "1.5s" }}>
           <div className="grid grid-cols-3 gap-2">
             <PhotoTile src={photosFor(c.ref)[0]} badge="Voice" />
             <PhotoTile src={photosFor(c.ref)[1]} />

@@ -122,7 +122,7 @@ export function stageCopy(c: Complaint, i: number): { title: string; detail: str
     { title: "We heard you.", detail: "311 logged your report. There is nothing you need to do right now. We're with you while it moves." },
     { title: `Sent to ${ag.name}.`, detail: `They are the team that handles ${t} complaints, so your case now sits with them.` },
     { title: "Someone is on the way.", detail: `${ag.visitor} has been assigned. Visits usually happen within a few hours, and we'll tell you the moment they arrive.` },
-    { title: "They checked.", detail: "They went to the address to listen or look. Sometimes the noise has stopped by the time they arrive. That doesn't mean you weren't heard." },
+    { title: "Someone listened.", detail: `${ag.visitor} went to the address and heard it for themselves. Sometimes the noise has stopped by the time they arrive. That doesn't mean you weren't heard.` },
     { title: "Here is what they decided.", detail: c.outcome ?? "The outcome is posted to your case." },
   ][i]
 }

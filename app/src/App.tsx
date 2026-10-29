@@ -12,12 +12,14 @@ import {
   type Confirmed,
   type Profile,
 } from "@/lib/data"
+import { stageCopy } from "@/lib/data"
 import { buildNotices, loadPrefs, loadSeen, savePrefs, saveSeen, type Notice, type Prefs } from "@/lib/notices"
 import { areaName } from "@/lib/data"
 import CasesScreen from "@/pages/CasesScreen"
 import ClosureScreen from "@/pages/ClosureScreen"
 import InsightsTab from "@/pages/InsightsTab"
 import MapTab from "@/pages/MapTab"
+import HeardScreen from "@/pages/HeardScreen"
 import HomeScreenNotify from "@/pages/HomeScreenNotify"
 import NotificationsScreen from "@/pages/NotificationsScreen"
 import Onboarding from "@/pages/Onboarding"
@@ -27,7 +29,7 @@ import SentScreen from "@/pages/SentScreen"
 import TrackTab from "@/pages/TrackTab"
 
 type Tab = "report" | "track" | "city" | "insights"
-type Overlay = { kind: "sent"; ref: string } | { kind: "closure"; ref: string } | { kind: "notices" } | { kind: "widgets" } | { kind: "home" } | { kind: "cases" } | null
+type Overlay = { kind: "sent"; ref: string } | { kind: "closure"; ref: string } | { kind: "notices" } | { kind: "widgets" } | { kind: "home" } | { kind: "cases" } | { kind: "heard"; ref: string } | null
 
 const now0 = Date.now()
 const SEED: Complaint[] = [
@@ -61,6 +63,31 @@ export default function App() {
   const frameRef = useRef<HTMLIFrameElement>(null)
 
   useEffect(() => saveCases(cases), [cases])
+
+  // A status change should be felt. Step 3 (someone listened) gets its own moment; the rest get a soft banner.
+  const [toast, setToast] = useState<{ id: number; ref: string; title: string; body: string } | null>(null)
+  const prevStage = useRef<Record<string, number>>({})
+  const overlayRef = useRef<Overlay>(null)
+  overlayRef.current = overlay
+  useEffect(() => {
+    const prev = prevStage.current
+    for (const c of cases) {
+      const before = prev[c.ref]
+      prev[c.ref] = c.stage
+      if (before === undefined || c.stage <= before) continue
+      if (c.stage === 3 && overlayRef.current === null) {
+        setOverlay({ kind: "heard", ref: c.ref })
+        continue
+      }
+      const copy = stageCopy(c, c.stage)
+      setToast({ id: Date.now(), ref: c.ref, title: c.stage === 4 ? "They answered you." : copy.title, body: c.stage === 4 ? "Tap to see what they decided." : copy.detail })
+    }
+  }, [cases])
+  useEffect(() => {
+    if (!toast) return
+    const t = window.setTimeout(() => setToast(null), 5000)
+    return () => window.clearTimeout(t)
+  }, [toast])
 
   // Simulated progress: the newest open case moves forward every few seconds.
   useEffect(() => {
@@ -200,6 +227,39 @@ export default function App() {
         </ul>
       </nav>
 
+      {toast && !overlay && (
+        <button
+          key={toast.id}
+          onClick={() => {
+            setSelected(toast.ref)
+            setTab("track")
+            setToast(null)
+          }}
+          className="glass absolute inset-x-4 top-[calc(var(--sat)+6px)] z-50 mx-auto flex max-w-[380px] items-center gap-3 rounded-[24px] px-4 py-3 text-left"
+          style={{ animation: "banner-in 0.75s cubic-bezier(0.32,0.72,0,1) both, banner-out 0.55s cubic-bezier(0.5,0,0.75,0) 4.4s forwards" }}
+        >
+          <span className="size-2.5 shrink-0 rounded-full bg-accent" style={{ animation: "beat 1.6s ease-in-out infinite" }} />
+          <span className="min-w-0">
+            <span className="block text-[15px] leading-tight font-semibold">{toast.title}</span>
+            <span className="line-clamp-2 block text-[13px] leading-snug text-muted-foreground">{toast.body}</span>
+          </span>
+        </button>
+      )}
+      {overlay?.kind === "heard" && (() => {
+        const hc = cases.find(x => x.ref === overlay.ref)
+        return hc ? (
+          <HeardScreen
+            key={hc.ref}
+            c={hc}
+            onSee={() => {
+              setSelected(hc.ref)
+              setOverlay(null)
+              setTab("track")
+            }}
+            onClose={() => setOverlay(null)}
+          />
+        ) : null
+      })()}
       {overlay?.kind === "notices" && (
         <NotificationsScreen notices={notices} seenAt={seenAt} prefs={prefs} setPrefs={setPrefs} onBack={closeNotices} onOpen={openNotice} onHome={() => setOverlay({ kind: "home" })} />
       )}

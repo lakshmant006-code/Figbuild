@@ -85,6 +85,9 @@ export default function TrackTab({
                       />
                     </span>
                   )}
+                  {done && c.times[i] && Date.now() - c.times[i] < 8000 && (
+                    <span aria-hidden="true" className="absolute top-0 left-0 size-8 rounded-full border-2 border-accent" style={{ animation: "ring-out 1.6s cubic-bezier(0.32,0.72,0,1) 2", opacity: 0 }} />
+                  )}
                   <span
                     className={cn(
                       "relative z-10 grid size-8 shrink-0 place-items-center rounded-full transition-colors duration-500",

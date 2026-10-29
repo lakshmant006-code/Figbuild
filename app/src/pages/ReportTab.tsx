@@ -12,6 +12,7 @@ export default function ReportTab({ profile, onSubmit }: { profile: Profile; onS
   const [text, setText] = useState("")
   const [feeling, setFeeling] = useState<string | null>(null)
   const hi = greeting()
+  const hasText = text.trim().length > 0
   const [voiceOpen, setVoiceOpen] = useState(false)
   const [example, setExample] = useState(false)
   const { level, listening, simulated, start, stop } = useVoiceLevel()
@@ -83,14 +84,25 @@ export default function ReportTab({ profile, onSubmit }: { profile: Profile; onS
         />
         <div className="flex items-center justify-between pt-1">
           <span className="px-2 text-[13px] text-muted-foreground">Near {areaName(profile.area)}</span>
-          <button
-            onClick={toggleVoice}
-            aria-label={listening ? "Stop recording" : "Speak your report"}
-            className="grid size-11 place-items-center rounded-full text-white shadow-[0_6px_18px_rgb(8_102_255/0.4)] transition-transform duration-200 ease-ios active:scale-90"
-            style={{ background: "linear-gradient(145deg,#9cc2ff 0%,#0866ff 45%,#050a24 100%)" }}
-          >
-            {listening ? <Square className="size-4 fill-white" /> : <Mic className="size-5" />}
-          </button>
+          <div className="flex items-center gap-2">
+            {hasText && !listening && (
+              <button
+                onClick={toggleVoice}
+                aria-label="Record again"
+                className="grid size-11 place-items-center rounded-full bg-fill text-foreground transition-transform duration-200 ease-ios active:scale-90"
+              >
+                <Mic className="size-5" />
+              </button>
+            )}
+            <button
+              onClick={hasText && !listening ? send : toggleVoice}
+              aria-label={listening ? "Stop recording" : hasText ? "Send my voice" : "Speak your report"}
+              className="grid size-11 place-items-center rounded-full text-white shadow-[0_6px_18px_rgb(8_102_255/0.4)] transition-transform duration-200 ease-ios active:scale-90"
+              style={{ background: "linear-gradient(145deg,#9cc2ff 0%,#0866ff 45%,#050a24 100%)" }}
+            >
+              {listening ? <Square className="size-4 fill-white" /> : hasText ? <ArrowUp key="send" className="anim-pop size-5" strokeWidth={2.4} /> : <Mic className="size-5" />}
+            </button>
+          </div>
         </div>
       </div>
 
