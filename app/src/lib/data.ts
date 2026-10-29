@@ -47,6 +47,7 @@ export interface Complaint {
   createdAt: number
   times: number[] // when each stage was reached, times[0] = createdAt
   note?: string
+  feeling?: string
   outcome?: string
   confirmed?: Confirmed
   closedAt?: number
@@ -94,14 +95,34 @@ const AGENCIES: Record<string, Agency> = {
 export const agencyFor = (type: string): Agency => AGENCIES[type] ?? NYPD
 
 // Plain-language explanation of each stage, no jargon.
+export const FEELINGS = ["Can't sleep", "Can't focus", "On edge", "Just annoyed"] as const
+
+// A short, human line for the moment someone is in. Late hours get the gentlest voice.
+export function greeting(now = new Date()) {
+  const h = now.getHours()
+  if (h >= 22 || h < 5) return { title: "Rough night?", sub: "Tell us what you're hearing. We'll take it from here." }
+  if (h < 12) return { title: "Rough morning?", sub: "Tell us what you're hearing. You don't have to explain it perfectly." }
+  if (h < 18) return { title: "What's bothering you?", sub: "Say it however it comes out. We're listening." }
+  return { title: "Noisy evening?", sub: "Tell us what you're hearing. We'll take it from here." }
+}
+
+export function comfort(c: Complaint) {
+  switch (c.feeling) {
+    case "Can't sleep": return "Hope you get some rest. We'll keep watching, so you don't have to."
+    case "Can't focus": return "That's hard to work through. We'll keep an eye on it for you."
+    case "On edge": return "You've done the hard part. Take a breath. We've got it from here."
+    default: return "You don't have to carry this alone. We'll keep watching."
+  }
+}
+
 export function stageCopy(c: Complaint, i: number): { title: string; detail: string } {
   const ag = agencyFor(c.type)
   const t = c.type.toLowerCase()
   return [
-    { title: "We have it.", detail: "311 logged your report. There is nothing you need to do right now." },
+    { title: "We heard you.", detail: "311 logged your report. There is nothing you need to do right now. We're with you while it moves." },
     { title: `Sent to ${ag.name}.`, detail: `They are the team that handles ${t} complaints, so your case now sits with them.` },
-    { title: "Someone is on the way.", detail: `${ag.visitor} has been assigned. Visits usually happen within a few hours.` },
-    { title: "They checked.", detail: "They went to the address to listen or look. Sometimes the noise has stopped by the time they arrive." },
+    { title: "Someone is on the way.", detail: `${ag.visitor} has been assigned. Visits usually happen within a few hours, and we'll tell you the moment they arrive.` },
+    { title: "They checked.", detail: "They went to the address to listen or look. Sometimes the noise has stopped by the time they arrive. That doesn't mean you weren't heard." },
     { title: "Here is what they decided.", detail: c.outcome ?? "The outcome is posted to your case." },
   ][i]
 }

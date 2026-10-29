@@ -2,7 +2,7 @@ import { Check, ChevronRight, LayoutGrid } from "lucide-react"
 
 import { SkylineWave } from "@/components/ui/skyline-wave"
 import { MapTile, MomentCard, PhotoTile, photosFor } from "@/components/ui/moment-card"
-import { STAGES, agencyFor, areaName, stageCopy, type Complaint } from "@/lib/data"
+import { STAGES, agencyFor, comfort, areaName, stageCopy, type Complaint } from "@/lib/data"
 import { cn } from "@/lib/utils"
 
 const clock = (t: number) => new Date(t).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
@@ -58,6 +58,14 @@ export default function TrackTab({
           >
             <SkylineWave stage={c.stage} seed={c.ref.length} className="mt-2" />
           </MomentCard>
+
+          {c.stage < 4 && (
+            <p className="mt-4 px-1 text-[15px] leading-snug text-muted-foreground">
+              {Date.now() - (c.times[c.stage] ?? c.createdAt) > 3 * 3600_000
+                ? "This is taking longer than usual, and we know that's hard. We're still with you."
+                : comfort(c)}
+            </p>
+          )}
 
           <p className="mt-7 mb-3 px-1 text-[14px] font-medium text-muted-foreground">Where it is, with {agencyFor(c.type).short}</p>
 

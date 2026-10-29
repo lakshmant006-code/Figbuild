@@ -3,13 +3,15 @@ import { ArrowUp, Mic, Square } from "lucide-react"
 
 import { VoiceBars, VoiceOrb } from "@/components/ui/voice-orb"
 import { useVoiceLevel } from "@/hooks/use-voice-level"
-import { NOISE_TYPES, agencyFor, areaName, newRef, type Complaint, type Profile } from "@/lib/data"
+import { FEELINGS, NOISE_TYPES, agencyFor, greeting, areaName, newRef, type Complaint, type Profile } from "@/lib/data"
 import { cn } from "@/lib/utils"
 
 // 02 · What's bothering you?  Type it, say it, or pick the kind of noise.
 export default function ReportTab({ profile, onSubmit }: { profile: Profile; onSubmit: (c: Complaint) => void }) {
   const [type, setType] = useState<string>(profile.hears[0] ?? NOISE_TYPES[0])
   const [text, setText] = useState("")
+  const [feeling, setFeeling] = useState<string | null>(null)
+  const hi = greeting()
   const [voiceOpen, setVoiceOpen] = useState(false)
   const [example, setExample] = useState(false)
   const { level, listening, simulated, start, stop } = useVoiceLevel()
@@ -40,8 +42,9 @@ export default function ReportTab({ profile, onSubmit }: { profile: Profile; onS
 
   const send = () => {
     const now = Date.now()
-    onSubmit({ ref: newRef(), type, area: profile.area, stage: 0, createdAt: now, times: [now], note: text.trim() || undefined })
+    onSubmit({ ref: newRef(), type, area: profile.area, stage: 0, createdAt: now, times: [now], note: text.trim() || undefined, feeling: feeling ?? undefined })
     setText("")
+    setFeeling(null)
     setVoiceOpen(false)
     setExample(false)
     setHistory(Array(28).fill(0))
@@ -49,9 +52,9 @@ export default function ReportTab({ profile, onSubmit }: { profile: Profile; onS
 
   return (
     <div className="mx-auto flex min-h-full w-full max-w-[430px] flex-col px-5 pt-[max(var(--sat),12px)] pb-6">
-      <h1 className="mt-1 pr-14 text-[32px] leading-[1.08] font-semibold tracking-[-0.03em] text-balance">What&apos;s bothering you?</h1>
+      <h1 className="mt-1 pr-14 text-[32px] leading-[1.08] font-semibold tracking-[-0.03em] text-balance">{hi.title}</h1>
       <p className="mt-2 text-[17px] leading-snug text-muted-foreground">
-        Report a disturbance by typing, speaking, or selecting the type of noise.
+        {hi.sub}
       </p>
 
       {/* voice panel opens above the composer */}
@@ -89,6 +92,23 @@ export default function ReportTab({ profile, onSubmit }: { profile: Profile; onS
             {listening ? <Square className="size-4 fill-white" /> : <Mic className="size-5" />}
           </button>
         </div>
+      </div>
+
+      <h2 className="mt-6 mb-2 px-1 text-[14px] font-medium text-muted-foreground">How is it affecting you? <span className="font-normal">Optional</span></h2>
+      <div className="flex flex-wrap gap-2">
+        {FEELINGS.map(f => (
+          <button
+            key={f}
+            onClick={() => setFeeling(x => (x === f ? null : f))}
+            aria-pressed={feeling === f}
+            className={cn(
+              "h-10 rounded-full px-4 text-[15px] font-medium transition-[background-color,color,transform] duration-300 ease-ios active:scale-95",
+              feeling === f ? "bg-foreground text-background" : "bg-fill",
+            )}
+          >
+            {f}
+          </button>
+        ))}
       </div>
 
       <h2 className="mt-6 mb-2 px-1 text-[14px] font-medium text-muted-foreground">Or choose the noise</h2>

@@ -3,7 +3,7 @@ import { ArrowRight } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { MapTile, PhotoTile, photosFor } from "@/components/ui/moment-card"
-import { agencyFor, areaName, type Complaint } from "@/lib/data"
+import { agencyFor, areaName, comfort, type Complaint } from "@/lib/data"
 
 // 03 · Your voice is on its way.  A confirmation with the official complaint reference.
 export default function SentScreen({ c, onTrack, onAnother }: { c: Complaint; onTrack: () => void; onAnother: () => void }) {
@@ -46,10 +46,10 @@ export default function SentScreen({ c, onTrack, onAnother }: { c: Complaint; on
         </div>
 
         <h1 className="anim-rise text-center text-[32px] leading-[1.08] font-semibold tracking-[-0.03em] text-balance" style={{ animationDelay: "0.7s" }}>
-          Your voice is on its way.
+          We heard you.
         </h1>
         <p className="anim-rise mt-2 text-center text-[16px] leading-snug text-muted-foreground" style={{ animationDelay: "0.85s" }}>
-          Filed with {agencyFor(c.type).name}. Keep this reference to follow the case.
+          {comfort(c)} Filed with {agencyFor(c.type).name}.
         </p>
 
         <div className="moment anim-rise mt-6 rounded-[28px] p-3 text-center" style={{ animationDelay: "1s" }}>
