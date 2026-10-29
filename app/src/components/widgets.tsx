@@ -202,8 +202,8 @@ export function NearbyWidget({ area }: { area: string }) {
 
 const NEXT_UP = [
   "Your case gets sent to the team that handles it.",
-  "Someone is assigned to go and check.",
-  "They visit the address to listen or look.",
+  "We are assigned to go and check.",
+  "We visit the address to listen or look.",
   "The outcome is posted to your case.",
   "Tell us if it got better. It closes the case.",
 ]

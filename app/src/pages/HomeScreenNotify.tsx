@@ -6,7 +6,7 @@ import { renderWidget } from "@/components/widgets"
 import type { Complaint } from "@/lib/data"
 import type { Notice } from "@/lib/notices"
 
-const DEMO: Notice = { id: "demo", at: Date.now(), type: "Music or party", title: "Someone is on the way.", body: "NYPD · CHM-48213", ref: "CHM-48213", action: { label: "View case", to: "track" } }
+const DEMO: Notice = { id: "demo", at: Date.now(), type: "Music or party", title: "We are on the way.", body: "NYPD · CHM-48213", ref: "CHM-48213", action: { label: "View case", to: "track" } }
 
 // A notification as it really arrives: over your normal Home Screen, from the top, then it tucks away.
 export default function HomeScreenNotify({

@@ -55,7 +55,7 @@ export function buildNotices(cases: Complaint[], prefs: Prefs, nearbyArea?: stri
           type: c.type,
           ref: c.ref,
           title: stageCopy(c, i).title,
-          body: i === 3 ? `${ag.visitor} went to your block and heard it · ${c.ref}` : `${ag.short} · ${c.ref}`,
+          body: i === 3 ? `We went to your block and heard it · ${c.ref}` : `${ag.short} · ${c.ref}`,
           action: { label: "View case", to: "track" },
         })
       }

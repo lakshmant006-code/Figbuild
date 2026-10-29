@@ -1,13 +1,12 @@
 import { Ear } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import { agencyFor, areaName, type Complaint } from "@/lib/data"
+import { areaName, type Complaint } from "@/lib/data"
 
 const clock = (t: number) => new Date(t).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
 
 // The moment a report is heard in person. Quiet, slow, and a little bit of relief.
 export default function HeardScreen({ c, onSee, onClose }: { c: Complaint; onSee: () => void; onClose: () => void }) {
-  const ag = agencyFor(c.type)
   return (
     <div className="anim-rise absolute inset-0 z-40 overflow-y-auto bg-background">
       <div className="mx-auto flex min-h-full max-w-[430px] flex-col px-5 pt-[max(var(--sat),12px)] pb-[max(var(--sab),20px)]">
@@ -33,10 +32,10 @@ export default function HeardScreen({ c, onSee, onClose }: { c: Complaint; onSee
           {clock(c.times[3] ?? Date.now())} · {c.ref}
         </p>
         <h1 className="anim-rise mt-2 text-center text-[36px] leading-[1.05] font-semibold tracking-[-0.03em]" style={{ animationDelay: "1.05s" }}>
-          Someone listened.
+          We listened.
         </h1>
         <p className="anim-rise mt-3 text-center text-[17px] leading-snug text-balance text-muted-foreground" style={{ animationDelay: "1.25s" }}>
-          {ag.visitor} went to {areaName(c.area)} and heard it for themselves. What you reported was real, and now it is on record.
+          We went to {areaName(c.area)} and heard it for ourselves. What you reported was real, and now it is on record.
         </p>
 
         {c.note && (

@@ -32,7 +32,7 @@ export const NOISE_TYPES = [
 export const STAGES = [
   "Received",
   "Sent to the right team",
-  "Someone is on the way",
+  "We are on the way",
   "Checked on site",
   "Outcome posted",
 ] as const
@@ -120,9 +120,9 @@ export function stageCopy(c: Complaint, i: number): { title: string; detail: str
   const t = c.type.toLowerCase()
   return [
     { title: "We heard you.", detail: "311 logged your report. There is nothing you need to do right now. We're with you while it moves." },
-    { title: `Sent to ${ag.name}.`, detail: `They are the team that handles ${t} complaints, so your case now sits with them.` },
-    { title: "Someone is on the way.", detail: `${ag.visitor} has been assigned. Visits usually happen within a few hours, and we'll tell you the moment they arrive.` },
-    { title: "Someone listened.", detail: `${ag.visitor} went to the address and heard it for themselves. Sometimes the noise has stopped by the time they arrive. That doesn't mean you weren't heard.` },
+    { title: `Sent to ${ag.name}.`, detail: `We passed your case to the team that handles ${t} complaints, so it is in the right hands.` },
+    { title: "We are on the way.", detail: `We have assigned ${ag.visitor.toLowerCase()} to your case. Visits usually happen within a few hours, and we'll tell you the moment we arrive.` },
+    { title: "We listened.", detail: `We went to the address and heard it for ourselves. Sometimes the noise has stopped by the time we arrive. That doesn't mean you weren't heard.` },
     { title: "Here is what they decided.", detail: c.outcome ?? "The outcome is posted to your case." },
   ][i]
 }
