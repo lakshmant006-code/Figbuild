@@ -14,7 +14,8 @@ const html = fs.readFileSync(path.join(here, "template.html"), "utf8")
 fs.mkdirSync(path.join(here, "build"), { recursive: true })
 fs.writeFileSync(path.join(here, "build/index.html"), html)
 for (const f of ["Inter-Bold.otf", "Inter-SemiBold.otf", "logo.png"]) fs.copyFileSync(path.join(here, f), path.join(here, "build", f))
-const frames = path.join(here, "build/frames"); fs.rmSync(frames, { recursive: true, force: true }); fs.mkdirSync(frames)
+const START = Number(process.env.START || 0) // re-render only from this frame on
+const frames = path.join(here, "build/frames"); if (START === 0) fs.rmSync(frames, { recursive: true, force: true }); fs.mkdirSync(frames, { recursive: true })
 
 ;(async () => {
   const b = await chromium.launch({ args: ["--use-gl=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist", "--allow-file-access-from-files"] })
@@ -23,7 +24,7 @@ const frames = path.join(here, "build/frames"); fs.rmSync(frames, { recursive: t
   await p.goto("file://" + path.join(here, "build/index.html"))
   await p.evaluate(() => window.ready)
   const n = FPS * SECONDS
-  for (let i = 0; i < n; i++) {
+  for (let i = START; i < n; i++) {
     const data = await p.evaluate(t => window.draw(t), i / FPS)
     fs.writeFileSync(path.join(frames, `f${String(i).padStart(4, "0")}.jpg`), Buffer.from(data.split(",")[1], "base64"))
     if (i % 30 === 0) console.log("frame", i, "/", n)

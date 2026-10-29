@@ -113,7 +113,7 @@ window.draw = (t) => {
   // 6. tagline
   const tg = ease((t - 3.7) / 0.6);
   if (tg > 0) {
-    ctx.save(); ctx.globalAlpha = tg; ctx.fillStyle = NAVY; ctx.textAlign = "center";
+    ctx.save(); ctx.globalAlpha = tg; ctx.fillStyle = "#fff"; ctx.shadowColor = "rgba(5,10,36,0.45)"; ctx.shadowBlur = 14; ctx.textAlign = "center";
     ctx.font = '600 64px "SF Stand-in"'; ctx.fillText("Give every complaint", W / 2, 1400 + (1 - tg) * 24); ctx.fillText("a heartbeat.", W / 2, 1480 + (1 - tg) * 24); ctx.restore();
   }
 
