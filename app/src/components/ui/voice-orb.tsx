@@ -2,8 +2,9 @@ import { useEffect, useRef } from "react"
 
 import { cn } from "@/lib/utils"
 
-// The Chime voice: a glass orb that goes white → blue → black and swells with the sound.
-export function VoiceOrb({ level, active, className }: { level: number; active: boolean; className?: string }) {
+// The Chime voice: a glass orb that goes white → blue → black. While listening it stays mostly still (the waveform carries the voice)
+// and its ring becomes clearer. `still` (reduced motion) keeps only the ring change.
+export function VoiceOrb({ level, active, still = false, className }: { level: number; active: boolean; still?: boolean; className?: string }) {
   const ref = useRef<HTMLCanvasElement>(null)
   const levelRef = useRef(level)
   levelRef.current = level
@@ -19,17 +20,26 @@ export function VoiceOrb({ level, active, className }: { level: number; active: 
     ctx.scale(dpr, dpr)
     let raf = 0
     let smooth = 0
+    let ring = active ? 1 : 0
     const draw = (now: number) => {
       const t = now / 1000
       smooth += (levelRef.current - smooth) * 0.25
-      const amp = active ? 0.05 + smooth * 0.16 : 0.035
-      const r = 86 + (active ? smooth * 20 : 0)
+      ring += ((active ? 1 : 0) - ring) * (still ? 1 : 0.12)
+      const amp = still ? 0 : active ? 0.04 + smooth * 0.03 : 0.035
+      const r = 86 + (active && !still ? smooth * 4 : 0)
       ctx.clearRect(0, 0, size, size)
       const cx = size / 2
       const cy = size / 2
 
+      // the listening ring: faint at rest, clearer while recording
+      ctx.beginPath()
+      ctx.arc(cx, cy, r + 10, 0, Math.PI * 2)
+      ctx.strokeStyle = `rgba(8,102,255,${0.14 + ring * 0.36})`
+      ctx.lineWidth = 1.5 + ring
+      ctx.stroke()
+
       // outer halo rings
-      for (let i = 0; i < 3; i++) {
+      for (let i = 0; i < (still ? 0 : 3); i++) {
         const k = (t * 0.5 + i / 3) % 1
         ctx.beginPath()
         ctx.arc(cx, cy, r + 8 + k * 52, 0, Math.PI * 2)
@@ -52,7 +62,7 @@ export function VoiceOrb({ level, active, className }: { level: number; active: 
       ctx.shadowBlur = 40
       ctx.shadowOffsetY = 14
       const g = ctx.createLinearGradient(cx - r, cy - r, cx + r, cy + r)
-      const shift = Math.sin(t * 0.8) * 0.08
+      const shift = still ? 0 : Math.sin(t * 0.8) * 0.08
       g.addColorStop(0, "#ffffff")
       g.addColorStop(Math.min(0.9, 0.3 + shift), "#9cc2ff")
       g.addColorStop(Math.min(0.95, 0.55 + shift), "#0866ff")
@@ -65,7 +75,7 @@ export function VoiceOrb({ level, active, className }: { level: number; active: 
       // inner swirl + glass highlight
       ctx.save()
       ctx.clip()
-      const sw = ctx.createRadialGradient(cx + Math.cos(t * 0.9) * 34, cy + Math.sin(t * 1.1) * 30, 4, cx, cy, r * 1.1)
+      const sw = ctx.createRadialGradient(cx + Math.cos(still ? 0 : t * 0.9) * 34, cy + Math.sin(still ? 0 : t * 1.1) * 30, 4, cx, cy, r * 1.1)
       sw.addColorStop(0, "rgba(255,255,255,0.55)")
       sw.addColorStop(0.45, "rgba(8,102,255,0.0)")
       sw.addColorStop(1, "rgba(0,0,0,0.35)")
@@ -81,13 +91,14 @@ export function VoiceOrb({ level, active, className }: { level: number; active: 
     }
     raf = requestAnimationFrame(draw)
     return () => cancelAnimationFrame(raf)
-  }, [active])
+  }, [active, still])
 
   return <canvas ref={ref} className={cn("size-[280px]", className)} style={{ width: 280, height: 280 }} aria-hidden="true" />
 }
 
 // Live bars in the same gradient: pale on the left, blue in the middle, black on the right.
-export function VoiceBars({ history, className }: { history: number[]; className?: string }) {
+// While recording the bars follow the (smoothed) voice; when it stops they settle over 180 ms.
+export function VoiceBars({ history, settling = false, className }: { history: number[]; settling?: boolean; className?: string }) {
   return (
     <div className={cn("flex h-12 items-center justify-center gap-[3px]", className)} aria-hidden="true">
       {history.map((v, i) => (
@@ -98,6 +109,7 @@ export function VoiceBars({ history, className }: { history: number[]; className
             height: `${6 + v * 42}px`,
             background: `hsl(${222 - (i / history.length) * 6} ${100 - (i / history.length) * 40}% ${88 - (i / history.length) * 82}%)`,
             outline: "1px solid rgb(8 102 255 / 0.15)",
+            transition: settling ? "height 180ms cubic-bezier(0.2, 0, 0, 1)" : undefined,
           }}
         />
       ))}

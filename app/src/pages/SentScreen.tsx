@@ -3,6 +3,7 @@ import { ArrowRight } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { MapTile, PhotoTile, photosFor } from "@/components/ui/moment-card"
+import { SignalSignature } from "@/components/ui/signal"
 import { agencyFor, areaName, comfort, type Complaint } from "@/lib/data"
 
 // 03 · Your voice is on its way.  A confirmation with the official complaint reference.
@@ -39,7 +40,9 @@ export default function SentScreen({ c, onTrack, onAnother }: { c: Complaint; on
           <div aria-hidden="true" className="pointer-events-none absolute inset-0 grid place-items-center">
             {Array.from({ length: 15 }, (_, i) => {
               const d = i - 7
-              const h = 0.35 + 0.65 * Math.exp(-(d * d) / 14) * (0.6 + 0.4 * Math.abs(Math.sin(i * 2.3)))
+              const sig = c.signature
+              // your own recording's shape when there is one
+              const h = sig ? 0.25 + 0.75 * sig[Math.min(sig.length - 1, Math.floor((i / 15) * sig.length))] : 0.35 + 0.65 * Math.exp(-(d * d) / 14) * (0.6 + 0.4 * Math.abs(Math.sin(i * 2.3)))
               return (
                 <span
                   key={i}
@@ -78,7 +81,9 @@ export default function SentScreen({ c, onTrack, onAnother }: { c: Complaint; on
             {typed}
             <span className="ml-0.5 inline-block w-[3px] animate-pulse bg-accent align-middle" style={{ height: 30 }} />
           </p>
-          <p className="mt-1 text-[14px] text-muted-foreground">
+          <p className="mt-1 flex items-center justify-center gap-2 text-[14px] text-muted-foreground">
+            {/* the recording, contracted into this report's signature */}
+            <SignalSignature samples={c.signature} height={16} contract delay={1700 + c.ref.length * 70 + 120} />
             {c.type} · {areaName(c.area)}
           </p>
           </div>

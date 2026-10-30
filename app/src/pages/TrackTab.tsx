@@ -1,7 +1,8 @@
-import { Check, ChevronRight, LayoutGrid } from "lucide-react"
+import { ChevronRight, LayoutGrid } from "lucide-react"
 
 import { SkylineWave } from "@/components/ui/skyline-wave"
 import { MapTile, MomentCard, PhotoTile, photosFor } from "@/components/ui/moment-card"
+import { MilestoneDot, SignalSignature } from "@/components/ui/signal"
 import { STAGES, agencyFor, comfort, areaName, stageCopy, type Complaint } from "@/lib/data"
 import { cn } from "@/lib/utils"
 
@@ -52,7 +53,12 @@ export default function TrackTab({
               <PhotoTile key="b" src={photosFor(c.ref)[1]} />,
               <MapTile key="m" label={areaName(c.area)} />,
             ]}
-            time={`${clock(c.createdAt)} · ${c.ref}`}
+            time={
+              <span className="flex items-center gap-2">
+                {clock(c.createdAt)} · {c.ref}
+                <SignalSignature samples={c.signature} height={12} />
+              </span>
+            }
             title={`${c.type} near ${areaName(c.area)}`}
             body={`${stageCopy(c, c.stage).title} ${c.stage < 4 ? `Next update usually in ${NEXT[c.stage]}.` : `Posted at ${clock(c.times[4] ?? Date.now())}.`}`}
           >
@@ -85,18 +91,8 @@ export default function TrackTab({
                       />
                     </span>
                   )}
-                  {done && c.times[i] && Date.now() - c.times[i] < 8000 && (
-                    <span aria-hidden="true" className="absolute top-0 left-0 size-8 rounded-full border-2 border-accent" style={{ animation: "ring-out 1.6s cubic-bezier(0.32,0.72,0,1) 2", opacity: 0 }} />
-                  )}
-                  <span
-                    className={cn(
-                      "relative z-10 grid size-8 shrink-0 place-items-center rounded-full transition-colors duration-500",
-                      done ? "bg-accent text-white" : now ? "bg-card text-accent ring-2 ring-accent" : "bg-fill text-muted-foreground",
-                    )}
-                    style={now ? { animation: "beat 1.6s ease-in-out infinite" } : undefined}
-                  >
-                    {done ? <Check className="size-4" strokeWidth={3} /> : <span className="text-[13px] font-semibold">{i + 1}</span>}
-                  </span>
+                  {/* a city response arrives as one inward ripple, once */}
+                  <MilestoneDot id={`${c.ref}:${c.reopened ?? 0}:${i}`} done={done} now={now} step={i + 1} fresh={!!c.times[i] && Date.now() - c.times[i] < 8000} />
                   <div className={cn("min-w-0 flex-1 transition-opacity duration-500", !done && !now && "opacity-45")}>
                     <div className="flex items-baseline justify-between gap-2">
                       <p className="text-[17px] leading-tight font-semibold">{copy.title}</p>

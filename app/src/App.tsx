@@ -41,6 +41,7 @@ const SEED: Complaint[] = [
     createdAt: now0 - 36e5,
     times: [now0 - 36e5, now0 - 34e5, now0 - 31e5],
     note: "Example case",
+    signature: [0.32, 0.58, 0.9, 0.66, 0.44, 0.8, 1, 0.62, 0.38, 0.54, 0.3, 0.18],
   },
 ]
 

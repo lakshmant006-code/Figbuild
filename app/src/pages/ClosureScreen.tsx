@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { ChevronLeft, Check, Copy } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { MapTile, PhotoTile, photosFor } from "@/components/ui/moment-card"
 import { ComplaintWave } from "@/components/ui/complaint-wave"
+import { ReleaseWave, SignalSignature } from "@/components/ui/signal"
 import { agencyFor, areaName, type Complaint, type Confirmed } from "@/lib/data"
 
 const clock = (t: number) => new Date(t).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })
@@ -26,26 +27,13 @@ export default function ClosureScreen({
   onNew: () => void
 }) {
   const ag = agencyFor(c.type)
-  const [amp, setAmp] = useState(0.5)
   const [alerts, setAlerts] = useState(true)
   const [note, setNote] = useState("")
   const [copied, setCopied] = useState(false)
 
-  // the wave settles to a calm line once you confirm
-  useEffect(() => {
-    if (c.confirmed !== "yes" && c.confirmed !== "partly") return
-    const start = performance.now()
-    const from = c.confirmed === "yes" ? 0.5 : 0.5
-    const to = c.confirmed === "yes" ? 0.02 : 0.2
-    let raf = 0
-    const step = (t: number) => {
-      const k = Math.min(1, (t - start) / 1400)
-      setAmp(from + (to - from) * (1 - Math.pow(1 - k, 3)))
-      if (k < 1) raf = requestAnimationFrame(step)
-    }
-    raf = requestAnimationFrame(step)
-    return () => cancelAnimationFrame(raf)
-  }, [c.confirmed])
+  // quiet becomes a small, visible release: plays once, right after you answer
+  const [justClosed, setJustClosed] = useState(false)
+  const [settled, setSettled] = useState(false)
 
   const share = `Chime outcome record\n${c.ref} · ${c.type} · ${areaName(c.area)}\n${ag.short}: ${c.outcome}\nConfirmed by resident: ${c.confirmed === "yes" ? "quiet" : "better, not gone"}`
   const copy = async () => {
@@ -85,7 +73,10 @@ export default function ClosureScreen({
               ).map(([k, t, d], i) => (
                 <button
                   key={k}
-                  onClick={() => onConfirm(k)}
+                  onClick={() => {
+                    setJustClosed(true)
+                    onConfirm(k)
+                  }}
                   className="glass anim-rise flex items-center justify-between rounded-[22px] p-5 text-left transition-transform duration-200 ease-ios active:scale-[0.98]"
                   style={{ animationDelay: `${0.1 + i * 0.08}s` }}
                 >
@@ -105,13 +96,15 @@ export default function ClosureScreen({
             <p className="mt-2 text-[17px] leading-snug text-muted-foreground">
               We sent {c.ref} back to {ag.name} and marked it as a repeat. You&apos;ll see the new steps in your tracker.
             </p>
+            {/* still loud: the signal stays */}
+            <ComplaintWave flow speed={6} amplitude={0.5} seed={3} className="mt-4" />
             <Button className="mt-8" variant="blue" onClick={onBack}>Back to tracker</Button>
           </div>
         )}
 
         {closed && (
           <div key="rec" className="anim-step">
-            <ComplaintWave flow speed={14} amplitude={amp} seed={5} color="var(--accent)" className="mt-4" />
+            <ReleaseWave to={c.confirmed === "yes" ? "yes" : "partly"} play={justClosed} seed={5} className="mt-4" onSettled={() => setSettled(true)} />
             <h1 className="mt-1 text-[32px] leading-[1.08] font-semibold tracking-[-0.03em]">
               {c.confirmed === "yes" ? "Glad it's quiet." : "Good to hear it's better."}
             </h1>
@@ -126,13 +119,16 @@ export default function ClosureScreen({
               <div className="px-2 pt-4 pb-2">
               <div className="flex items-center justify-between">
                 <p className="text-[12px] font-medium tracking-[0.08em] text-muted-foreground uppercase">Outcome record</p>
-                <span className="flex items-center gap-1 rounded-full bg-accent/15 px-3 py-1 text-[12px] font-semibold text-accent">
+                <span
+                  className="flex items-center gap-1 rounded-full bg-accent/15 px-3 py-1 text-[12px] font-semibold text-accent"
+                  style={settled ? { animation: justClosed ? "fade-in 120ms ease-out both" : undefined } : { opacity: 0 }}
+                >
                   <Check className="size-3.5" strokeWidth={3} /> Resident confirmed
                 </span>
               </div>
               <dl className="mt-3 flex flex-col text-[15px]">
                 {[
-                  ["Reference", c.ref],
+                  ["Reference", <span key="r" className="inline-flex items-center gap-2"><SignalSignature samples={c.signature} height={12} />{c.ref}</span>],
                   ["Noise", `${c.type} · ${areaName(c.area)}`],
                   ["Reported", clock(c.createdAt)],
                   ["Closed", clock(c.closedAt ?? Date.now())],
@@ -140,7 +136,7 @@ export default function ClosureScreen({
                   [ag.short, c.outcome ?? ""],
                   ["You said", c.confirmed === "yes" ? "It's quiet" : "A little better"],
                 ].map(([k, v], i) => (
-                  <div key={k} className={"flex justify-between gap-4 py-2.5 " + (i ? "border-t border-separator" : "")}>
+                  <div key={String(k)} className={"flex justify-between gap-4 py-2.5 " + (i ? "border-t border-separator" : "")}>
                     <dt className="shrink-0 text-muted-foreground">{k}</dt>
                     <dd className="text-right font-medium">{v}</dd>
                   </div>

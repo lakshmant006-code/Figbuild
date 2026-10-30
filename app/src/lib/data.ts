@@ -48,6 +48,7 @@ export interface Complaint {
   times: number[] // when each stage was reached, times[0] = createdAt
   note?: string
   feeling?: string
+  signature?: number[] // a few normalized loudness samples from the recording (decoration only; the audio is never kept)
   outcome?: string
   confirmed?: Confirmed
   closedAt?: number

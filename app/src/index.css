@@ -146,3 +146,14 @@ html, body { height: 100%; overflow: hidden; }
   100% { transform: translateX(0) scaleY(0.05) scaleX(0.4); opacity: 0; }
 }
 @keyframes glow-in { 0% { opacity: 0; transform: scale(0.6); } 100% { opacity: 1; transform: scale(1); } }
+
+/* ---- signal language: voice becomes a signal, the city responds, the signal settles ---- */
+/* the orb takes a breath before listening: in 2% over 120 ms, then softly back out */
+@keyframes orb-breath { 0% { transform: scale(1); animation-timing-function: cubic-bezier(0.4, 0, 1, 1); } 22% { transform: scale(0.98); animation-timing-function: cubic-bezier(0.2, 0, 0, 1); } 100% { transform: scale(1); } }
+/* the recording contracts into the report's signature */
+@keyframes sig-contract { 0% { transform: scaleX(2.4) scaleY(1.6); opacity: 0; filter: blur(3px); } 100% { transform: none; opacity: 1; filter: none; } }
+/* a city response arrives as one inward ripple (≈5 px onto a 32 px dot), then the check resolves */
+@keyframes arrive-in { 0% { transform: scale(1.32); opacity: 0; } 25% { opacity: 0.35; } 100% { transform: scale(1); opacity: 0; } }
+@keyframes arrive-fill { 0%, 60% { background: var(--card); box-shadow: inset 0 0 0 2px var(--accent); } 100% { background: var(--accent); box-shadow: none; } }
+@keyframes arrive-check { 0% { transform: scale(0.6); opacity: 0; } 100% { transform: none; opacity: 1; } }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }

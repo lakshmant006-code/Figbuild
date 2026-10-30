@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react"
 import { ArrowUp, Mic, Square } from "lucide-react"
 
 import { VoiceBars, VoiceOrb } from "@/components/ui/voice-orb"
+import { toSignature, useReducedMotion } from "@/components/ui/signal"
 import { useVoiceLevel } from "@/hooks/use-voice-level"
 import { FEELINGS, NOISE_TYPES, agencyFor, greeting, areaName, newRef, type Complaint, type Profile } from "@/lib/data"
 import { cn } from "@/lib/utils"
@@ -18,15 +19,21 @@ export default function ReportTab({ profile, onSubmit }: { profile: Profile; onS
   const { level, listening, simulated, start, stop } = useVoiceLevel()
   const [history, setHistory] = useState<number[]>(() => Array(28).fill(0))
   const timer = useRef(0)
+  const samples = useRef<number[]>([])
+  const [breath, setBreath] = useState(0)
+  const reduce = useReducedMotion()
 
   useEffect(() => {
-    if (listening) setHistory(h => [...h.slice(1), level])
-  }, [level, listening])
+    if (!listening) return
+    samples.current.push(level)
+    if (!reduce) setHistory(h => [...h.slice(1), level])
+  }, [level, listening, reduce])
   useEffect(() => () => window.clearTimeout(timer.current), [])
 
   const finishVoice = () => {
     window.clearTimeout(timer.current)
     stop()
+    setHistory(Array(28).fill(0)) // the waveform settles (180 ms)
     setText(t => {
       if (t) return t
       setExample(true)
@@ -35,15 +42,18 @@ export default function ReportTab({ profile, onSubmit }: { profile: Profile; onS
   }
   const toggleVoice = () => {
     if (listening) return finishVoice()
+    setBreath(b => (voiceOpen ? b + 1 : -(Math.abs(b) + 1))) // negative: the panel is still opening, so breathe a beat later
     setVoiceOpen(true)
     setExample(false)
+    samples.current = []
     void start()
     timer.current = window.setTimeout(finishVoice, 6000)
   }
 
   const send = () => {
     const now = Date.now()
-    onSubmit({ ref: newRef(), type, area: profile.area, stage: 0, createdAt: now, times: [now], note: text.trim() || undefined, feeling: feeling ?? undefined })
+    onSubmit({ ref: newRef(), type, area: profile.area, stage: 0, createdAt: now, times: [now], note: text.trim() || undefined, feeling: feeling ?? undefined, signature: toSignature(samples.current) })
+    samples.current = []
     setText("")
     setFeeling(null)
     setVoiceOpen(false)
@@ -62,8 +72,13 @@ export default function ReportTab({ profile, onSubmit }: { profile: Profile; onS
       <div className="grid transition-[grid-template-rows,opacity] duration-500 ease-ios" style={{ gridTemplateRows: voiceOpen ? "1fr" : "0fr", opacity: voiceOpen ? 1 : 0 }}>
         <div className="min-h-0 overflow-hidden">
           <div className="flex flex-col items-center pt-3">
-            <VoiceOrb level={level} active={listening} className="-my-8 scale-[0.72]" />
-            <VoiceBars history={history} />
+            {/* the orb takes a breath before it listens */}
+            <div key={breath} className="-my-8 scale-[0.72]">
+              <div style={breath && !reduce ? { animation: `orb-breath 540ms both`, animationDelay: breath < 0 ? "320ms" : "0ms" } : undefined}>
+                <VoiceOrb level={level} active={listening} still={reduce} />
+              </div>
+            </div>
+            <VoiceBars history={history} settling={!listening} />
             <p className="mt-1 text-[14px] text-muted-foreground">
               {listening ? (simulated ? "Listening (simulated voice)…" : "Listening…") : example ? "Example transcript. Your real words appear here." : "Tap the mic to talk"}
             </p>

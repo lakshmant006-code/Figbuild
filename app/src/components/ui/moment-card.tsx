@@ -78,7 +78,7 @@ export function MomentCard({
 }: {
   tiles?: ReactNode[]
   type?: string
-  time: string
+  time: ReactNode
   title: string
   body: string
   onClick?: () => void
