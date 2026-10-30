@@ -1,0 +1,159 @@
+@import "tailwindcss";
+
+/* Light-only. Airy white surfaces, one accent, system type.
+   Chime blue lives only in the logo, the shader card and the wave. */
+:root {
+  color-scheme: light;
+  --background: #ffffff;
+  --foreground: #000000;
+  --card: #f7f7f8;
+  --muted-foreground: #6c6c70;
+  --separator: rgb(60 60 67 / 0.12);
+  --fill: rgb(120 120 128 / 0.10);
+  --stage: #e4e7ee;
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --accent: #0866ff;
+  --calm: #0866ff;
+  --voice: conic-gradient(from 210deg at 50% 50%, #ffffff, #9cc2ff, #0866ff, #0a1030, #000000, #0866ff, #ffffff);
+  --primary: #000000;
+  --primary-foreground: #ffffff;
+}
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-separator: var(--separator);
+  --color-fill: var(--fill);
+  --color-accent: var(--accent);
+  --color-calm: var(--calm);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", system-ui, sans-serif;
+}
+
+html { background: var(--stage); -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+  overflow: hidden;
+  background: var(--stage);
+}
+button, a { touch-action: manipulation; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}
+
+/* ---- Glass + motion ---- */
+.glass {
+  background: color-mix(in srgb, var(--card) 58%, transparent);
+  -webkit-backdrop-filter: blur(30px) saturate(1.9);
+  backdrop-filter: blur(30px) saturate(1.9);
+  border: 1px solid color-mix(in srgb, var(--foreground) 9%, transparent);
+  box-shadow: 0 10px 40px rgb(8 40 120 / 0.16), inset 0 1px 0 rgb(255 255 255 / 0.28);
+}
+.ease-ios { transition-timing-function: cubic-bezier(0.32, 0.72, 0, 1); }
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(16px) scale(0.985); filter: blur(12px); }
+  to { opacity: 1; transform: none; filter: blur(0); }
+}
+@keyframes step-in {
+  from { opacity: 0; transform: translateX(var(--dx, 28px)); filter: blur(10px); }
+  to { opacity: 1; transform: none; filter: blur(0); }
+}
+@keyframes feed-in {
+  from { opacity: 0; transform: translateY(-12px); filter: blur(8px); }
+  to { opacity: 1; transform: none; filter: blur(0); }
+}
+@keyframes sweep {
+  from { background-position: 160% 0; }
+  to { background-position: -60% 0; }
+}
+@keyframes ecg {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+@keyframes spike {
+  0% { transform: scaleY(1); }
+  30% { transform: scaleY(2.4); }
+  100% { transform: scaleY(1); }
+}
+@keyframes breathe {
+  0%, 100% { transform: scale(1); filter: blur(0); }
+  50% { transform: scale(1.06); filter: blur(1px); }
+}
+.anim-rise { animation: rise 0.7s cubic-bezier(0.32, 0.72, 0, 1) both; }
+.anim-step { animation: step-in 0.5s cubic-bezier(0.32, 0.72, 0, 1) both; }
+.anim-feed { animation: feed-in 0.55s cubic-bezier(0.32, 0.72, 0, 1) both; }
+.anim-sweep {
+  background-image: linear-gradient(100deg, transparent 30%, rgb(8 102 255 / 0.28) 50%, transparent 70%);
+  background-size: 250% 100%;
+  animation: sweep 1.4s ease-out 1;
+}
+
+@keyframes ring-out { 0% { transform: scale(0.45); opacity: 0.65; } 100% { transform: scale(2.3); opacity: 0; } }
+@keyframes pop { 0% { transform: scale(0.2); opacity: 0; filter: blur(8px); } 60% { transform: scale(1.12); } 100% { transform: scale(1); opacity: 1; filter: blur(0); } }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+@keyframes beat { 0%, 100% { box-shadow: 0 0 0 0 rgb(8 102 255 / 0.45); } 50% { box-shadow: 0 0 0 9px rgb(8 102 255 / 0); } }
+.anim-pop { animation: pop 0.7s cubic-bezier(0.32, 0.72, 0, 1) both; }
+
+/* ---- Moment cards: quiet, airy, hairline border ---- */
+.moment {
+  background: var(--card);
+  border: 1px solid color-mix(in srgb, var(--foreground) 7%, transparent);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.03);
+}
+
+/* A phone has no visible scrollbars: content still scrolls by touch, wheel or drag. */
+* { scrollbar-width: none; -ms-overflow-style: none; }
+*::-webkit-scrollbar { display: none; width: 0; height: 0; }
+html, body { height: 100%; overflow: hidden; }
+.phone-screen * { -webkit-user-select: none; user-select: none; }
+.phone-screen input, .phone-screen textarea { -webkit-user-select: text; user-select: text; }
+
+/* ---- Calm process animation ---- */
+@keyframes wave-flow { to { transform: translateX(-320px); } }
+@keyframes arc-pulse { 0% { opacity: 0; transform: translateX(-5px); } 35% { opacity: 0.9; } 100% { opacity: 0; transform: translateX(9px); } }
+@keyframes dash-run { to { stroke-dashoffset: -28; } }
+@keyframes dot-travel { from { offset-distance: 0%; } to { offset-distance: 100%; } }
+@keyframes drive { from { transform: translate(72px, 104px); } to { transform: translate(206px, 104px); } }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes twinkle { 0%, 100% { opacity: 0.2; } 50% { opacity: 1; } }
+@keyframes listen { 0% { transform: scale(0.25); opacity: 0.75; } 100% { transform: scale(1); opacity: 0; } }
+@keyframes float-y { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2.5px); } }
+
+/* ---- iOS-style notification banner ---- */
+@keyframes banner-in {
+  0% { transform: translateY(-130px) scale(0.84); opacity: 0; filter: blur(10px); }
+  60% { transform: translateY(5px) scale(1.01); opacity: 1; filter: blur(0); }
+  100% { transform: translateY(0) scale(1); opacity: 1; filter: blur(0); }
+}
+@keyframes banner-out { to { transform: translateY(-130px) scale(0.9); opacity: 0; filter: blur(8px); } }
+
+/* ---- being heard ---- */
+@keyframes hear-in { 0% { transform: scale(1.9); opacity: 0; } 30% { opacity: 0.55; } 100% { transform: scale(0.62); opacity: 0; } }
+@keyframes gather {
+  0% { transform: translateX(var(--x)) scaleY(0.05); opacity: 0; }
+  30% { transform: translateX(var(--x)) scaleY(var(--h)); opacity: 1; }
+  55% { transform: translateX(var(--x)) scaleY(calc(var(--h) * 0.8)); opacity: 1; }
+  100% { transform: translateX(0) scaleY(0.05) scaleX(0.4); opacity: 0; }
+}
+@keyframes glow-in { 0% { opacity: 0; transform: scale(0.6); } 100% { opacity: 1; transform: scale(1); } }
+
+/* ---- signal language: voice becomes a signal, the city responds, the signal settles ---- */
+/* the orb takes a breath before listening: in 2% over 120 ms, then softly back out */
+@keyframes orb-breath { 0% { transform: scale(1); animation-timing-function: cubic-bezier(0.4, 0, 1, 1); } 22% { transform: scale(0.98); animation-timing-function: cubic-bezier(0.2, 0, 0, 1); } 100% { transform: scale(1); } }
+/* the recording contracts into the report's signature */
+@keyframes sig-contract { 0% { transform: scaleX(2.4) scaleY(1.6); opacity: 0; filter: blur(3px); } 100% { transform: none; opacity: 1; filter: none; } }
+/* a city response arrives as one inward ripple (≈5 px onto a 32 px dot), then the check resolves */
+@keyframes arrive-in { 0% { transform: scale(1.32); opacity: 0; } 25% { opacity: 0.35; } 100% { transform: scale(1); opacity: 0; } }
+@keyframes arrive-fill { 0%, 60% { background: var(--card); box-shadow: inset 0 0 0 2px var(--accent); } 100% { background: var(--accent); box-shadow: none; } }
+@keyframes arrive-check { 0% { transform: scale(0.6); opacity: 0; } 100% { transform: none; opacity: 1; } }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
