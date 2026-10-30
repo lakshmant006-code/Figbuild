@@ -78,7 +78,7 @@ const useMeasure = (text: string, size: number) =>
     c.font = `700 ${size}px Outfit`;
     return text.split("").map((ch) => c.measureText(ch).width);
   }, [text, size]);
-export const Wordmark: React.FC<{ size: number; start: number; light?: boolean; streak?: boolean; markGlow?: boolean }> = ({ size, start, light, streak = true, markGlow }) => {
+export const Wordmark: React.FC<{ size: number; start: number; light?: boolean; streak?: boolean; markGlow?: boolean; logo?: boolean }> = ({ size, start, light, streak = true, markGlow, logo }) => {
   const f = useCurrentFrame();
   const { fps } = useVideoConfig();
   const letters = "Chime".split("");
@@ -90,7 +90,7 @@ export const Wordmark: React.FC<{ size: number; start: number; light?: boolean; 
   const col = light ? "#FFFFFF" : T.colors.text;
   return (
     <div style={{ display: "flex", alignItems: "center", gap: size * 0.18 }}>
-      <div style={{ transform: `scale(${mark}) rotate(${interpolate(mark, [0, 1], [-40, 0])}deg)`, opacity: mark }}><ChimeMark size={size * 0.95} glow={markGlow} light id={`w${size}${start}`} /></div>
+      <div style={{ transform: `scale(${mark}) rotate(${interpolate(mark, [0, 1], [logo ? -12 : -40, 0])}deg)`, opacity: mark }}>{logo ? <AppIconTile size={size * 0.92} /> : <ChimeMark size={size * 0.95} glow={markGlow} light id={`w${size}${start}`} />}</div>
       <div style={{ position: "relative", width: total }}>
         <div style={{ display: "flex", fontFamily: T.fonts.display, fontWeight: 700, fontSize: size, letterSpacing: "-0.02em", lineHeight: 1, color: col }}>
           {letters.map((ch, i) => {
@@ -232,12 +232,25 @@ export const SceneTablet: React.FC<{ dur: number }> = ({ dur }) => {
   );
 };
 
+// Deep blue gradient used from 0:25 to the end. Soft light pools drift so it never sits flat.
+const BlueBg: React.FC<{ bright?: boolean }> = ({ bright }) => {
+  const f = useCurrentFrame();
+  const t = f / 80;
+  return (
+    <AbsoluteFill style={{ background: bright ? "linear-gradient(180deg, #2F7BFF 0%, #1550E0 45%, #0A2A8A 100%)" : "linear-gradient(180deg, #1F63F0 0%, #0F3CBF 50%, #061A66 100%)" }}>
+      <div style={{ position: "absolute", left: 360 + Math.sin(t) * 120, top: -280, width: 1200, height: 720, borderRadius: "50%", background: "radial-gradient(ellipse, rgba(156,194,255,0.55), transparent 66%)", filter: "blur(50px)" }} />
+      <div style={{ position: "absolute", left: -260 + Math.cos(t * 0.8) * 100, top: 600, width: 1500, height: 700, borderRadius: "50%", background: "radial-gradient(ellipse, rgba(3,8,40,0.55), transparent 68%)", filter: "blur(60px)" }} />
+      <div style={{ position: "absolute", left: 1000 - Math.sin(t * 0.7) * 90, top: 520, width: 1100, height: 600, borderRadius: "50%", background: "radial-gradient(ellipse, rgba(106,176,255,0.35), transparent 68%)", filter: "blur(60px)" }} />
+    </AbsoluteFill>
+  );
+};
+
 // ------------------------------------------------------------------ I · light lavender: "Heard" → "Ready"
 export const SceneReady: React.FC<{ dur: number }> = ({ dur }) => (
   <SceneShell dur={dur} inF={8} outF={9}>
-    <LavenderBg />
-    <AbsoluteFill style={{ ...center, display: "flex" }}><Kinetic text="Heard" size={250} start={2} end={36} per={3} gradient /></AbsoluteFill>
-    <AbsoluteFill style={{ ...center, display: "flex" }}><div style={{ position: "absolute" }}><FrameShift by={42}><Kinetic text="Ready" size={250} start={0} per={4} gradient end={9999} /></FrameShift></div></AbsoluteFill>
+    <BlueBg />
+    <AbsoluteFill style={{ ...center, display: "flex" }}><Kinetic text="Heard" size={250} start={2} end={36} per={3} /></AbsoluteFill>
+    <AbsoluteFill style={{ ...center, display: "flex" }}><div style={{ position: "absolute" }}><FrameShift by={42}><Kinetic text="Ready" size={250} start={0} per={4} end={9999} /></FrameShift></div></AbsoluteFill>
   </SceneShell>
 );
 
@@ -250,18 +263,12 @@ export const SceneEnd: React.FC<{ dur: number }> = ({ dur }) => {
   const tile = spring({ frame: f - 30, fps, config: T.spring.bouncy });
   return (
     <SceneShell dur={dur} inF={9} outF={14}>
-      <AbsoluteFill style={{ background: "linear-gradient(180deg, #A8ADF0 0%, #6C73DD 52%, #4249C0 100%)" }}>
-        <div style={{ position: "absolute", left: 420, top: 160, width: 1100, height: 620, borderRadius: "50%", background: "radial-gradient(ellipse, rgba(255,255,255,0.5), transparent 68%)", filter: "blur(40px)" }} />
-        <div style={{ position: "absolute", left: 0, right: 0, bottom: -120, height: 520, background: "radial-gradient(ellipse at 50% 100%, rgba(30,40,160,0.7), transparent 70%)" }} />
+      <BlueBg bright />
         <AbsoluteFill style={{ ...center, display: "flex", flexDirection: "column", gap: 44 }}>
-          <Wordmark size={190} start={4} light markGlow />
+          <Wordmark size={190} start={4} light logo />
           <div style={{ fontFamily: T.fonts.display, fontSize: 52, color: "#fff", opacity: tag, transform: `translateY(${(1 - tag) * 24}px)`, filter: `blur(${(1 - tag) * 8}px)` }}>Give every complaint a heartbeat.</div>
-          <div style={{ display: "flex", alignItems: "center", gap: 22, opacity: cred, transform: `translateY(${(1 - cred) * 18}px)` }}>
-            <div style={{ transform: `scale(${tile})` }}><AppIconTile size={64} /></div>
-            <span style={{ fontFamily: T.fonts.display, fontSize: 30, color: "rgba(255,255,255,0.85)" }}>Civic by Design · AIGA × Designpreneurs Hackathon</span>
-          </div>
+          <div style={{ opacity: cred * (0.6 + 0.4 * tile), transform: `translateY(${(1 - cred) * 18}px)`, fontFamily: T.fonts.display, fontSize: 30, color: "#FFFFFF" }}>Civic by Design · AIGA × Designpreneurs Hackathon</div>
         </AbsoluteFill>
-      </AbsoluteFill>
     </SceneShell>
   );
 };
