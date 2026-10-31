@@ -1,0 +1,200 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1920px;height:1080px;overflow:hidden;background:#050a24;font-family:Inter,-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+#stage{position:absolute;inset:0;overflow:hidden}
+.sc{position:absolute;inset:0;overflow:hidden}
+.abs{position:absolute;left:0;top:0}
+.glow{position:absolute;border-radius:50%;filter:blur(120px)}
+.phone{position:absolute;left:0;top:0;width:426px;height:898px;transform-origin:0 0;will-change:transform}
+.phone .bz{position:absolute;inset:0;background:#0b0c11;border-radius:70px;padding:12px;box-shadow:0 60px 120px rgba(8,40,120,.28),0 20px 50px rgba(8,40,120,.18),inset 0 0 0 2px #2a2d38}
+.phone .scr{width:402px;height:874px;border-radius:58px;display:block;background:#fff;object-fit:cover}
+.phone .btn{position:absolute;width:5px;background:#1b1d26;border-radius:3px}
+.h1{position:absolute;font-weight:700;letter-spacing:-0.035em;line-height:1.02;color:#0a0f1e;white-space:nowrap}
+.h2{position:absolute;font-weight:500;letter-spacing:-0.01em;line-height:1.32;color:#4a5878}
+.eb{position:absolute;font-weight:600;font-size:26px;letter-spacing:.16em;color:#0866ff;white-space:nowrap}
+.w{display:inline-block;will-change:transform,opacity,filter}
+.chip{position:absolute;display:flex;align-items:center;gap:14px;padding:18px 26px;border-radius:22px;background:rgba(255,255,255,.82);backdrop-filter:blur(20px);box-shadow:0 18px 50px rgba(8,40,120,.16);font-weight:600;font-size:30px;color:#0a0f1e;white-space:nowrap}
+.chip i{display:block;width:14px;height:14px;border-radius:50%;background:#0866ff}
+.dark .h1{color:#fff}.dark .h2{color:#b9c6e6}
+</style></head>
+<body><div id="stage"></div>
+<script>
+const W=1920,H=1080,FPS=30
+const clamp=(x,a=0,b=1)=>Math.min(b,Math.max(a,x))
+const seg=(t,a,b)=>clamp((t-a)/(b-a))
+const lerp=(a,b,k)=>a+(b-a)*k
+const eo=k=>1-Math.pow(1-k,3), eio=k=>k<.5?4*k*k*k:1-Math.pow(-2*k+2,3)/2
+const ob=k=>{const c1=1.70158,c3=c1+1;return 1+c3*Math.pow(k-1,3)+c1*Math.pow(k-1,2)}
+const el=(tag,cls,parent,css)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(css)e.style.cssText=css;if(parent)parent.appendChild(e);return e}
+const stage=document.getElementById('stage')
+const META={}, pend=[]
+async function loadMeta(){for(const n of ['report','onboarding','notices','widgets','insights']){try{META[n]=await (await fetch(`build/clips/${n}/meta.json`)).json()}catch(e){META[n]=null}}}
+const clipUrl=(n,f)=>{const m=META[n];const i=clamp(Math.round(f),0,m.frames-1);return `build/clips/${n}/f${String(i).padStart(5,'0')}.jpg`}
+const imgCache={}
+function setSrc(img,src){if(img.__src===src)return;img.__src=src;img.src=src;pend.push(img.decode().catch(()=>{}))}
+
+// ---------- phone
+function Phone(parent){const p=el('div','phone',parent);const bz=el('div','bz',p);const img=el('img','scr',bz);for(const [y,h] of [[120,40],[190,80],[290,80]])el('div','btn',p,`left:-3px;top:${y}px;height:${h}px`);el('div','btn',p,'right:-3px;top:230px;height:110px');
+  const o={el:p,img,place(x,y,s=1,o={}){p.style.opacity=o.op??1;p.style.transform=`translate(${x}px,${y}px) perspective(${o.persp||2400}px) rotateY(${o.ry||0}deg) rotateX(${o.rx||0}deg) rotateZ(${o.rz||0}deg) scale(${s})`;p.style.display=(o.op??1)<=0.001?'none':'block'},clip(n,f){setSrc(img,clipUrl(n,f))},still(u){setSrc(img,u)}};return o}
+// ---------- word reveal text
+function words(parent,text,cls,css,size){const e=el('div',cls,parent,css+`;font-size:${size}px`);const ws=[];text.split(' ').forEach((w,i,a)=>{const s=el('span','w',e);s.textContent=w+(i<a.length-1?' ':'');ws.push(s)});return {e,ws}}
+function reveal(o,t,a,step=0.06,dur=0.7,rise=40,blur=14){o.ws.forEach((s,i)=>{const k=eo(seg(t,a+i*step,a+i*step+dur));s.style.opacity=k;s.style.transform=`translateY(${(1-k)*rise}px)`;s.style.filter=`blur(${(1-k)*blur}px)`})}
+function fadeOut(o,t,a,dur=.4){const k=1-seg(t,a,a+dur);o.e.style.opacity=k}
+// ---------- backgrounds
+function lightBg(parent,seed=0){const bg=el('div','abs',parent,'inset:0;width:1920px;height:1080px;background:#eaf3ff');const g=[el('div','glow',bg,'width:1100px;height:900px;background:#0066f2;opacity:.85'),el('div','glow',bg,'width:900px;height:640px;background:#73c7ff;opacity:.85'),el('div','glow',bg,'width:1000px;height:700px;background:#f5faff;opacity:.9')];
+  return {el:bg,upd(t){const a=t*.35+seed;g[0].style.transform=`translate(${1000+Math.sin(a)*120}px,${420+Math.cos(a*.8)*60}px)`;g[1].style.transform=`translate(${1250+Math.cos(a*.9)*90}px,${-220+Math.sin(a)*60}px)`;g[2].style.transform=`translate(${-300+Math.sin(a*.7)*80}px,${-200+Math.cos(a)*50}px)`}}}
+function darkBg(parent){const bg=el('div','abs',parent,'inset:0;width:1920px;height:1080px;background:#050a24');const g=[el('div','glow',bg,'width:1000px;height:800px;background:#0866ff;opacity:.55'),el('div','glow',bg,'width:800px;height:600px;background:#3a86ff;opacity:.35')];return {el:bg,upd(t){const a=t*.4;g[0].style.transform=`translate(${450+Math.sin(a)*140}px,${380+Math.cos(a*.8)*70}px)`;g[1].style.transform=`translate(${1100+Math.cos(a*.9)*100}px,${-80+Math.sin(a)*60}px)`}}}
+function chip(parent,txt,x,y){const c=el('div','chip',parent,`left:${x}px;top:${y}px`);el('i','',c);c.append(txt);return c}
+function popChip(c,t,a,x,y,dir=1){const k=ob(seg(t,a,a+.5));c.style.opacity=clamp(seg(t,a,a+.25));c.style.transform=`translate(${(1-k)*dir*40}px,${(1-k)*30}px) scale(${.8+.2*k})`}
+
+const scenes=[]
+function scene(start,end,build,opts={}){const sc=el('div','sc',stage);sc.style.display='none';const S={start,end,sc,fi:opts.fi??0.45,dark:opts.dark,z:scenes.length};S.upd=build(sc,S);scenes.push(S)}
+// ======================================================= SCENES
+const T_END=72.7
+// ---- S0 hook 0–6.2
+scene(0,6.4,(sc)=>{const bg=darkBg(sc);sc.classList.add('dark');
+  const t1=words(sc,'11:42 PM.','h1','left:160px;top:330px',230);
+  const t2=words(sc,"The music upstairs won't stop.",'h1','left:160px;top:330px',120);
+  const t3=words(sc,'You file a complaint.','h1','left:160px;top:330px',120);
+  const t4=words(sc,'And then, nothing.','h1','left:160px;top:330px',120);
+  for(const o of [t1,t2,t3,t4]) o.e.style.color='#fff';
+  const bars=el('div','abs',sc,'left:0;top:auto;bottom:0;width:1920px;height:420px');const B=[];for(let i=0;i<96;i++){B.push(el('div','',bars,`position:absolute;bottom:0;left:${i*20+3}px;width:12px;border-radius:6px 6px 0 0;background:linear-gradient(#9cc2ff,#0866ff 60%,#050a24)`))}
+  const tick=el('div','chip',sc,'left:160px;top:640px;background:rgba(255,255,255,.1);color:#fff;backdrop-filter:blur(20px);box-shadow:none;border:1px solid rgba(255,255,255,.2)');tick.innerHTML='<i style="background:#7aa8ff"></i>Status: Received';
+  const dots=el('div','h2',sc,'left:460px;top:643px;font-size:34px;color:#9fb2dc');
+  const flash=el('div','abs',sc,'inset:0;width:1920px;height:1080px;background:#fff;opacity:0');
+  return t=>{bg.upd(t);reveal(t1,t,.15,.1,.9,60,20);t1.e.style.opacity=1-seg(t,1.55,1.85);
+    reveal(t2,t,1.8,.07,.6);t2.e.style.opacity=1-seg(t,3.2,3.5);
+    reveal(t3,t,3.45,.07,.6);t3.e.style.opacity=1-seg(t,4.6,4.9);
+    reveal(t4,t,4.85,.09,.7);
+    const loud=seg(t,0,.8)*(1-seg(t,4.9,5.6))*(1-.5*seg(t,3.2,4.8));
+    B.forEach((b,i)=>{const n=.5+.5*Math.sin(t*9+i*.7)*Math.sin(t*5.3+i*.31);const e=Math.abs(Math.sin(t*2.1+i*.13));const h=6+loud*(40+300*n*e*(.5+.5*Math.sin(i*.09+t)))+ (1-loud)*3;b.style.height=h+'px';b.style.opacity=.9});
+    const tk=seg(t,3.6,4.1);tick.style.opacity=tk;tick.style.transform=`translateY(${(1-eo(tk))*20}px)`;
+    dots.textContent=t>4.2?'.'.repeat(1+Math.floor((t*3)%3)):'';dots.style.opacity=seg(t,4.2,4.5);
+    flash.style.opacity=seg(t,5.8,6.4)}},{fi:0.01})
+// ---- S1 logo 6.2–10.4
+scene(6.2,10.4,(sc,S)=>{const bg=lightBg(sc,1);
+  const rings=[0,1,2].map(i=>{const r=el('div','abs',sc,`left:960px;top:470px;width:260px;height:260px;margin:-130px 0 0 -130px;border-radius:50%;border:3px solid #0866ff`);return r});
+  const logo=el('img','abs',sc,'left:960px;top:400px;width:210px;height:210px;margin:-105px 0 0 -105px;border-radius:47px;box-shadow:0 30px 80px rgba(8,102,255,.35)');logo.src='build/img/logo.png';
+  const name=el('div','h1',sc,'left:0;width:1920px;text-align:center;top:560px;font-size:210px;letter-spacing:-.045em;color:#0866ff');const L=[...'Chime'].map(c=>{const s=el('span','w',name);s.textContent=c;return s});
+  const tag=words(sc,'Give every complaint a heartbeat.','h2','left:0;width:1920px;text-align:center;top:800px;font-weight:600;color:#0a0f1e',54);tag.e.style.textAlign='center';
+  const ecg=el('div','abs',sc,'left:560px;top:900px;width:800px;height:100px');ecg.innerHTML='<svg width="800" height="100" viewBox="0 0 800 100"><defs><linearGradient id="eg" x1="0" x2="800" gradientUnits="userSpaceOnUse"><stop stop-color="#9cc2ff"/><stop offset=".5" stop-color="#0866ff"/><stop offset="1" stop-color="#050a24"/></linearGradient></defs><path id="ep" d="M0 60 H300 l20 0 l14 -34 l22 70 l16 -60 l12 24 H800" fill="none" stroke="url(#eg)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  const ep=ecg.querySelector('#ep');const len=ep.getTotalLength();ep.style.strokeDasharray=len;
+  return t=>{const lt=t-S.start;bg.upd(t);
+    rings.forEach((r,i)=>{const k=seg(lt,.5+i*.35,2.4+i*.35);r.style.opacity=k>0&&k<1?(1-k)*.5:0;r.style.transform=`scale(${.5+k*3.2})`});
+    const k=ob(seg(lt,.2,.9));logo.style.transform=`scale(${.2+.8*k}) translateY(${-seg(lt,1.6,2.2)*60}px)`;logo.style.opacity=clamp(seg(lt,.2,.45));
+    logo.style.top=lerp(400,330,eio(seg(lt,1.5,2.3)))+'px';
+    name.style.top=lerp(640,540,eio(seg(lt,1.4,2.2)))+'px';
+    L.forEach((s,i)=>{const kk=ob(seg(lt,1.55+i*.07,2.3+i*.07));s.style.opacity=clamp(seg(lt,1.55+i*.07,1.8+i*.07));s.style.transform=`translateY(${(1-kk)*110}px) scale(${.7+.3*kk})`;s.style.filter=`blur(${(1-clamp(kk))*12}px)`});
+    reveal(tag,lt,2.4,.07,.7,30,10);ep.style.strokeDashoffset=len*(1-eo(seg(lt,2.6,3.5)));ecg.style.opacity=seg(lt,2.6,2.8);
+    S.sc.style.opacity=1-seg(lt,4.0,4.4)*0}},{fi:.5})
+// ---- generic phone scene helper pieces -------------------------------------------------
+function phoneScene(){}
+// ---- S2 onboarding 10.6–18.4  (clip speed 2.2x)
+scene(10.2,18.4,(sc,S)=>{const bg=lightBg(sc,2);const ph=Phone(sc);
+  const eb=el('div','eb',sc,'left:170px;top:210px');eb.textContent='01  ·  ONBOARDING';
+  const h=words(sc,'Start where you are.','h1','left:170px;top:270px',112);h.e.style.whiteSpace='normal';h.e.style.width='820px';
+  const sub=words(sc,'Pick your block, the sounds that wake you, and say hello out loud.','h2','left:170px;top:560px;width:780px',38);sub.e.style.whiteSpace='normal';
+  const items=['Pick your neighborhood','Choose the sounds','Say hello','You are ready'].map((s,i)=>chip(sc,s,170,720+i*80));items.forEach(c=>c.style.fontSize='27px');
+  return t=>{const lt=t-S.start;bg.upd(t);const f=lt*2.1*(META.onboarding?META.onboarding.fps:30);ph.clip('onboarding',f);const k=eo(seg(lt,0,.9));ph.place(lerp(1500,1070,k),lerp(1200,90,k),.9,{ry:lerp(-30,-9,k),rx:lerp(8,2,k),rz:lerp(6,1.5,k)});
+    eb.style.opacity=seg(lt,.2,.6);reveal(h,lt,.3,.08);reveal(sub,lt,.9,.03,.6,24,8);
+    const total=(META.onboarding?META.onboarding.frames:600)/(30*2.1);items.forEach((c,i)=>{const a=.9+i*.3;popChip(c,lt,a);const on=lt/(8.2)*4>=i+0.2;c.style.background=on?'rgba(255,255,255,.95)':'rgba(255,255,255,.55)';c.querySelector('i').style.background=on?'#0866ff':'#9cb4dc'});
+    ph.el.style.opacity=1}},{})
+// ---- S3 report 18.4–28.4
+scene(18.2,26.0,(sc,S)=>{const bg=lightBg(sc,3);const ph=Phone(sc);
+  const eb=el('div','eb',sc,'left:170px;top:190px');eb.textContent='02  ·  WHAT’S BOTHERING YOU?';
+  const h=words(sc,'Say it out loud.','h1','left:170px;top:250px;width:900px',108);h.e.style.whiteSpace='normal';
+  const sub=words(sc,'Or type it. Chime listens, and the mic turns into Send when you are done.','h2','left:170px;top:420px;width:760px',38);sub.e.style.whiteSpace='normal';
+  const q=el('div','abs',sc,'left:170px;top:640px;width:760px;font-size:44px;font-weight:600;letter-spacing:-.02em;line-height:1.25;color:#0a0f1e;border-left:6px solid #0866ff;padding-left:28px');const qt='“Loud music from the apartment upstairs, going since 11 PM.”';
+  const c1=chip(sc,'How is it affecting you? Optional',1270,150),c2=chip(sc,'Mic becomes Send',1330,930),c3=chip(sc,'Hears you, even offline',150,900);
+  return t=>{const lt=t-S.start;bg.upd(t);const f=0.5*30+lt*30;ph.clip('report',f);const k=eo(seg(lt,0,.9));ph.place(lerp(1500,1000,k)+Math.sin(lt*.8)*6,lerp(1150,95,k),.9,{ry:lerp(-26,-7,k)+Math.sin(lt*.6)*1.4,rx:2,rz:lerp(5,0,k)});
+    eb.style.opacity=seg(lt,.2,.6);reveal(h,lt,.25,.09);reveal(sub,lt,.8,.03,.6,24,8);
+    const n=Math.floor(clamp(seg(lt,6.1,8.7))*qt.length);q.textContent=qt.slice(0,n)+(n>0&&n<qt.length&&Math.floor(lt*3)%2?'▍':'');q.style.opacity=n>0?1:0;
+    popChip(c1,lt,3.1,0,0,-1);popChip(c2,lt,8.6,0,0,-1);c3.style.display='none';
+    c1.style.opacity*=1-seg(lt,6,6.4)}},{})
+// ---- S4 sent 29.0–34.2  (report clip marks.send → follow)
+scene(25.8,30.4,(sc,S)=>{const bg=lightBg(sc,4);const ph=Phone(sc);
+  const rings=[0,1,2,3].map(i=>el('div','abs',sc,`left:560px;top:540px;width:300px;height:300px;margin:-150px 0 0 -150px;border-radius:50%;border:3px solid #0866ff`));
+  const eb=el('div','eb',sc,'left:1060px;top:270px');eb.textContent='03  ·  SENT';
+  const h=words(sc,'We heard you.','h1','left:1060px;top:330px',112);
+  const sub=words(sc,'Your voice became a waveform, then a check. The official reference types itself in.','h2','left:1060px;top:520px;width:700px',38);sub.e.style.whiteSpace='normal';
+  const ref=chip(sc,'CHM-48213',1060,730);ref.style.fontSize='54px';ref.style.letterSpacing='.06em';ref.style.fontWeight='700';
+  const note=el('div','h2',sc,'left:1060px;top:870px;font-size:28px;color:#6a7aa0');note.textContent='Prototype reference, not a live 311 filing.';
+  return t=>{const lt=t-S.start;bg.upd(t);const m=META.report.marks;const f=m.send+lt*30;ph.clip('report',f);
+    const k=eo(seg(lt,0,.7));ph.place(lerp(860,330,k),lerp(300,85,k),lerp(.7,.93,k),{ry:lerp(-18,6,k),rz:lerp(-4,0,k)});
+    rings.forEach((r,i)=>{const kk=seg(lt,1.0+i*.5,3.0+i*.5);r.style.opacity=kk>0&&kk<1?(1-kk)*.45:0;r.style.transform=`scale(${.6+kk*3.2})`;r.style.left='540px';r.style.top='520px'});
+    eb.style.opacity=seg(lt,1.3,1.7);reveal(h,lt,1.4,.1,.8);reveal(sub,lt,2.1,.03,.6,20,8);popChip(ref,lt,3.0,0,0);note.style.opacity=seg(lt,3.6,4)}},{})
+// ---- S5 track 34.2–44.4
+scene(30.2,39.6,(sc,S)=>{const bg=lightBg(sc,5);const ph=Phone(sc);
+  const eb=el('div','eb',sc,'left:170px;top:190px');eb.textContent='04  ·  FOLLOW YOUR SIGNAL';
+  const h=words(sc,'A wave that becomes a skyline.','h1','left:170px;top:230px;width:820px',92);h.e.style.whiteSpace='normal';
+  const sub=words(sc,'Waiting is the hardest part. The line stays put. Only the gradient travels, and every step is said in plain words.','h2','left:170px;top:590px;width:780px',34);sub.e.style.whiteSpace='normal';
+  const st=['We heard you.','Sent to the NYPD.','We are on the way.'].map((s,i)=>chip(sc,s,170,760+i*0));st.forEach(c=>{c.style.fontSize='26px'});
+  const sky=el('div','abs',sc,'left:1500px;top:190px;width:340px;height:90px;opacity:.9');sky.innerHTML='<svg width="340" height="90" viewBox="0 0 340 64"><defs><linearGradient id="sg" gradientUnits="userSpaceOnUse" x1="0" x2="340"><stop id="s1" offset="0" stop-color="#9cc2ff"/><stop id="s2" offset=".5" stop-color="#0866ff"/><stop id="s3" offset="1" stop-color="#050a24"/></linearGradient></defs><path d="M0 58 L44 58 L66 52 L84 46 L98 50 L114 38 L130 44 L144 30 L156 8 L162 2 L168 8 L178 30 L192 40 L206 34 L220 44 L234 28 L242 16 L250 28 L262 40 L280 50 L300 57 L340 58" fill="none" stroke="url(#sg)" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  const toast=chip(sc,'We are on the way.',1380,860);
+  return t=>{const lt=t-S.start;bg.upd(t);const m=META.report.marks;const f=m.follow+30*.3+lt*30;ph.clip('report',f);const k=eo(seg(lt,0,.8));ph.place(lerp(1500,1050,k),lerp(1100,90,k),.92,{ry:lerp(-24,-6,k),rz:lerp(4,0,k)});
+    eb.style.opacity=seg(lt,.2,.6);reveal(h,lt,.25,.09);reveal(sub,lt,.9,.03,.6,20,8);
+    const pos=[1.6,4.4,7.4];st.forEach((c,i)=>{popChip(c,lt,pos[i]-.2,0,0);c.style.left='170px';c.style.top=(800+i*78)+'px'});
+    sky.style.opacity=seg(lt,.9,1.4)*.9;const o=(lt*.35)%1;const sp=document.getElementById('sg');
+    if(sp){const xs=lt*140%340;sp.setAttribute('x1',-340+xs);sp.setAttribute('x2',xs)}
+    toast.style.display='none'}},{})
+// ---- S6 heard 44.6–51.8 (dark, rings)
+scene(39.4,45.8,(sc,S)=>{const bg=darkBg(sc);sc.classList.add('dark');const ph=Phone(sc);
+  const rings=[0,1,2,3,4].map(i=>el('div','abs',sc,`left:520px;top:540px;width:900px;height:900px;margin:-450px 0 0 -450px;border-radius:50%;border:3px solid rgba(110,170,255,.9)`));
+  const eb=el('div','eb',sc,'left:1120px;top:210px;color:#9cc2ff');eb.textContent='05  ·  WE LISTENED';
+  const h=words(sc,'We listened.','h1','left:1120px;top:270px',124);h.e.style.color='#fff';
+  const sub=words(sc,'We went to Williamsburg and heard it for ourselves. What you reported was real, and now it is on record.','h2','left:1120px;top:480px;width:660px',38);sub.e.style.whiteSpace='normal';
+  const q=el('div','abs',sc,'left:1120px;top:760px;width:640px;font-size:34px;font-weight:600;line-height:1.3;color:#e8f0ff;border-left:6px solid #3a86ff;padding-left:26px');q.textContent='“Loud music from the apartment upstairs, going since 11 PM.”';
+  return t=>{const lt=t-S.start;bg.upd(t);const m=META.report.marks;const f=m.heard+lt*30;ph.clip('report',f);
+    const k=eo(seg(lt,0,.8));ph.place(lerp(-300,260,k),lerp(300,90,k),lerp(.6,.92,k),{ry:lerp(18,-5,k),rz:lerp(-4,0,k)});
+    rings.forEach((r,i)=>{const kk=((lt*.55+i/5)%1);r.style.opacity=(1-Math.abs(kk-.5)*2)*.5*seg(lt,.5,1.2);r.style.transform=`scale(${1.35-kk*1.1})`;r.style.left='555px';r.style.top='545px'});
+    eb.style.opacity=seg(lt,.9,1.3);reveal(h,lt,1.0,.1,.9);reveal(sub,lt,1.8,.03,.6,20,8);q.style.opacity=seg(lt,3.2,3.8);q.style.transform=`translateY(${(1-seg(lt,3.2,3.8))*20}px)`}},{fi:.6})
+// ---- S7 closure 51.4–57.6
+scene(45.6,52.0,(sc,S)=>{const bg=lightBg(sc,6);const ph=Phone(sc);
+  const eb=el('div','eb',sc,'left:170px;top:210px');eb.textContent='06  ·  DID IT GET BETTER?';
+  const h=words(sc,'Glad it’s quiet.','h1','left:170px;top:270px;width:900px',130);h.e.style.whiteSpace='normal';
+  const sub=words(sc,'You confirm what changed. That becomes your own outcome record, and the city’s response becomes visible.','h2','left:170px;top:470px;width:760px',38);sub.e.style.whiteSpace='normal';
+  const cs=['Warning issued to the source','Closed in about 1h 20m','Your record, saved'].map((s,i)=>chip(sc,s,170,730+i*86));
+  return t=>{const lt=t-S.start;bg.upd(t);const m=META.report.marks;const f=m.closure+lt*30*1.0;ph.clip('report',f);const k=eo(seg(lt,0,.8));ph.place(lerp(1500,1060,k),lerp(1100,90,k),.92,{ry:lerp(-24,-6,k),rz:lerp(4,0,k)});
+    eb.style.opacity=seg(lt,.2,.6);reveal(h,lt,.25,.09);reveal(sub,lt,.8,.03,.6,20,8);cs.forEach((c,i)=>popChip(c,lt,3.0+i*.35,0,0))}},{})
+// ---- S8 beyond 57.4–63.8
+scene(51.8,58.4,(sc,S)=>{const bg=lightBg(sc,7);const a=Phone(sc),b=Phone(sc);
+  const eb=el('div','eb',sc,'left:1090px;top:230px');eb.textContent='07  ·  BEYOND THE APP';
+  const h=words(sc,'Where you already are.','h1','left:1090px;top:290px;width:760px',104);h.e.style.whiteSpace='normal';
+  const sub=words(sc,'A real iOS banner on the Home Screen, and widgets in three sizes, so you know you were heard without opening anything.','h2','left:1090px;top:590px;width:700px',34);sub.e.style.whiteSpace='normal';
+  const c1=chip(sc,'iOS notification banner',1090,860),c2=chip(sc,'Small · medium · large widgets',1090,946);c2.style.fontSize='26px';c1.style.fontSize='26px';
+  return t=>{const lt=t-S.start;bg.upd(t);const nm=META.notices.frames, wm=META.widgets.frames;
+    a.clip('notices',nm-30*5.4+lt*30);b.clip('widgets',wm-30*6.6+lt*30);
+    const k=eo(seg(lt,0,.8));a.place(lerp(-300,90,k),lerp(900,120,k),.86,{ry:lerp(18,8,k),rz:lerp(-4,-1,k)});b.place(lerp(-100,540,k),lerp(1200,190,k),.86,{ry:lerp(18,4,k),rz:lerp(4,1,k)});
+    eb.style.opacity=seg(lt,.3,.7);reveal(h,lt,.35,.09);reveal(sub,lt,1.0,.03,.6,20,8);popChip(c1,lt,2.4,0,0);popChip(c2,lt,2.8,0,0)}},{})
+// ---- S9 city + insights 63.6–70.6
+scene(58.2,65.4,(sc,S)=>{const bg=lightBg(sc,8);const a=Phone(sc),b=Phone(sc);
+  const eb=el('div','eb',sc,'left:1090px;top:230px');eb.textContent='08  ·  THE CITY, THE TREND';
+  const h=words(sc,'See the block. See the trend.','h1','left:1090px;top:290px;width:760px',100);h.e.style.whiteSpace='normal';
+  const sub=words(sc,'The city tab is built from the NYC 3D Building Model. Insights shows quiet nights, reports and how fast the city responds, all under one range switch.','h2','left:1090px;top:600px;width:720px',32);sub.e.style.whiteSpace='normal';
+  const cs=['NYC 3D Building Model','7 / 30 / 90 days','Example data, labeled'].map((s,i)=>chip(sc,s,1090,860+i*0));cs.forEach((c,i)=>{c.style.fontSize='24px';c.style.left='1090px';c.style.top=[860,930,1000][i]+'px'});
+  return t=>{const lt=t-S.start;bg.upd(t);a.still('build/img/18-city-map.png');b.clip('insights',30*1.6+lt*30*2.4);
+    const k=eo(seg(lt,0,.8));a.place(lerp(-300,80,k),lerp(1000,100,k),.88,{ry:lerp(20,9,k),rz:lerp(-4,-1,k)});b.place(lerp(-100,520,k),lerp(1200,190,k),.88,{ry:lerp(20,5,k),rz:lerp(4,1,k)});
+    a.img.style.transform=`scale(${1.05+lt*.02}) translate(${-lt*3}px,0)`;a.img.style.objectPosition='50% 40%';
+    eb.style.opacity=seg(lt,.3,.7);reveal(h,lt,.35,.07);reveal(sub,lt,1.1,.03,.6,20,8);cs.forEach((c,i)=>popChip(c,lt,2.6+i*.3,0,0))}},{})
+// ---- S10 outro 70.4–end
+scene(65.2,T_END,(sc,S)=>{const bg=lightBg(sc,9);const fan=['d1-report','d2-sent','d3-track','d4b-heard','d5-insights'].map(n=>{const p=Phone(sc);p.still(`build/img/${n}.png`);return p});
+  const logo=el('img','abs',sc,'left:960px;top:150px;width:130px;height:130px;margin:-65px 0 0 -65px;border-radius:34px;box-shadow:0 24px 60px rgba(8,102,255,.35)');logo.src='build/img/logo.png';
+  const name=el('div','h1',sc,'left:0;width:1920px;text-align:center;top:235px;font-size:170px;letter-spacing:-.045em;color:#0866ff');name.textContent='Chime';
+  const tag=words(sc,'Give every complaint a heartbeat.','h2','left:0;width:1920px;text-align:center;top:450px;font-weight:600;color:#0a0f1e',54);tag.e.style.textAlign='center';
+  const hk=el('div','h2',sc,'left:0;width:1920px;text-align:center;top:560px;font-size:32px;font-weight:600;color:#0a0f1e');hk.textContent='Civic by Design  ·  AIGA × Designpreneurs Hackathon';
+  const by=el('div','h2',sc,'left:0;width:1920px;text-align:center;top:612px;font-size:26px;color:#4a5878');by.textContent='Lakshman Thota  ·  Prototype with simulated 311 data';
+  return t=>{const lt=t-S.start;bg.upd(t);
+    fan.forEach((p,i)=>{const d=i-2;const k=eo(seg(lt,.1+i*.1,1.1+i*.1));p.place(960+d*290-213*.46,lerp(1250,740+Math.abs(d)*36,k),.46,{ry:d*-10,rz:d*5,op:k})});
+    const k=ob(seg(lt,.8,1.5));logo.style.opacity=seg(lt,.8,1.1);logo.style.transform=`scale(${.3+.7*k})`;
+    name.style.opacity=seg(lt,1.0,1.3);name.style.transform=`translateY(${(1-eo(seg(lt,1.0,1.8)))*60}px)`;
+    reveal(tag,lt,1.6,.06,.7,24,8);hk.style.opacity=seg(lt,2.4,2.9);by.style.opacity=seg(lt,2.8,3.3);
+    S.sc.style.opacity=1-seg(lt,T_END-S.start-.5,T_END-S.start)*0}},{})
+// ======================================================= driver
+window.ready=loadMeta()
+window.draw=async function(t){pend.length=0
+  for(const S of scenes){const vis=t>=S.start&&t<S.end+S.fi+0.05;S.sc.style.display=vis?'block':'none';if(vis){const op=clamp(seg(t,S.start,S.start+S.fi));S.sc.style.opacity=op;S.sc.style.zIndex=S.z;S.upd(t)}}
+  await Promise.all(pend);const imgs=[...document.images];await Promise.all(imgs.map(i=>i.complete?0:new Promise(r=>{i.onload=i.onerror=r})));
+  return true}
+</script></body></html>
