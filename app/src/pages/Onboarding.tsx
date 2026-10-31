@@ -3,6 +3,7 @@ import { Bell, Check, ChevronLeft, MapPin, Search } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { VoiceBars, VoiceOrb } from "@/components/ui/voice-orb"
+import { ListeningEar } from "@/components/ui/listening-ear"
 import { ShaderBackground } from "@/components/ui/waves-shaders-homlu-ui"
 import { useVoiceLevel } from "@/hooks/use-voice-level"
 import { AREAS, NOISE_TYPES, type AreaId, type Profile } from "@/lib/data"
@@ -79,11 +80,11 @@ function Welcome() {
     <div className="flex flex-1 flex-col">
       <div className="relative mt-3 flex-1 min-h-[320px] overflow-hidden rounded-[32px]">
         <ShaderBackground className="absolute inset-0 h-full w-full" />
-        <img
-          src="logo.png"
-          alt="Chime"
-          className="anim-rise absolute top-1/2 left-1/2 size-[112px] -translate-x-1/2 -translate-y-1/2 rounded-[28px] shadow-[0_14px_40px_rgb(0_0_0/0.35)]" style={{ animationDelay: "0.1s" }}
-        />
+        <div className="anim-rise absolute inset-0 grid place-items-center" style={{ animationDelay: "0.1s" }}>
+          <ListeningEar className="size-[176px]" />
+        </div>
+        <img src="logo.png" alt="Chime" className="absolute top-4 left-4 size-10 rounded-[11px] shadow-[0_6px_18px_rgb(0_0_0/0.3)]" />
+        <p className="pointer-events-none absolute inset-x-0 bottom-4 text-center text-[13px] font-medium text-white/85">Tap the ear</p>
       </div>
       <div className="pt-7">
         <h1 className="anim-rise text-[34px] leading-[1.06] font-semibold tracking-[-0.03em] text-balance" style={{ animationDelay: "0.25s" }}>Every noise complaint gets a heartbeat.</h1>
