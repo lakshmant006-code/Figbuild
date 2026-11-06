@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: chime
+    runtime: static
+    buildCommand: echo "static site, nothing to build"
+    staticPublishPath: .
+    headers:
+      - path: /sw.js
+        name: Cache-Control
+        value: public, max-age=0, must-revalidate
+      - path: /index.html
+        name: Cache-Control
+        value: public, max-age=0, must-revalidate
+      - path: /areas/*
+        name: Cache-Control
+        value: public, max-age=2592000

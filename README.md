@@ -1,3 +1,33 @@
+# Chime: the installable app
+
+`index.html` is the Chime prototype, the phone app: say a noise complaint out loud, watch the case move through five stages, get a banner when the city responds, and open the 3D map. It is one static page, so there is nothing to build or install on a server.
+
+## Put it on a phone
+
+1. Deploy this repo as a static site (Vercel, Render Static Site, Netlify or GitHub Pages). The publish directory is the repo root, there is no build command.
+   - **Vercel:** import the repo, framework "Other", leave the build command empty. `vercel.json` sets the cache headers.
+   - **Render:** New, then Static Site, publish directory `.`, no build command. `render.yaml` has the same settings.
+2. Open the site on the phone.
+   - **iPhone:** Safari, Share, **Add to Home Screen**.
+   - **Android:** Chrome, menu, **Install app** (or Add to Home screen).
+3. It opens full screen with no browser bar, and works offline after the first visit (`sw.js` keeps the app and the map data it has used).
+
+On a phone, or when installed, the app fills the screen. On a laptop it shows inside an iPhone frame. Add `?full` to the address to force full screen, or `?frame` to force the frame.
+
+## App files
+
+| Path | What it is |
+| --- | --- |
+| `index.html` | The Chime app (all screens and interactions in one file) |
+| `manifest.webmanifest`, `icons/` | The home screen name, colours and icons |
+| `sw.js` | Offline support: caches the app, fonts, map library and building meshes |
+| `areas/` | Building meshes for the 3D map, loaded on demand |
+| `vercel.json`, `render.yaml` | Deploy settings and cache headers |
+
+The map loads deck.gl and the fonts from a CDN the first time, so the first visit needs a connection.
+
+---
+
 # Hello? — NYC noise complaint concept
 
 Hello? gives every noise complaint a heartbeat: a unique animated sound wave that changes as the city acts on it, and settles into a calm line when the resident confirms it got quieter. Built for the NYC noise complaint design challenge.
