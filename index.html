@@ -298,4 +298,130 @@ function FullScreen({children:e}){return(0,L.jsx)(`div`,{className:`phone-screen
 </script>
 
 <script>if("serviceWorker" in navigator&&location.protocol!=="file:"){addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}</script>
+<style id="hm-style">
+/* Chime motion pack: soft mesh, glass cards, springy touch, tilt, bubbles */
+.phone-screen{background:#f5f8fd!important}
+.phone-screen::before{content:"";position:absolute;inset:-25%;z-index:0;pointer-events:none;background:
+  radial-gradient(38% 28% at 20% 16%,#cfe0ff 0,transparent 72%),
+  radial-gradient(34% 28% at 84% 26%,#e6dcff 0,transparent 72%),
+  radial-gradient(44% 34% at 22% 84%,#cdf0e7 0,transparent 72%),
+  radial-gradient(40% 30% at 88% 88%,#ffe3c9 0,transparent 72%),#f5f8fd;
+  filter:blur(18px) hue-rotate(var(--hm-hue,0deg));animation:hmDrift 24s ease-in-out infinite alternate;transition:filter 1.1s ease}
+@keyframes hmDrift{from{transform:translate(0,0) scale(1)}to{transform:translate(-4%,3%) scale(1.08) rotate(3deg)}}
+.phone-screen>.bg-background{z-index:1;background:transparent!important}
+.phone-screen .moment{background:rgba(255,255,255,.62)!important;-webkit-backdrop-filter:blur(18px) saturate(1.4);backdrop-filter:blur(18px) saturate(1.4);border:1px solid rgba(255,255,255,.85);box-shadow:0 18px 34px -20px rgba(20,40,90,.38),inset 0 1px 0 rgba(255,255,255,.9);transform:perspective(900px) rotateX(var(--hm-rx,0deg)) rotateY(var(--hm-ry,0deg));transition:transform .55s cubic-bezier(.2,.9,.25,1.12)}
+.phone-screen .flex-wrap.gap-2>button:not([class*="bg-accent"]){background:rgba(255,255,255,.7)!important;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.9);box-shadow:0 6px 14px -8px rgba(20,40,90,.3)}
+.phone-screen nav ul>span[aria-hidden]{transition-timing-function:cubic-bezier(.3,1.6,.5,1)!important;transition-duration:.7s!important}
+.phone-screen nav button svg{transition-timing-function:cubic-bezier(.3,1.7,.5,1)!important}
+.phone-screen button:active{transition-duration:.1s!important}
+@keyframes hmPop{0%{transform:scale(.9)}45%{transform:scale(1.14)}100%{transform:scale(1)}}
+.hm-pop{animation:hmPop .5s cubic-bezier(.3,1.6,.5,1)}
+.hm-rip{position:absolute;border-radius:50%;pointer-events:none;background:rgba(255,255,255,.5);transform:scale(0);animation:hmRip .75s ease-out forwards}
+@keyframes hmRip{to{transform:scale(1);opacity:0}}
+@keyframes hmRise{from{opacity:0;transform:translateY(18px) scale(.97);filter:blur(6px)}to{opacity:1;transform:none;filter:none}}
+.hm-in{animation:hmRise .7s cubic-bezier(.2,.9,.25,1.05) both}
+
+.hm-bubbles{padding:16px 16px 12px!important}
+.hm-bubbles h3{margin:0;font:700 17px/1.2 inherit;letter-spacing:-.01em}
+.hm-bubbles p{margin:2px 0 0;font-size:13px;color:#6b7280}
+.hm-field{position:relative;height:250px;margin:8px -8px 0;overflow:hidden;cursor:grab;touch-action:none;-webkit-mask-image:radial-gradient(closest-side at 50% 50%,#000 68%,transparent 100%);mask-image:radial-gradient(closest-side at 50% 50%,#000 68%,transparent 100%)}
+.hm-b{position:absolute;left:0;top:0;border-radius:50%;display:grid;place-items:center;font:600 12px/1 inherit;color:#1c2a4a;background:rgba(255,255,255,.78);border:1px solid rgba(255,255,255,.95);box-shadow:0 8px 16px -8px rgba(20,40,90,.4);will-change:transform;text-align:center}
+.hm-b small{display:block;font-size:9px;opacity:.6;margin-top:1px}
+.hm-b.you{background:radial-gradient(circle at 35% 30%,#4f9bff,#0866ff);color:#fff;box-shadow:0 0 0 6px rgba(8,102,255,.16),0 12px 22px -8px rgba(8,102,255,.7)}
+.hm-b.sel{background:#fff3c4;box-shadow:0 0 0 5px rgba(255,214,107,.45),0 12px 22px -8px rgba(20,40,90,.45)}
+.hm-info{margin-top:6px;text-align:center;font-size:13px;color:#2b3a5e;min-height:18px}
+@media (prefers-reduced-motion:reduce){.phone-screen::before{animation:none}.hm-in,.hm-pop{animation:none}}
+</style>
+<script id="hm-js">
+(function(){
+  try{
+    var root=function(){return document.querySelector('.phone-screen')};
+    function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
+
+    // ---- tilt the glass cards toward the pointer ----
+    var cur=null;
+    function reset(c){if(!c)return;c.style.setProperty('--hm-rx','0deg');c.style.setProperty('--hm-ry','0deg');if(cur===c)cur=null}
+    document.addEventListener('pointermove',function(e){
+      var c=e.target&&e.target.closest?e.target.closest('.moment:not(.hm-bubbles)'):null;
+      if(!c){if(cur)reset(cur);return}
+      if(cur&&cur!==c)reset(cur);cur=c;
+      var r=c.getBoundingClientRect();
+      c.style.setProperty('--hm-ry',(((e.clientX-r.left)/r.width-.5)*9).toFixed(2)+'deg');
+      c.style.setProperty('--hm-rx',((-((e.clientY-r.top)/r.height-.5))*9).toFixed(2)+'deg');
+    },true);
+    ['pointerup','pointercancel','pointerleave'].forEach(function(t){document.addEventListener(t,function(){reset(cur)},true)});
+
+    // ---- ripple on primary buttons ----
+    document.addEventListener('pointerdown',function(e){
+      var b=e.target&&e.target.closest?e.target.closest('button'):null;
+      if(!b||b.closest('nav')||!/bg-accent|h-\[50px\]/.test(b.className)||b.getBoundingClientRect().width<120)return;
+      var r=b.getBoundingClientRect(),d=Math.max(r.width,r.height)*1.3,s=document.createElement('span');
+      var pos=getComputedStyle(b).position;if(pos==='static')b.style.position='relative';b.style.overflow='hidden';
+      s.className='hm-rip';s.style.width=s.style.height=d+'px';s.style.left=(e.clientX-r.left-d/2)+'px';s.style.top=(e.clientY-r.top-d/2)+'px';
+      b.appendChild(s);setTimeout(function(){s.remove()},800);
+    },true);
+
+    // ---- chips pop when selected, cards rise in, tab hue ----
+    var HUES=[0,40,110,-50],seen=new WeakSet();
+    function scan(){
+      var rt=root();if(!rt)return;
+      rt.querySelectorAll('.moment').forEach(function(m,i){if(!seen.has(m)){seen.add(m);if(!m.classList.contains('hm-bubbles')){m.classList.add('hm-in');m.style.animationDelay=(i*70)+'ms'}}});
+      var btns=[].slice.call(rt.querySelectorAll('nav button')),ai=btns.findIndex(function(b){return b.getAttribute('aria-current')==='page'});
+      if(ai>=0)rt.style.setProperty('--hm-hue',(HUES[ai]||0)+'deg');
+      ensureBubbles();
+    }
+    var prevSel=new WeakMap();
+    new MutationObserver(function(muts){
+      muts.forEach(function(m){
+        if(m.type==='attributes'&&m.target.tagName==='BUTTON'&&m.target.parentElement&&/flex-wrap/.test(m.target.parentElement.className)){
+          var on=/bg-accent/.test(m.target.className);
+          if(on&&!prevSel.get(m.target)){m.target.classList.remove('hm-pop');void m.target.offsetWidth;m.target.classList.add('hm-pop')}
+          prevSel.set(m.target,on);
+        }
+      });
+      clearTimeout(scan.t);scan.t=setTimeout(scan,120);
+    }).observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['class','aria-current']});
+
+    // ---- "Your block" bubble cloud on the Insights screen ----
+    function prng(s){return function(){s=(s*16807)%2147483647;return s/2147483647}}
+    function buildBubbles(sec){
+      var f=sec.querySelector('.hm-field'),info=sec.querySelector('.hm-info'),R=prng(9),D=58,units=['2F','3R','4B','5A','1L','6C','2A','7D','3F','4C','5E','1B','8A','2D','6F','3B'];
+      var dirs=[[1,0],[1,-1],[0,-1],[-1,0],[-1,1],[0,1]],cells=[[0,0]];
+      [1,2,3].forEach(function(k){var q=-k,r=k;for(var s=0;s<6;s++)for(var j=0;j<k;j++){cells.push([q,r]);q+=dirs[s][0];r+=dirs[s][1]}});
+      var bubs=[],pan={x:0,y:0,vx:0,vy:0,drag:false},sel=null,tap=null,down=false,sx=0,sy=0,lx=0,ly=0,lt=0,W=350,H=250,BR=110;
+      cells.forEach(function(qr,i){
+        var x=D*(qr[0]+qr[1]/2)+(R()-.5)*6,y=D*(.866*qr[1])+(R()-.5)*6,you=i===0,size=you?58:42+R()*10,n=1+Math.floor(R()*6),u=units[i%units.length];
+        var el=document.createElement('div');el.className='hm-b'+(you?' you':'');el.style.width=el.style.height=size+'px';
+        el.innerHTML=you?'<span>You</span>':'<span>'+u+'<small>'+n+'x</small></span>';el.dataset.u=u;el.dataset.n=n;el.dataset.you=you?1:0;f.appendChild(el);bubs.push({el:el,x:x,y:y,s:size});
+      });
+      function frame(){
+        if(!f.isConnected)return;
+        if(!pan.drag){pan.x+=pan.vx;pan.y+=pan.vy;pan.vx*=.94;pan.vy*=.94;pan.x-=(pan.x-clamp(pan.x,-BR,BR))*.14;pan.y-=(pan.y-clamp(pan.y,-BR,BR))*.14}
+        W=f.clientWidth||W;
+        bubs.forEach(function(b){var x=b.x+pan.x,y=b.y+pan.y,d=Math.hypot(x,y),s=clamp(1.3-d/215,.3,1.3);
+          b.el.style.transform='translate('+(W/2+x-b.s/2).toFixed(1)+'px,'+(H/2+y-b.s/2).toFixed(1)+'px) scale('+s.toFixed(3)+')';b.el.style.opacity=clamp(s*1.7,.1,1).toFixed(2);b.el.style.zIndex=Math.round(s*10)});
+        requestAnimationFrame(frame);
+      }
+      f.addEventListener('pointerdown',function(e){down=true;pan.drag=true;pan.vx=pan.vy=0;sx=lx=e.clientX;sy=ly=e.clientY;lt=performance.now();tap=e.target.closest('.hm-b');try{f.setPointerCapture(e.pointerId)}catch(_){}});
+      f.addEventListener('pointermove',function(e){if(!down)return;var now=performance.now(),dt=Math.max(1,now-lt),dx=e.clientX-lx,dy=e.clientY-ly;pan.vx=pan.vx*.6+(dx/dt*16)*.4;pan.vy=pan.vy*.6+(dy/dt*16)*.4;pan.x+=dx*(Math.abs(pan.x)>BR?.35:1);pan.y+=dy*(Math.abs(pan.y)>BR?.35:1);lx=e.clientX;ly=e.clientY;lt=now});
+      function up(e){if(!down)return;down=false;pan.drag=false;if(Math.hypot(e.clientX-sx,e.clientY-sy)<7&&tap){
+        if(sel)sel.classList.remove('sel');
+        if(tap.dataset.you==='1'){info.textContent='That is you, grouped with 8 neighbors at this address.';sel=null}
+        else{sel=tap;tap.classList.add('sel');info.textContent='Apt '+tap.dataset.u+' reported '+tap.dataset.n+(tap.dataset.n==='1'?' time':' times')+' this month. Same address, so one case.'}}tap=null}
+      f.addEventListener('pointerup',up);f.addEventListener('pointercancel',up);
+      requestAnimationFrame(frame);
+    }
+    function ensureBubbles(){
+      var st=document.querySelector('.anim-step');
+      if(!st||!/Median reply|reports this week|Quiet nights/i.test(st.textContent)){return}
+      if(st.querySelector('.hm-bubbles'))return;
+      var first=st.querySelector('section.moment');if(!first)return;
+      var sec=document.createElement('section');sec.className='moment hm-bubbles mt-3 rounded-[28px]';
+      sec.innerHTML='<h3>Your block</h3><p>Neighbors who reported the same address. Drag the cloud, tap a bubble.</p><div class="hm-field"></div><div class="hm-info">9 neighbors, 31 reports in 30 days.</div>';
+      first.insertAdjacentElement('afterend',sec);buildBubbles(sec);
+    }
+    scan();
+  }catch(err){try{console.warn('hm overlay',err)}catch(_){}}
+})();
+</script>
 </body></html>
