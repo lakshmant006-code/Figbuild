@@ -553,4 +553,62 @@ function FullScreen({children:e}){return(0,L.jsx)(`div`,{className:`phone-screen
   }catch(err){try{console.warn('hm overlay',err)}catch(_){}}
 })();
 </script>
+<style id="hm-edge-style">
+/* Edge light: a glowing ring that travels around the screen edge, breathes, flares on events and leans toward your finger */
+@property --hm-a{syntax:'<angle>';inherits:false;initial-value:0deg}
+.hm-edge{position:absolute;inset:0;z-index:9000;pointer-events:none;border-radius:var(--hm-r,44px);overflow:hidden;--hm-i:.38;--hm-speed:9s;--hm-tx:50%;--hm-ty:50%;--hm-t:0}
+.hm-edge i{position:absolute;inset:0;border-radius:inherit;pointer-events:none}
+/* the ring */
+.hm-edge .ring,.hm-edge .halo,.hm-edge .touch{padding:var(--hm-w,3px);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
+.hm-edge .ring{background:conic-gradient(from var(--hm-a),rgba(255,255,255,0) 0deg,#7fb2ff 50deg,#ffffff 80deg,#c9a7ff 120deg,rgba(255,255,255,0) 170deg,rgba(255,255,255,0) 200deg,#5ee3ff 250deg,#ffffff 285deg,#ff9ad5 320deg,rgba(255,255,255,0) 360deg);opacity:var(--hm-i);animation:hmSpin var(--hm-speed) linear infinite;transition:opacity .6s ease}
+.hm-edge .halo{--hm-w:16px;background:conic-gradient(from var(--hm-a),rgba(8,102,255,0) 0deg,rgba(8,102,255,.9) 70deg,rgba(150,100,255,.8) 120deg,rgba(8,102,255,0) 175deg,rgba(8,102,255,0) 200deg,rgba(34,211,238,.85) 260deg,rgba(255,120,200,.8) 320deg,rgba(8,102,255,0) 360deg);filter:blur(14px);opacity:calc(var(--hm-i)*.75);animation:hmSpin var(--hm-speed) linear infinite;transition:opacity .6s ease}
+.hm-edge .touch{--hm-w:10px;background:radial-gradient(circle 170px at var(--hm-tx) var(--hm-ty),#fff 0,rgba(140,190,255,.9) 35%,rgba(140,190,255,0) 72%);filter:blur(2px);opacity:var(--hm-t);transition:opacity .35s ease}
+@keyframes hmSpin{to{--hm-a:360deg}}
+/* inner wash that brightens a little with the edge */
+.hm-edge .wash{background:radial-gradient(120% 90% at 50% 50%,rgba(255,255,255,0) 58%,rgba(120,160,255,.16) 100%);opacity:calc(var(--hm-i)*1.4)}
+.hm-edge.breathe{animation:hmBreathe 3.6s ease-in-out infinite}
+@keyframes hmBreathe{0%,100%{--hm-i:.34}50%{--hm-i:.62}}
+.hm-edge.flare{--hm-i:1;--hm-speed:2.6s}
+/* shimmer that travels across the words of a headline, like the "Your reveal is on its way" text */
+.hm-shine{background:linear-gradient(100deg,currentColor 0%,currentColor 38%,rgba(255,255,255,.0) 44%,rgba(8,102,255,.9) 50%,rgba(255,255,255,0) 56%,currentColor 62%,currentColor 100%);background-size:260% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:hmShine 3.2s ease-in-out 1}
+@keyframes hmShine{from{background-position:120% 0}to{background-position:-60% 0}}
+@media (prefers-reduced-motion:reduce){.hm-edge .ring,.hm-edge .halo{animation:none}.hm-edge.breathe{animation:none}.hm-shine{animation:none;-webkit-text-fill-color:currentColor}}
+</style>
+<script id="hm-edge-js">
+(function(){
+  try{
+    var el=null,flareT=0,idleT=0,lastTouch=0,RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+    function mount(){
+      var rt=document.querySelector('.phone-screen');if(!rt)return;
+      if(!el||!el.isConnected){
+        el=document.createElement('div');el.className='hm-edge breathe';el.setAttribute('aria-hidden','true');
+        el.innerHTML='<i class="wash"></i><i class="halo"></i><i class="ring"></i><i class="touch"></i>';rt.appendChild(el);
+      }
+      var cs=getComputedStyle(rt),r=parseFloat(cs.borderTopLeftRadius)||0;
+      el.style.setProperty('--hm-r',(r||(window.innerWidth<=500?40:44))+'px');
+    }
+    function flare(ms){
+      if(!el)return;el.classList.add('flare');el.classList.remove('breathe');clearTimeout(flareT);
+      flareT=setTimeout(function(){el.classList.remove('flare');el.classList.add('breathe')},ms||1500)}
+    // events that deserve a flare: tab changes, big buttons, screens appearing
+    document.addEventListener('click',function(e){var b=e.target&&e.target.closest?e.target.closest('button'):null;if(b)flare(b.closest('nav')?900:1500)},true);
+    var seen=new WeakSet();
+    new MutationObserver(function(){mount();
+      [].forEach.call(document.querySelectorAll('.anim-rise,.hm-sheet,.hm-trackdeck'),function(n){if(!seen.has(n)){seen.add(n);if(n.classList.contains('hm-sheet'))flare(1800)}});
+      var h=document.querySelector('main h1');if(h&&!h.dataset.hmS){h.dataset.hmS='1';h.classList.add('hm-shine');setTimeout(function(){h.classList.remove('hm-shine')},3400)}
+    }).observe(document.body,{subtree:true,childList:true});
+    // finger near an edge pulls the light toward it
+    function near(e){
+      if(!el)return;var rt=el.parentElement.getBoundingClientRect(),x=e.clientX-rt.left,y=e.clientY-rt.top,d=Math.min(x,y,rt.width-x,rt.height-y);
+      el.style.setProperty('--hm-tx',x+'px');el.style.setProperty('--hm-ty',y+'px');
+      el.style.setProperty('--hm-t',d<46?String(Math.max(0,1-d/46)):'0');
+      if(d<46&&performance.now()-lastTouch>400){lastTouch=performance.now();if(!el.classList.contains('flare'))el.style.setProperty('--hm-i','.8')}
+    }
+    function leave(){if(el){el.style.setProperty('--hm-t','0');el.style.removeProperty('--hm-i')}}
+    document.addEventListener('pointermove',near,true);document.addEventListener('pointerdown',near,true);
+    ['pointerup','pointercancel','pointerleave'].forEach(function(t){document.addEventListener(t,leave,true)});
+    mount();setTimeout(function(){mount();flare(2200)},900);
+  }catch(err){try{console.warn('hm edge',err)}catch(_){}}
+})();
+</script>
 </body></html>
