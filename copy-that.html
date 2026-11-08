@@ -304,6 +304,46 @@ section{padding-top:88px}
 .moves p{color:var(--mute);font-size:15px;margin-top:4px}
 @media (max-width:900px){.appwrap{grid-template-columns:1fr;gap:36px}.moves{max-width:none}}
 @media (prefers-reduced-motion:reduce){.tile,.bgmesh{animation:none}}
+
+/* guided flow */
+.ov{position:absolute;inset:0;z-index:52;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:60px 30px 44px;background:linear-gradient(180deg,rgba(243,247,255,.88),rgba(243,247,255,.96));-webkit-backdrop-filter:blur(26px) saturate(1.4);backdrop-filter:blur(26px) saturate(1.4);opacity:0;pointer-events:none;transform:translateY(30px) scale(.97);filter:blur(8px);transition:opacity .45s ease,transform .7s cubic-bezier(.2,.9,.25,1.04),filter .45s ease}
+.ov.on{opacity:1;pointer-events:auto;transform:none;filter:none}
+.ov h3{margin:0;font:800 34px/1.04 var(--display);letter-spacing:-.04em;color:#141B3C}
+.ov h3.huge{font-size:86px;letter-spacing:-.06em;margin-top:6px}
+.ov p{margin:12px 0 0;font:400 15.5px/1.4 var(--display);color:#5B6380;max-width:290px}
+.ovhero{height:230px;display:grid;place-items:center;margin-bottom:6px}
+.orbBig{position:relative;width:120px;height:120px;display:grid;place-items:center}
+.orbBig .core{position:relative;width:104px;height:104px;border-radius:50%;background:radial-gradient(circle at 35% 25%,#8ab8ff,#0866ff 55%,#042a8c);box-shadow:0 22px 44px -14px rgba(8,102,255,.7),inset 0 2px 0 rgba(255,255,255,.4);display:grid;place-items:center}
+.orbBig .core svg{width:50px;height:50px}
+.rg{position:absolute;left:50%;top:50%;border-radius:50%;border:2px solid #0866ff;opacity:0;animation:ringOut 3s ease-out infinite}
+.rg.r1{width:104px;height:104px;margin:-52px 0 0 -52px}.rg.r2{width:104px;height:104px;margin:-52px 0 0 -52px;animation-delay:1s}.rg.r3{width:104px;height:104px;margin:-52px 0 0 -52px;animation-delay:2s}
+@keyframes ringOut{0%{transform:scale(1);opacity:.55}100%{transform:scale(2.6);opacity:0}}
+.ov.on .core{animation:corePop .8s cubic-bezier(.3,1.6,.5,1) both}
+@keyframes corePop{0%{transform:scale(.4);opacity:0}100%{transform:scale(1);opacity:1}}
+.ovbtn{margin-top:26px;width:100%;max-width:330px;height:54px;border:0;border-radius:27px;background:linear-gradient(180deg,#2f7bff,#0558e6);color:#fff;font:700 17px var(--display);cursor:pointer;box-shadow:0 18px 28px -12px rgba(8,102,255,.7),inset 0 1px 0 rgba(255,255,255,.4);transition:transform .3s cubic-bezier(.3,1.6,.5,1)}
+.ovbtn:active{transform:scale(.96)}
+.ovlink{margin-top:14px;border:0;background:none;color:#0866ff;font:600 16px var(--display);cursor:pointer}
+.mono2{font:500 12px var(--mono);letter-spacing:.08em;color:#6b7280;margin-bottom:8px}
+.refcard{margin-top:20px;width:100%;max-width:330px;border-radius:26px;padding:16px 16px 6px;display:grid;gap:2px;justify-items:center}
+.refcard .rk{font:500 9.5px var(--mono);letter-spacing:.1em;color:#6b7280}.refcard b{font:500 26px var(--mono);color:#141B3C;letter-spacing:.02em}.refcard .rt{font:400 13px var(--display);color:#6b7280}
+.refcard canvas{width:100%;height:46px;margin-top:4px}
+.calm{width:300px;height:100px;margin-bottom:6px}
+.calm .cl{stroke-dasharray:260;stroke-dashoffset:260}.calm .ck{stroke-dasharray:60;stroke-dashoffset:60}
+.ov.on .calm .cl{animation:draw 1.2s ease-out .15s forwards}.ov.on .calm .ck{animation:draw .5s ease-out 1.2s forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+.ov.on h3,.ov.on p,.ov.on .ovbtn,.ov.on .ovlink,.ov.on .refcard{animation:hmRise .7s cubic-bezier(.2,.9,.25,1.05) both}
+.ov.on p{animation-delay:.08s}.ov.on .refcard{animation-delay:.14s}.ov.on .ovbtn{animation-delay:.2s}.ov.on .ovlink{animation-delay:.26s}
+.side2{min-width:0}.rail{list-style:none;margin:0 0 28px;padding:0;display:grid;gap:0;max-width:420px;position:relative}
+.rail::before{content:"";position:absolute;left:17px;top:22px;bottom:22px;width:2px;background:var(--line)}
+.rail li{position:relative}
+.rail button{display:grid;grid-template-columns:36px 1fr;grid-template-rows:auto auto;column-gap:14px;width:100%;text-align:left;border:0;background:none;color:var(--fg);padding:9px 0;cursor:pointer;font-family:inherit;border-radius:14px}
+.rail button i{grid-row:1/3;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font:600 13px var(--mono);font-style:normal;background:var(--card);border:2px solid var(--line);color:var(--mute);transition:all .5s cubic-bezier(.3,1.5,.5,1);position:relative;z-index:1}
+.rail button b{font:800 17px var(--display);letter-spacing:-.02em;align-self:end}
+.rail button span{font-size:13px;color:var(--mute);align-self:start}
+.rail button.done i{background:var(--butter);border-color:var(--butter);color:#141B3C}
+.rail button.now i{background:var(--tang);border-color:var(--tang);color:#fff;transform:scale(1.18);box-shadow:0 0 0 6px color-mix(in srgb,var(--tang) 22%,transparent)}
+.rail button:hover b{color:var(--tang)}
+@media (prefers-reduced-motion:reduce){.rg{animation:none}.calm .cl,.calm .ck{stroke-dashoffset:0;animation:none!important}}
 </style>
 
 <button class="themebtn" id="themebtn" type="button">Light / Dark</button>
@@ -438,10 +478,49 @@ section{padding-top:88px}
             </div>
             <div class="hint">Press and hold to drop it</div>
           </div>
+          <!-- guided flow overlays -->
+          <div class="ov on" id="ov-welcome" aria-label="Welcome">
+            <div class="ovhero"><div class="orbBig"><i class="rg r1"></i><i class="rg r2"></i><i class="rg r3"></i><div class="core"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8.5a6 6 0 0 1 12 0c0 3-2 4-3 5.5s-1 3-3 3.5a2.5 2.5 0 0 1-2.5-2.5"/><path d="M9.5 8.5a2.5 2.5 0 0 1 5 0c0 1.5-1.5 2-2 3"/></svg></div></div></div>
+            <h3>Every noise complaint<br>gets a heartbeat.</h3>
+            <p>Report in seconds. Watch the city answer, one step at a time.</p>
+            <button class="ovbtn" data-act="start" type="button">Get started</button>
+          </div>
+          <div class="ov" id="ov-sent" aria-label="Sent">
+            <div class="ovhero"><div class="orbBig"><i class="rg r1"></i><i class="rg r2"></i><i class="rg r3"></i><div class="core"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div></div></div>
+            <h3>We heard you.</h3>
+            <p>You don't have to carry this alone. We'll keep watching.</p>
+            <div class="refcard glass"><span class="rk">OFFICIAL COMPLAINT REFERENCE</span><b id="sentRef">HLO-48213</b><span class="rt" id="sentType">Music or party</span><canvas id="sentWave"></canvas></div>
+            <button class="ovbtn" data-act="follow" type="button">Follow your signal</button>
+            <button class="ovlink" data-act="again" type="button">Report something else</button>
+          </div>
+          <div class="ov" id="ov-listened" aria-label="We listened">
+            <div class="ovhero"><div class="orbBig"><i class="rg r1"></i><i class="rg r2"></i><i class="rg r3"></i><div class="core"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8.5a6 6 0 0 1 12 0c0 3-2 4-3 5.5s-1 3-3 3.5a2.5 2.5 0 0 1-2.5-2.5"/><path d="M9.5 8.5a2.5 2.5 0 0 1 5 0c0 1.5-1.5 2-2 3"/></svg></div></div></div>
+            <div class="mono2" id="lisRef">HLO-48213</div>
+            <h3>We listened.</h3>
+            <p>We went to Williamsburg and heard it for ourselves. What you reported was real, and now it is on record.</p>
+            <button class="ovbtn" data-act="next" type="button">See what happens next</button>
+            <button class="ovlink" data-act="later" type="button">Not now</button>
+          </div>
+          <div class="ov" id="ov-quiet" aria-label="Quiet">
+            <svg class="calm" viewBox="0 0 300 100" fill="none"><path class="cl" d="M0 50 C 60 48, 120 52, 180 50 S 240 50, 252 50" stroke="#8FB0FF" stroke-width="4" stroke-linecap="round"/><path class="ck" d="M258 50 L270 62 L294 34" stroke="#FFD66B" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <h3 class="huge">Ahh.</h3>
+            <p>Logged as quieter. Case closed, with your thumbs-up on the record.</p>
+            <button class="ovbtn" data-act="share" type="button">Share the silence</button>
+            <button class="ovlink" data-act="home" type="button">Back to today</button>
+          </div>
           <div class="toast" id="aToast" role="status"></div>
         </div>
       </div>
     </div>
+    <div class="side2">
+    <ol class="rail" id="rail" aria-label="The flow">
+      <li><button type="button" data-step="0"><i>1</i><b>Welcome</b><span>Say hello</span></button></li>
+      <li><button type="button" data-step="1"><i>2</i><b>Drop it</b><span>Pick the racket, hold to drop</span></button></li>
+      <li><button type="button" data-step="2"><i>3</i><b>We heard you</b><span>Your reference number</span></button></li>
+      <li><button type="button" data-step="3"><i>4</i><b>Follow</b><span>Swipe the five stages</span></button></li>
+      <li><button type="button" data-step="4"><i>5</i><b>We listened</b><span>Someone checked</span></button></li>
+      <li><button type="button" data-step="5"><i>6</i><b>Quiet</b><span>Slide to close the case</span></button></li>
+    </ol>
     <ul class="moves">
       <li><span>01</span><div><b>Swipe the stage cards</b><p>They tilt, blur and settle like they have weight, and the whole background shifts hue as the case moves.</p></div></li>
       <li><span>02</span><div><b>Tilt the tiles</b><p>Hover or drag across a tile and it leans toward you. Idle, it floats.</p></div></li>
@@ -450,6 +529,7 @@ section{padding-top:88px}
       <li><span>05</span><div><b>Hold to drop</b><p>Press and hold the orange orb, pick the racket, and a ripple leaves the screen as a case.</p></div></li>
       <li><span>06</span><div><b>Slide to say quiet</b><p>Skip ahead to the last stage, slide the handle, and the wave exhales into one calm line.</p></div></li>
     </ul>
+    </div>
   </div>
 </section>
 
@@ -743,19 +823,19 @@ section{padding-top:88px}
       if(cur==='today')setHue(closed?150:HUES[stage]);
       target=closed?.02:s.e;
     }
-    function setStage(i){stage=clamp(i,0,4);closed=false;sp=0;paintSlider();refresh()}
+    function setStage(i){stage=clamp(i,0,4);closed=false;sp=0;paintSlider();refresh();if(stage===3&&!lisSeen&&flowStep>=3){lisSeen=true;setTimeout(function(){showOv('listened')},650)}}
     $('#skip').addEventListener('click',function(){setStage(stage+1)});
 
     // ---- slide to confirm ----
     var sh=$('#shandle'),sf=$('#sfill'),sp=0,sDrag=false,TRAVEL=284;
     function paintSlider(){sh.style.transform='translateX('+(sp*TRAVEL)+'px)';sf.style.width=(62+sp*TRAVEL)+'px'}
     dragify(sh,{start:function(){sDrag=true},move:function(dx,dy,tx){sp=clamp(tx/TRAVEL,0,1);paintSlider()},
-      end:function(){sDrag=false;if(sp>.82){sp=1;paintSlider();closed=true;refresh();toast('Ahh. Logged as quieter. Case closed.')}}});
-    $('#nope').addEventListener('click',function(){closed=false;sp=0;paintSlider();setStage(1);toast('Reopened. Your first report is attached.')});
+      end:function(){sDrag=false;if(sp>.82){sp=1;paintSlider();closed=true;refresh();setTimeout(function(){showOv('quiet')},800)}}});
+    $('#nope').addEventListener('click',function(){closed=false;sp=0;paintSlider();setStage(1);hideOv();toast('Reopened. Your first report is attached.')});
 
     // ---- report sheet ----
     var sheet=$('#sheet'),scrim=$('#scrim'),sheetOn=false;
-    function openSheet(){sheetOn=true;sheet.classList.add('on');scrim.classList.add('on');sheet.setAttribute('aria-hidden','false')}
+    function openSheet(){setFlow(1);sheetOn=true;sheet.classList.add('on');scrim.classList.add('on');sheet.setAttribute('aria-hidden','false')}
     function closeSheet(){if(!sheetOn)return;sheetOn=false;sheet.classList.remove('on','drag');sheet.style.transform='';scrim.classList.remove('on');sheet.setAttribute('aria-hidden','true')}
     $('#orb').addEventListener('click',openSheet);scrim.addEventListener('click',closeSheet);
     [$('#grab'),$('h4',sheet)].forEach(function(el){dragify(el,{start:function(){sheet.classList.add('drag')},move:function(dx,dy,tx,ty){sheet.style.transform='translateY('+Math.max(0,ty)+'px)'},end:function(tx,ty){sheet.classList.remove('drag');if(ty>110)closeSheet();else sheet.style.transform=''}})});
@@ -771,15 +851,45 @@ section{padding-top:88px}
       dropped=true;holding=false;hold.classList.remove('down');$('#htext').textContent='Plop.';
       var rip=$('#rip');rip.innerHTML='';[0,.25,.5].forEach(function(d){var i=document.createElement('i');i.style.animationDelay=d+'s';rip.appendChild(i)});
       var type=TYPES[wh.idx>=0?wh.idx:0][0];
-      setTimeout(function(){closeSheet();ref='HLO-'+(10000+Math.floor(Math.random()*89999));wv=makeWave(seedFrom(ref));stage=0;closed=false;sp=0;paintSlider();en=.15;refresh();setTab('today');car.go(0);toast('Plop. "'+type+'" is now '+ref+'. Tracking started.');var o=$('#orb');o.classList.remove('pulse');void o.offsetWidth;o.classList.add('pulse')},900);
+      setTimeout(function(){closeSheet();ref='HLO-'+(10000+Math.floor(Math.random()*89999));wv=makeWave(seedFrom(ref));stage=0;closed=false;sp=0;paintSlider();en=.15;refresh();setTab('today');car.go(0);lisSeen=false;fillSent(type);showOv('sent');var o=$('#orb');o.classList.remove('pulse');void o.offsetWidth;o.classList.add('pulse')},900);
       setTimeout(function(){dropped=false;hp=0;$('#htext').textContent='Hold';hring.style.strokeDashoffset=289;rip.innerHTML=''},1700);
     }
+
+    // ---- guided flow: welcome > drop > sent > follow > listened > quiet ----
+    var flowStep=0,lisSeen=false,ovs={welcome:$('#ov-welcome'),sent:$('#ov-sent'),listened:$('#ov-listened'),quiet:$('#ov-quiet')},swv=makeWave(seedFrom('sent'));
+    function setFlow(n){flowStep=n;$$('#rail button').forEach(function(b,i){b.className=i<n?'done':i===n?'now':''})}
+    function showOv(k){hideOv();var e=ovs[k];if(!e)return;e.classList.add('on');var m={welcome:0,sent:2,listened:4,quiet:5};setFlow(m[k]);if(k==='sent')$('#sentWave').dataset.on='1';if(k==='listened')$('#lisRef').textContent=ref}
+    function hideOv(){Object.keys(ovs).forEach(function(k){ovs[k].classList.remove('on')});$('#sentWave').dataset.on=''}
+    function fillSent(t){$('#sentRef').textContent=ref;$('#sentType').textContent=t+' \u00b7 Williamsburg';swv=makeWave(seedFrom(ref))}
+    function goFollow(){hideOv();setFlow(3);setTab('cases');car.go(0)}
+    $$('.ov [data-act]').forEach(function(b){b.addEventListener('click',function(){
+      var a=b.dataset.act;
+      if(a==='start'){hideOv();setFlow(1);setTab('today');setTimeout(openSheet,450)}
+      else if(a==='follow')goFollow();
+      else if(a==='again'){hideOv();setTab('today');setTimeout(openSheet,350)}
+      else if(a==='next'){hideOv();setTab('today');if(!isOpen)openDetail('case',$('#tileCase'));setStage(4);setFlow(4)}
+      else if(a==='later'){hideOv();setTab('cases');car.go(3)}
+      else if(a==='share'){toast('Copied. Share the silence with your block.')}
+      else if(a==='home'){hideOv();closeDetail();setTab('today');setFlow(5)}
+    })});
+    function goFlow(i){
+      closeSheet();hideOv();if(isOpen)closeDetail();
+      if(i===0){setTab('today');showOv('welcome')}
+      else if(i===1){setTab('today');setFlow(1);setTimeout(openSheet,300)}
+      else if(i===2){setTab('today');setStage(0);en=1;lisSeen=false;fillSent('Music or party');showOv('sent')}
+      else if(i===3){setTab('cases');setStage(2);car.go(2);setFlow(3)}
+      else if(i===4){setTab('today');setStage(3);lisSeen=true;showOv('listened')}
+      else if(i===5){setTab('today');setStage(4);closed=true;sp=1;paintSlider();refresh();showOv('quiet')}
+    }
+    $$('#rail button').forEach(function(b){b.addEventListener('click',function(){goFlow(+b.dataset.step)})});
+    setFlow(0);
 
     // ---- frame loop ----
     loop(function(t){
       var dt=Math.min(.05,t-lastT);lastT=t;
       en+=RM?(target-en):(target-en)*.05;
       var calm=closed?'#8FB0FF':null;
+      if($('#sentWave').dataset.on==='1')drawWave($('#sentWave'),swv,t,.9,{lines:2,amp:.9,color:'#FD4802'});
       if(shown($('#tileWave')))drawWave($('#tileWave'),wv,t,en,{lines:3,amp:.95,color:calm||undefined});
       if(isOpen&&shown($('#dWave')))drawWave($('#dWave'),wv,t,en,{lines:3,amp:.95,color:calm||undefined});
       if(cur==='cases'){car.tick();cards.forEach(function(c,i){if(Math.abs(i-car.pos)<1.6)drawWave(c.cv,c.w,t,STAGES[i].e,{lines:2,amp:.9,color:'rgba(255,255,255,.95)'})})}
